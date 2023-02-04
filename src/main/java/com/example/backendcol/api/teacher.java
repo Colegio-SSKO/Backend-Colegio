@@ -162,13 +162,171 @@ public class teacher extends HttpServlet {
 
     }
 
+
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPut(req, resp);
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //getting print writer object
+        PrintWriter out = response.getWriter();
+        String path = request.getPathInfo();
+
+        //has only a '/'
+        if (request.getPathInfo().equals("/")){
+            response.setContentType("text/html");
+            response.setStatus(response.SC_BAD_REQUEST);
+            out.println("Invalid resource request.");
+        }
+
+        //if no parameters set
+        if (request.getPathInfo() == null){
+            response.setContentType("text/html");
+            response.setStatus(response.SC_BAD_REQUEST);
+            out.println("Invalid resource request. ID is null");
+        }
+        String params = path.split("/:")[1];
+        //if multiple parameters are present
+        if (path.split("/:").length>2){
+            response.setContentType("text/html");
+            response.setStatus(response.SC_BAD_REQUEST);
+            out.println("Invalid resource request. multiple parameters found");
+        }
+
+
+        // if the parameter is not a digit
+        if(!Character.isDigit(params.charAt(0))){
+            response.setContentType("text/html");
+            response.setStatus(response.SC_BAD_REQUEST);
+            out.println("Invalid resource request. Invalid parameters found");
+        }
+
+        //if everything is fine
+        //get JSON data
+        StringBuilder sb = new StringBuilder();
+        BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));
+        String line = null;
+        while ((line = br.readLine())!=null){
+            sb.append(line);
+        }
+        JSONObject req = new JSONObject(sb.toString());
+
+
+
+        //handle data
+        String gender = req.get("gender").toString();
+        String qualificationLevel = req.get("qualification_level").toString();
+        Integer user_ID = req.getInt("User_ID");
+
+
+        Connection connection = Driver.getConnection();
+
+        try{
+
+            PreparedStatement statement = connection.prepareStatement("update teacher" +
+                    " set gender = ?," +
+                    "qualification_level = ?," +
+                    "User_ID = ? " +
+                    "where teacher_ID = ?", Statement.RETURN_GENERATED_KEYS);
+            statement.setString(1,gender);
+            statement.setString(2,qualificationLevel);
+            statement.setInt(3,user_ID);
+            statement.setInt(4, Integer.parseInt(params));
+
+
+            statement.executeUpdate();
+
+
+            //sending the response
+            response.setContentType("text/html");
+            response.setStatus(response.SC_OK);
+
+
+        }catch (SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+
     }
 
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doDelete(req, resp);
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //getting print writer object
+        PrintWriter out = response.getWriter();
+        String path = request.getPathInfo();
+
+        //has only a '/'
+        if (request.getPathInfo().equals("/")){
+            response.setContentType("text/html");
+            response.setStatus(response.SC_BAD_REQUEST);
+            out.println("Invalid resource request.");
+        }
+
+        //if no parameters set
+        if (request.getPathInfo() == null){
+            response.setContentType("text/html");
+            response.setStatus(response.SC_BAD_REQUEST);
+            out.println("Invalid resource request. ID is null");
+        }
+        String params = path.split("/:")[1];
+        //if multiple parameters are present
+        if (path.split("/:").length>2){
+            response.setContentType("text/html");
+            response.setStatus(response.SC_BAD_REQUEST);
+            out.println("Invalid resource request. multiple parameters found");
+        }
+
+
+        // if the parameter is not a digit
+        if(!Character.isDigit(params.charAt(0))){
+            response.setContentType("text/html");
+            response.setStatus(response.SC_BAD_REQUEST);
+            out.println("Invalid resource request. Invalid parameters found");
+        }
+
+        //if everything is fine
+        Connection connection = Driver.getConnection();
+
+        try{
+            PreparedStatement statement = connection.prepareStatement("select * from teacher where teacher_ID = ?");
+            statement.setInt(1, Integer.parseInt(params));
+            ResultSet rs = statement.executeQuery();
+
+
+            //preparing the response
+            JSONObject resp = new JSONObject();
+            while (rs.next()){
+                resp.put("teacher_ID", rs.getInt("teacher_ID"));
+                resp.put("gender", rs.getString("gender"));
+                resp.put("qualification_level", rs.getString("qualification_level"));
+                resp.put("User_ID", rs.getInt("User_ID"));
+            }
+
+
+            statement = connection.prepareStatement("delete from teacher where teacher_ID = ?");
+            statement.setInt(1, Integer.parseInt(params));
+            statement.executeUpdate();
+
+            //sending the json response
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            out.println(resp);
+
+
+
+
+
+
+
+
+
+
+            //sending the response
+            response.setContentType("text/html");
+            response.setStatus(response.SC_OK);
+
+
+        }catch (SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+
     }
 }
