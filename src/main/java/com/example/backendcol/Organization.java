@@ -31,4 +31,8 @@ public class Organization extends User {
 
 
     }
+
+    public void myname(Integer id) {
+        System.out.println("Senith Uthsara");
+    }
 }

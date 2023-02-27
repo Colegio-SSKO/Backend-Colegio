@@ -8,6 +8,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.json.JSONObject;
 
 import java.io.IOException;
 
@@ -28,9 +29,11 @@ public class Organizations extends HttpServlet {
 
 
         Organization organization = new Organization();
-        RequestsParameters requestsParameters = ApiHandler.handleRequest(request, response);
-        Object res = organization.executeFunction(requestsParameters.getFunction(), requestsParameters.getID());
-        ApiHandler.sendResponse(response, res);
+
+        ApiHandler apiHandler = new ApiHandler();
+        RequestsParameters requestsParameters = apiHandler.handleRequest(request, response);
+        Object res = apiHandler.executeFunction(requestsParameters.getFunction(), requestsParameters.getID(), new JSONObject());
+        apiHandler.sendResponse(response, res);
     }
 
     @Override
