@@ -18,12 +18,10 @@ public class Teacher extends User{
 
 
 
-            JSONObject jsonObject = new JSONObject(request.getParameter("data"));
+            JSONObject jsonObject = new JSONObject(request.getParameter("textData"));
             String title = jsonObject.getString("title");
             String category = jsonObject.getString("category");
             String description = jsonObject.getString("description");
-
-
 
 
 
