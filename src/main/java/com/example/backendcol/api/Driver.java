@@ -16,11 +16,8 @@ public class Driver {
 
 
 
-        }catch (SQLException sqlException){
-            System.out.println(sqlException);
-        }
-        catch (ClassNotFoundException classNotFoundException){
-            System.out.println(classNotFoundException);
+        }catch (Exception exception){
+            System.out.println(exception);
         }
 
         return connection;

@@ -19,13 +19,26 @@ import java.sql.*;
 public class users extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+        User user = new User();
+        RequestsParameters requestsParameters = user.handleRequest(request, response);
+        Object res = user.executeFunction(requestsParameters.getFunction(), requestsParameters.getID(), new JSONObject() );
+        user.sendResponse(response, res);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        User user = new User();
+        RequestsParameters requestsParameters = user.handleRequest(request, response);
+        JSONObject jsonObject = JsonHandler.getJSONObject(request);
+        Object res = user.executeFunction(requestsParameters.getFunction(), requestsParameters.getID(), jsonObject );
+        user.sendResponse(response, res);
+
+    }
 
 
+
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         User user = new User();
         RequestsParameters requestsParameters = user.handleRequest(request, response);
         JSONObject jsonObject = JsonHandler.getJSONObject(request);

@@ -62,7 +62,7 @@ public class ApiHandler {
         try {
             response.setContentType("application/json");
             response.addHeader("Access-Control-Allow-Origin", "*");
-            response.addHeader("Access-Control-Allow-Methods" , "GET, POST, PUT, DELETE");
+            response.addHeader("Access-Control-Allow-Methods" , "GET, POST, PUT, DELETE, OPTIONS");
             response.setCharacterEncoding("UTF-8");
             PrintWriter out = response.getWriter();
             out.println(res);
