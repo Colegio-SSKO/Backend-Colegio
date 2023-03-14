@@ -12,6 +12,7 @@ public class User extends ApiHandler {
     public JSONObject editProfile(Integer id, JSONObject requestObject){
 
 
+        JSONObject jsonObject = new JSONObject();
         Connection connection = Driver.getConnection();
         try{
 
@@ -28,14 +29,25 @@ public class User extends ApiHandler {
             statement.setInt(3,id);
             int resultSet = statement.executeUpdate();
             int resultSet1 = statement1.executeUpdate();
+            if(resultSet1==0 || resultSet == 0){
+                jsonObject.put("message", "Inavlid User!");
+                jsonObject.put("isError", 1);
+                return jsonObject;
+            }
+            System.out.printf("Methnta enkn wed");
+            jsonObject.put("message", "Profile successfully Updated!");
+            jsonObject.put("isError", 0);
+            return jsonObject;
 
 
         }catch (SQLException sqlException){
             System.out.println(sqlException);
+            jsonObject.put("message", "Database error!");
+            jsonObject.put("isError", 1);
+            return jsonObject;
         }
 
 
-        return new JSONObject();
     }
 
 
@@ -48,7 +60,8 @@ public class User extends ApiHandler {
 
             ResultSet resultSet = statement1.executeQuery();
             if (!resultSet.next()){
-                jsonObject.put("error", "invalid user");
+                jsonObject.put("isError", 0);
+                jsonObject.put("message", "Invalid user");
                 return jsonObject;
             }
             if (requestObject.getString("currPassword").equals(resultSet.getString("password"))){
@@ -57,14 +70,19 @@ public class User extends ApiHandler {
                     statement.setString(1,requestObject.getString("newPassword"));
                     statement.setInt(2,id);
                     int resultset = statement.executeUpdate();
+                    jsonObject.put("isError", 0);
+                    jsonObject.put("message", "Password successfully updated!");
+                    return jsonObject;
 
                 }else {
-                    jsonObject.put("error", "New Password does not match");
+                    jsonObject.put("message", "New Password does not match");
+                    jsonObject.put("isError",1);
                     return jsonObject;
                 }
 
             }else {
-                jsonObject.put("error", "Enter valid old password");
+                jsonObject.put("message", "Enter valid old password");
+                jsonObject.put("isError", 1);
                 return jsonObject;
             }
 
@@ -72,9 +90,12 @@ public class User extends ApiHandler {
 
         }catch (SQLException sqlException){
             System.out.println(sqlException);
+            jsonObject.put("isError", 1);
+            jsonObject.put("message", "Invalid user");
+            return jsonObject;
         }
 
-        return new JSONObject();
+
     }
 
 
@@ -90,7 +111,8 @@ public class User extends ApiHandler {
 
 
             if (!resultSet.next()){
-                jsonObject.put("error", "invalid user");
+                jsonObject.put("message", "invalid user");
+                jsonObject.put("isError", 1);
                 return jsonObject;
             }
             if (requestObject.getString("currPassword1").equals(resultSet.getString("password"))){
@@ -102,21 +124,31 @@ public class User extends ApiHandler {
                     statement.setString(1,requestObject.getString("newEmail1"));
                     statement.setInt(2,id);
                     int resultset = statement.executeUpdate();
+                    jsonObject.put("message", "email successfully Updated!");
+                    jsonObject.put("isError", 0);
+                    return jsonObject;
 
                 }else {
-                    jsonObject.put("error", "New Email does not match");
+
+                    jsonObject.put("message", "New Email does not match");
+                    jsonObject.put("isError", 1);
                     return jsonObject;
+
                 }
 
             }else {
-                jsonObject.put("error", "Enter valid password");
+                jsonObject.put("message", "Enter valid password");
+                jsonObject.put("isError", 1);
                 return jsonObject;
             }
         }catch (SQLException sqlException){
             System.out.println(sqlException);
+            jsonObject.put("isError", 1);
+            jsonObject.put("message", "Invalid user");
+            return jsonObject;
         }
 
-        return new JSONObject();
+
     }
 
 
@@ -166,22 +198,30 @@ public class User extends ApiHandler {
 
 
     public JSONObject deleteProfile(Integer id, JSONObject requestObject){
-
+        System.out.printf("kccccc");
         JSONObject jsonObject = new JSONObject();
         Connection connection = Driver.getConnection();
         try {
             PreparedStatement statement = connection.prepareStatement("UPDATE user " +
                     "SET status = 1 " +
                     "WHERE user_id = ?;");
+            System.out.printf("1111111");
+
             statement.setInt(1,id);
             Integer resID = statement.executeUpdate();
+            jsonObject.put("isError", 0);
+            System.out.printf("222222");
+
+            jsonObject.put("message", "Profile deleted successfully!");
+            return jsonObject;
 
         }catch (Exception exception){
             System.out.println(exception);
+            jsonObject.put("isError", 1);
+            jsonObject.put("message", "Invalid user");
+            return jsonObject;
         }
 
-
-        return jsonObject;
     }
 
 
