@@ -20,11 +20,12 @@ import java.sql.*;
 public class users extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-//        User user = new User();
-//        RequestsParameters requestsParameters = user.handleRequest(request, response);    //save the id and the function
-//        JSONArray jsonArray = JsonHandler.createJSONArray(resultSet, attributes);      //save the details which comming from the frontend to the jason object
-//        Object res = user.executeFunction(requestsParameters.getFunction(), requestsParameters.getID(), jsonArray );        //save the object which return from the calling function
-//        user.sendResponse(response, res);
+        User user = new User();
+        RequestsParameters requestsParameters = user.handleRequest(request, response); //save the id and the function
+        System.out.println("heloooooooooooooo");
+        Object res = user.executeFunction(requestsParameters.getFunction(), requestsParameters.getID(),new JSONObject());        //save the object which return from the calling function
+
+        user.sendResponse(response, res);
     }
 
     @Override
@@ -36,5 +37,7 @@ public class users extends HttpServlet {
         Object res = user.executeFunction(requestsParameters.getFunction(), requestsParameters.getID(), jsonObject );        //save the object which return from the calling function
         user.sendResponse(response, res);
     }
+
+
 
 }
