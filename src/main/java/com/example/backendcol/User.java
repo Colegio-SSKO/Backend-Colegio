@@ -183,10 +183,23 @@ public class User extends ApiHandler {
         JSONObject jsonObject= new JSONObject();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("INSERT INTO cart (status, user_id, content_id) values (0,?,?)");
+            statement = connection.prepareStatement("SELECT * from cart where user_id=? && content_id=?");
             statement.setInt(1,id);
             statement.setInt(2,requestObject.getInt("content_id"));
-            Integer res_id = statement.executeUpdate();
+            ResultSet rs= statement.executeQuery();
+
+            if(rs.next()){
+                jsonObject.put("message","You already added this content");
+            }
+
+            else{
+                PreparedStatement statement2;
+                statement2 = connection.prepareStatement("INSERT INTO cart (status, user_id, content_id) values (0,?,?)");
+                statement2.setInt(1,id);
+                statement2.setInt(2,requestObject.getInt("content_id"));
+                Integer res_id = statement2.executeUpdate();
+            }
+
 
 
         }
