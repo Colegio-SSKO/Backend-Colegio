@@ -218,7 +218,7 @@ public class User extends ApiHandler {
         JSONArray jsonArray= new JSONArray();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT concat(user.f_name, user.l_name) as name, organization.address as address, user.pro_pic as img_src, organization.organization_id as organization_id from user INNER JOIN organization on organization.user_id= user.user_id;");
+            statement = connection.prepareStatement("SELECT concat(user.f_name,' ', user.l_name) as name, organization.address as address, user.pro_pic as img_src, organization.organization_id as organization_id from user INNER JOIN organization on organization.user_id= user.user_id;");
             ResultSet rs = statement.executeQuery();
 
             jsonArray = JsonHandler.createJSONArray(rs, "name", "address", "img_src", "organization_id");
@@ -280,10 +280,10 @@ public class User extends ApiHandler {
         JSONArray jsonArray= new JSONArray();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("select concat(user.f_name, user.l_name) as name, teacher.qulification_level as quli, user.user_id as user_id, teacher.teacher_id as teacher_id from teacher INNER JOIN org_has_teacher on org_has_teacher.teacher_id= teacher.teacher_id INNER JOIN user on teacher.user_ID= user.user_id where org_has_teacher.status=0 && org_has_teacher.organization_id=?;");
+            statement = connection.prepareStatement("select concat(user.f_name,' ', user.l_name) as name, teacher.qulification_level as quli, user.user_id as user_id, teacher.teacher_id as teacher_id, user.pro_pic as img_src from teacher INNER JOIN org_has_teacher on org_has_teacher.teacher_id= teacher.teacher_id INNER JOIN user on teacher.user_ID= user.user_id where org_has_teacher.status=0 && org_has_teacher.organization_id=?;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
-            jsonArray = JsonHandler.createJSONArray(rs, "name", "quli", "user_id", "teacher_id");
+            jsonArray = JsonHandler.createJSONArray(rs, "name", "quli", "user_id", "teacher_id", "img_src");
 
         }
 
@@ -301,7 +301,7 @@ public class User extends ApiHandler {
         JSONArray jsonArray= new JSONArray();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("select course.course_title as title, concat(user.f_name, user.l_name) as author, course.introduction_media as img_src, course.price as price from teacher INNER JOIN user on teacher.user_ID= user.user_id INNER JOIN content on teacher.user_ID= user.user_id INNER JOIN course on content.content_id=course.content_id where teacher.user_ID=?;");
+            statement = connection.prepareStatement("select course.course_title as title, concat(user.f_name,' ',user.l_name) as author, course.introduction_media as img_src, course.price as price from teacher INNER JOIN user on teacher.user_ID= user.user_id INNER JOIN content on teacher.user_ID= user.user_id INNER JOIN course on content.content_id=course.content_id where teacher.user_ID=?;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
             jsonArray = JsonHandler.createJSONArray(rs, "author", "title", "price", "img_src");
@@ -368,7 +368,7 @@ public class User extends ApiHandler {
         JSONArray jsonArray= new JSONArray();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("select concat(user.f_name, user.l_name) as name, user.pro_pic as img_src, teacher.teacher_id as teacher_id from teacher INNER JOIN org_teacher_request on org_teacher_request.teacher_id= teacher.teacher_id INNER JOIN user on teacher.user_ID= user.user_id WHERE org_teacher_request.organization_id=? && org_teacher_request.status=0;");
+            statement = connection.prepareStatement("select concat(user.f_name,' ', user.l_name) as name, user.pro_pic as img_src, teacher.teacher_id as teacher_id from teacher INNER JOIN org_teacher_request on org_teacher_request.teacher_id= teacher.teacher_id INNER JOIN user on teacher.user_ID= user.user_id WHERE org_teacher_request.organization_id=? && org_teacher_request.status=0;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
             jsonArray = JsonHandler.createJSONArray(rs, "name", "img_src", "teacher_id");
