@@ -1,6 +1,8 @@
-package com.example.backendcol.api;
+package com.example.backendcol;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class Driver {
     public static Connection getConnection(){
