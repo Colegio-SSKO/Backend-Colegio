@@ -39,4 +39,14 @@ public class users extends HttpServlet {
     }
 
 
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.printf("delete thma");
+        User user = new User();
+        RequestsParameters requestsParameters = user.handleRequest(request, response);
+        Object res = user.executeFunction(requestsParameters.getFunction(), requestsParameters.getID(), new JSONObject() );
+        user.sendResponse(response, res);
+
+    }
+
 }

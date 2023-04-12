@@ -495,6 +495,226 @@ public class User extends ApiHandler {
 
 
 
+    public JSONObject editProfile(Integer id, JSONObject requestObject){
+
+
+        JSONObject jsonObject = new JSONObject();
+        Connection connection = Driver.getConnection();
+        try{
+
+            //JDBC part
+            PreparedStatement statement = connection.prepareStatement("UPDATE user SET f_name = ?, l_name = ? WHERE user_id = ?");
+            PreparedStatement statement1 = connection.prepareStatement("UPDATE student SET education_level = ?, gender = ? WHERE user_id = ?");
+            statement.setString(1,requestObject.getString("fName"));
+            statement.setString(2,requestObject.getString("lName"));
+            statement1.setString(1,requestObject.getString("edu"));
+            statement1.setString(2,requestObject.getString("gender"));
+            System.out.println(requestObject.getString("edu"));
+            System.out.println(requestObject.getString("gender"));
+
+            statement1.setInt(3,id);
+            statement.setInt(3,id);
+            int resultSet = statement.executeUpdate();
+            int resultSet1 = statement1.executeUpdate();
+            System.out.println(resultSet);
+            System.out.println(resultSet1);
+
+            if(resultSet1==0 || resultSet == 0){
+                jsonObject.put("message", "Inavlid User!");
+                jsonObject.put("isError", 1);
+                return jsonObject;
+            }
+            System.out.printf("Methnta enkn wed");
+            jsonObject.put("message", "Profile successfully Updated!");
+            jsonObject.put("isError", 0);
+            return jsonObject;
+
+
+        }catch (SQLException sqlException){
+            System.out.println(sqlException);
+            jsonObject.put("message", "Database error!");
+            jsonObject.put("isError", 1);
+            return jsonObject;
+        }
+
+
+    }
+
+
+
+    public JSONObject changePassword(Integer id, JSONObject requestObject){
+        JSONObject jsonObject = new JSONObject();
+        try{
+            Connection connection = Driver.getConnection();
+            PreparedStatement statement1 = connection.prepareStatement("select * from user where user_id = ?");
+            statement1.setInt(1,id);
+
+            ResultSet resultSet = statement1.executeQuery();
+            if (!resultSet.next()){
+                jsonObject.put("isError", 0);
+                jsonObject.put("message", "Invalid user");
+                return jsonObject;
+            }
+            if (requestObject.getString("currPassword").equals(resultSet.getString("password"))){
+                if (requestObject.getString("newPassword").equals(requestObject.getString("againPassword"))){
+                    PreparedStatement statement = connection.prepareStatement("UPDATE user SET password = ? WHERE user_id = ?");
+                    statement.setString(1,requestObject.getString("newPassword"));
+                    statement.setInt(2,id);
+                    int resultset = statement.executeUpdate();
+                    jsonObject.put("isError", 0);
+                    jsonObject.put("message", "Password successfully updated!");
+                    return jsonObject;
+
+                }else {
+                    jsonObject.put("message", "New Password does not match");
+                    jsonObject.put("isError",1);
+                    return jsonObject;
+                }
+
+            }else {
+                jsonObject.put("message", "Enter valid old password");
+                jsonObject.put("isError", 1);
+                System.out.println("wedoooo");
+                return jsonObject;
+            }
+
+
+
+        }catch (SQLException sqlException){
+            System.out.println(sqlException);
+            jsonObject.put("isError", 1);
+            jsonObject.put("message", "Invalid user");
+            return jsonObject;
+        }
+
+
+    }
+
+
+
+
+
+
+    public JSONObject editEmail(Integer id, JSONObject requestObject){
+        JSONObject jsonObject = new JSONObject();
+        try{
+            Connection connection = Driver.getConnection();
+            PreparedStatement statement1 = connection.prepareStatement("select * from user where user_id = ?");
+            statement1.setInt(1,id);
+            ResultSet resultSet = statement1.executeQuery();
+
+
+            if (!resultSet.next()){
+                jsonObject.put("message", "invalid user");
+                jsonObject.put("isError", 1);
+                return jsonObject;
+            }
+            if (requestObject.getString("currPassword1").equals(resultSet.getString("password"))){
+                System.out.println("hari");
+                System.out.println(requestObject.getString("newEmail1"));
+                if (requestObject.getString("currEmail1").equals(resultSet.getString("email"))){
+                    System.out.println("ai bn");
+                    PreparedStatement statement = connection.prepareStatement("UPDATE user SET email = ? WHERE user_id = ?");
+                    statement.setString(1,requestObject.getString("newEmail1"));
+                    statement.setInt(2,id);
+                    int resultset = statement.executeUpdate();
+                    jsonObject.put("message", "email successfully Updated!");
+                    System.out.println("email updated bosa");
+                    jsonObject.put("isError", 0);
+                    return jsonObject;
+
+                }else {
+
+                    jsonObject.put("message", "New Email does not match");
+                    jsonObject.put("isError", 1);
+                    return jsonObject;
+
+                }
+
+            }else {
+                jsonObject.put("message", "Enter valid password");
+                jsonObject.put("isError", 1);
+                return jsonObject;
+            }
+        }catch (SQLException sqlException){
+            System.out.println(sqlException);
+            jsonObject.put("isError", 1);
+            jsonObject.put("message", "Invalid user");
+            return jsonObject;
+        }
+
+
+    }
+
+
+
+
+    public JSONArray myQuestions(Integer id, JSONObject requestObject){
+        System.out.println(id);
+        JSONArray jasonarray = new JSONArray();
+        Connection connection = Driver.getConnection();
+        try {
+            PreparedStatement statement = connection.prepareStatement("SELECT * from question INNER join teacher on question.user_id = teacher.user_id INNER join user on user.user_id = teacher.user_ID INNER join question_media on question.question_id = question_media.question_id WHERE question.user_id = ?;");
+            System.out.println("aaaa");
+            statement.setInt(1,id);
+            ResultSet resultSet = statement.executeQuery();
+
+            jasonarray = JsonHandler.createJSONArray(resultSet,  "question_Id", "question_img","question_title","question_description", "f_name" , "l_name","status", "media", "qulification_level","pro_pic");
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+
+
+        return jasonarray;
+    }
+
+
+
+
+    public JSONArray myQuizes(Integer id, JSONObject requestObject){
+
+        JSONArray jasonarray = new JSONArray();
+        Connection connection = Driver.getConnection();
+        try {
+            PreparedStatement statement = connection.prepareStatement("SELECT * from content INNER JOIN purchase on purchase.content_id=content.content_id INNER JOIN quiz ON purchase.content_id=quiz.content_id INNER JOIN user on content.user_id= user.user_id inner join quiz_media on quiz.quiz_id= quiz_media.quiz_id inner join teacher on content.user_id = teacher.user_id inner join quiz_question on quiz.quiz_id = quiz_question.quiz_id where purchase.user_id=? AND quiz.status=0;");
+            statement.setInt(1,id);
+            ResultSet resultSet = statement.executeQuery();
+
+            jasonarray = JsonHandler.createJSONArray(resultSet, "quiz_title", "f_name", "l_name", "description","question", "media" ,"qulification_level", "content_id", "op1","op2","op3","op4");
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+
+
+        return jasonarray;
+    }
+
+
+
+
+
+    public JSONArray myCources(Integer id, JSONObject requestObject){
+        System.out.println("myssss");
+        JSONArray jasonarray = new JSONArray();
+        Connection connection = Driver.getConnection();
+        try {
+            PreparedStatement statement = connection.prepareStatement("SELECT * from purchase INNER JOIN content on purchase.content_id= content.content_id INNER JOIN course ON content.content_id= course.content_id INNER JOIN user ON content.user_id= user.user_id inner JOIN course_media on course.course_id = course_media.course_id inner join teacher on content.user_id = teacher.user_ID where purchase.user_id=?;");
+            statement.setInt(1, id);
+            ResultSet resultSet = statement.executeQuery();
+
+            jasonarray = JsonHandler.createJSONArray(resultSet, "course_title", "f_name", "l_name", "decription", "media" ,"qulification_level","content_id" , "pro_pic");
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+
+
+        return jasonarray;
+    }
+
+
+
+
+
 }
 
 
