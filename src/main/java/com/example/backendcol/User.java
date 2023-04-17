@@ -676,11 +676,11 @@ public class User extends ApiHandler {
         JSONArray jasonarray = new JSONArray();
         Connection connection = Driver.getConnection();
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * from content INNER JOIN purchase on purchase.content_id=content.content_id INNER JOIN quiz ON purchase.content_id=quiz.content_id INNER JOIN user on content.user_id= user.user_id inner join quiz_media on quiz.quiz_id= quiz_media.quiz_id inner join teacher on content.user_id = teacher.user_id inner join quiz_question on quiz.quiz_id = quiz_question.quiz_id where purchase.user_id=? AND quiz.status=0;");
+            PreparedStatement statement = connection.prepareStatement("SELECT * from content INNER JOIN purchase on purchase.content_id=content.content_id INNER JOIN quiz ON purchase.content_id=quiz.content_id INNER JOIN user on content.user_id= user.user_id inner join teacher on content.user_id = teacher.user_id where purchase.user_id=? AND quiz.status=0;");
             statement.setInt(1,id);
             ResultSet resultSet = statement.executeQuery();
 
-            jasonarray = JsonHandler.createJSONArray(resultSet, "quiz_title", "f_name", "l_name", "description","question", "media" ,"qulification_level", "content_id", "op1","op2","op3","op4");
+            jasonarray = JsonHandler.createJSONArray(resultSet, "quiz_title", "f_name", "l_name", "description" ,"qulification_level", "content_id", "quiz_id");
         }catch (Exception exception){
             System.out.println(exception);
         }
@@ -688,6 +688,39 @@ public class User extends ApiHandler {
 
         return jasonarray;
     }
+
+    public JSONArray getQuestions(Integer id, JSONObject requestObject){
+        JSONArray jsonArray = new JSONArray();
+        Connection connection = Driver.getConnection();
+        try{
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM quiz_question where quiz_id = ?");
+            statement.setInt(1, id);
+            ResultSet resultSet = statement.executeQuery();
+            jsonArray = JsonHandler.createJSONArray(resultSet, "question", "op1", "op2", "op3", "op4", "answer", "quiz_qid");
+        }catch(Exception exception){
+            System.out.println(exception);
+        }
+        return jsonArray;
+    }
+
+    public JSONObject saveAnswer(Integer id, JSONObject requestObject){
+        JSONObject jsonObject = new JSONObject();
+        Connection connection = Driver.getConnection();
+        try{
+            PreparedStatement statement = connection.prepareStatement("insert into user_answers_questions values (?,?,?) on duplicate key update given_answer = ?");
+            statement.setInt(1, requestObject.getInt("quiz_qid"));
+            statement.setInt(2, requestObject.getInt("user_id"));
+            statement.setString(3, requestObject.getString("answer"));
+            statement.setString(4, requestObject.getString("answer"));
+            statement.executeUpdate();
+
+        }catch(Exception exception){
+            System.out.println(exception);
+        }
+        return jsonObject;
+    }
+
+
 
 
 
