@@ -318,26 +318,7 @@ public class User extends ApiHandler {
 
 
 
-    public JSONObject remove_teacher(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
 
-        JSONObject jsonObject= new JSONObject();
-        try{
-            PreparedStatement statement;
-            statement = connection.prepareStatement("Update org_has_teacher set status=1 where teacher_id=? && organization_id=?");
-            statement.setInt(1,requestObject.getInt("teacher_id"));
-            statement.setInt(2,id);
-            Integer res_id = statement.executeUpdate();
-
-
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
-        return jsonObject;
-    }
 
 
 //    public JSONArray search_teacher(Integer id, JSONObject requestObject){
@@ -362,25 +343,7 @@ public class User extends ApiHandler {
 //    }
 
 
-    public JSONArray teacher_org_noti(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
 
-        JSONArray jsonArray= new JSONArray();
-        try{
-            PreparedStatement statement;
-            statement = connection.prepareStatement("select concat(user.f_name,' ', user.l_name) as name, user.pro_pic as img_src, teacher.teacher_id as teacher_id from teacher INNER JOIN org_teacher_request on org_teacher_request.teacher_id= teacher.teacher_id INNER JOIN user on teacher.user_ID= user.user_id WHERE org_teacher_request.organization_id=? && org_teacher_request.status=0;");
-            statement.setInt(1,id);
-            ResultSet rs = statement.executeQuery();
-            jsonArray = JsonHandler.createJSONArray(rs, "name", "img_src", "teacher_id");
-
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
-        return jsonArray;
-    }
 
 
 
