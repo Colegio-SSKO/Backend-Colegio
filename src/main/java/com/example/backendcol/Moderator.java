@@ -32,6 +32,28 @@ public class Moderator extends ApiHandler {
     }
 
 
+    public JSONArray generate_report_quiz(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONArray jsonArray= new JSONArray();
+        try{
+            PreparedStatement statement;
+            statement = connection.prepareStatement("select report_quiz.reason as reason, report_quiz.date as date, concat(user.f_name,' ', user.l_name) as name, quiz.quiz_title as title, content.content_id as content_id, report_quiz.quiz_id as quiz_id from quiz INNER JOIN report_quiz on report_quiz.quiz_id= quiz.quiz_id INNER JOIN user on report_quiz.user_id= user.user_id INNER JOIN content on quiz.content_id= content.content_id where report_quiz.quiz_id=?;");
+            statement.setInt(1,id);
+            ResultSet rs = statement.executeQuery();
+            jsonArray = JsonHandler.createJSONArray(rs, "date", "name", "title", "reason", "quiz_id","content_id");
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonArray;
+    }
+
+
+
     public JSONArray view_reported_courses(Integer id, JSONObject requestObject){
         Connection connection = Driver.getConnection();
 
@@ -41,6 +63,26 @@ public class Moderator extends ApiHandler {
             statement = connection.prepareStatement("select distinct report_course.course_id as course_id, course.course_title as title, concat(user.f_name,' ', user.l_name) as name, subject.name as subject, course.introduction_media as img_src from report_course inner join course on report_course.course_id= course.course_id INNER JOIN content on course.content_id= content.content_id INNER JOIN user on content.user_id= user.user_id INNER JOIN subject on content.subject_id= subject.subject_id where content.status=0;");
             ResultSet rs = statement.executeQuery();
             jsonArray = JsonHandler.createJSONArray(rs, "course_id","title", "name", "subject", "img_src");
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonArray;
+    }
+
+
+    public JSONArray view_reported_quiz(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONArray jsonArray= new JSONArray();
+        try{
+            PreparedStatement statement;
+            statement = connection.prepareStatement("select distinct report_quiz.quiz_id as quiz_id, quiz.quiz_title as title, concat(user.f_name,' ', user.l_name) as name, subject.name as subject, quiz.image as img_src from report_quiz inner join quiz on report_quiz.quiz_id= quiz.quiz_id INNER JOIN content on quiz.content_id= content.content_id INNER JOIN user on content.user_id= user.user_id INNER JOIN subject on content.subject_id= subject.subject_id where content.status=0;");
+            ResultSet rs = statement.executeQuery();
+            jsonArray = JsonHandler.createJSONArray(rs, "quiz_id","title", "name", "subject", "img_src");
 
         }
 
@@ -71,6 +113,39 @@ public class Moderator extends ApiHandler {
 
             if(res_id2==1){
                 jsonObject.put("message","Disable course successfully");
+            }
+            else{
+                jsonObject.put("message","Error");
+            }
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
+
+
+    public JSONObject disable_quiz(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+        System.out.println("sewwwwwwwww");
+
+        JSONObject jsonObject= new JSONObject();
+        try{
+            PreparedStatement statement;
+            statement = connection.prepareStatement("UPDATE content SET status = 1 WHERE content_id = ?;");
+            statement.setInt(1,requestObject.getInt("content_id"));
+            Integer res_id= statement.executeUpdate();
+
+            statement = connection.prepareStatement("INSERT INTO resolve_quiz VALUES (?,?);");
+            statement.setInt(1,id);
+            statement.setInt(2,requestObject.getInt("content_id"));
+            Integer res_id2= statement.executeUpdate();
+
+            if(res_id2==1){
+                jsonObject.put("message","Disable quiz successfully");
             }
             else{
                 jsonObject.put("message","Error");
