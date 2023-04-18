@@ -96,9 +96,10 @@ public class User extends ApiHandler {
         JSONObject jsonObject= new JSONObject();
         try{
             System.out.println("DB connectiontt");
-            Statement st= connection.createStatement();
-            ResultSet rs= st.executeQuery("Select CONCAT(user.f_name, user.l_name) as name, user.pro_pic as img_src, user.date_joined as date, student.education_level as level, student.gender as gender from user inner join student on user.user_id=student.user_id where user.user_id=4");
-
+            PreparedStatement statement;
+            statement = connection.prepareStatement("Select CONCAT(user.f_name,' ', user.l_name) as name, user.pro_pic as img_src, user.date_joined as date, student.education_level as level, student.gender as gender from user inner join student on user.user_id=student.user_id where user.user_id=?");
+            statement.setInt(1,id);
+            ResultSet rs = statement.executeQuery();
             jsonObject = JsonHandler.createJSONObject(rs, "name", "img_src", "date", "level", "gender");
 
         }
@@ -186,7 +187,7 @@ public class User extends ApiHandler {
         JSONObject jsonObject= new JSONObject();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT * from cart where user_id=? && content_id=?");
+            statement = connection.prepareStatement("SELECT * from cart where user_id=? && content_id=? && status=0");
             statement.setInt(1,id);
             statement.setInt(2,requestObject.getInt("content_id"));
             ResultSet rs= statement.executeQuery();
@@ -196,11 +197,27 @@ public class User extends ApiHandler {
             }
 
             else{
-                PreparedStatement statement2;
-                statement2 = connection.prepareStatement("INSERT INTO cart (status, user_id, content_id) values (0,?,?)");
-                statement2.setInt(1,id);
-                statement2.setInt(2,requestObject.getInt("content_id"));
-                Integer res_id = statement2.executeUpdate();
+                statement = connection.prepareStatement("SELECT * from cart where user_id=? && content_id=? && status=1");
+                statement.setInt(1,id);
+                statement.setInt(2,requestObject.getInt("content_id"));
+                ResultSet rs2= statement.executeQuery();
+
+                if(rs2.next()){
+                    jsonObject.put("message","Added to cart");
+                    statement = connection.prepareStatement("Update cart set status=0 where user_id=? && content_id=?");
+                    statement.setInt(1,id);
+                    statement.setInt(2,requestObject.getInt("content_id"));
+                    Integer num= statement.executeUpdate();
+                }
+                else{
+                    jsonObject.put("message","Added to cart");
+                    PreparedStatement statement2;
+                    statement2 = connection.prepareStatement("INSERT INTO cart (status, user_id, content_id) values (0,?,?)");
+                    statement2.setInt(1,id);
+                    statement2.setInt(2,requestObject.getInt("content_id"));
+                    Integer res_id = statement2.executeUpdate();
+                }
+
             }
         }
 
