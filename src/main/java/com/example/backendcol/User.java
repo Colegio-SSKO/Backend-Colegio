@@ -672,14 +672,16 @@ public class User extends ApiHandler {
 
 
     public JSONArray myQuizes(Integer id, JSONObject requestObject){
+        System.out.println("methnt enw");
 
         JSONArray jasonarray = new JSONArray();
-        Connection connection = Driver.getConnection();
+
         try {
+            Connection connection = Driver.getConnection();
             PreparedStatement statement = connection.prepareStatement("SELECT * from content INNER JOIN purchase on purchase.content_id=content.content_id INNER JOIN quiz ON purchase.content_id=quiz.content_id INNER JOIN user on content.user_id= user.user_id inner join teacher on content.user_id = teacher.user_id where purchase.user_id=? AND quiz.status=0;");
             statement.setInt(1,id);
             ResultSet resultSet = statement.executeQuery();
-
+            System.out.println("methnt enw2");
             jasonarray = JsonHandler.createJSONArray(resultSet, "quiz_title", "f_name", "l_name", "description" ,"qulification_level", "content_id", "quiz_id");
         }catch (Exception exception){
             System.out.println(exception);
