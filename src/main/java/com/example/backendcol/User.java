@@ -196,6 +196,7 @@ public class User extends ApiHandler {
             }
 
             else{
+                jsonObject.put("message","saaa");
                 PreparedStatement statement2;
                 statement2 = connection.prepareStatement("INSERT INTO cart (status, user_id, content_id) values (0,?,?)");
                 statement2.setInt(1,id);
@@ -318,26 +319,33 @@ public class User extends ApiHandler {
 
 
 
-    public JSONObject remove_teacher(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
-
-        JSONObject jsonObject= new JSONObject();
-        try{
-            PreparedStatement statement;
-            statement = connection.prepareStatement("Update org_has_teacher set status=1 where teacher_id=? && organization_id=?");
-            statement.setInt(1,requestObject.getInt("teacher_id"));
-            statement.setInt(2,id);
-            Integer res_id = statement.executeUpdate();
-
-
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
-        return jsonObject;
-    }
+//    public JSONObject remove_teacher(Integer id, JSONObject requestObject){
+//        Connection connection = Driver.getConnection();
+//
+//        JSONObject jsonObject= new JSONObject();
+//        try{
+//            PreparedStatement statement;
+//            statement = connection.prepareStatement("Update org_has_teacher set status=1 where teacher_id=? && organization_id=?");
+//            statement.setInt(1,requestObject.getInt("teacher_id"));
+//            statement.setInt(2,id);
+//            Integer res_id = statement.executeUpdate();
+//
+//            if(res_id==1){
+//                jsonObject.put("message","Remove teacher successfully");
+//            }
+//            else{
+//                jsonObject.put("message","Error");
+//            }
+//
+//
+//        }
+//
+//        catch(SQLException sqlException){
+//            System.out.println(sqlException);
+//        }
+//
+//        return jsonObject;
+//    }
 
 
 //    public JSONArray search_teacher(Integer id, JSONObject requestObject){
