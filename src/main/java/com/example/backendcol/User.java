@@ -639,7 +639,7 @@ public class User extends ApiHandler {
             statement.setInt(1,id);
             ResultSet resultSet = statement.executeQuery();
 
-            jasonarray = JsonHandler.createJSONArray(resultSet,  "question_Id", "question_img","question_title","question_description", "f_name" , "l_name","status", "media", "qulification_level","pro_pic");
+            jasonarray = JsonHandler.createJSONArray(resultSet,  "question_Id", "question_img","question_title","question_description", "f_name" , "l_name","status", "media", "qulification_level","pro_pic", "teacher.user_id");
         }catch (Exception exception){
             System.out.println(exception);
         }

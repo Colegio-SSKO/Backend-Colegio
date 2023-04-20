@@ -21,7 +21,7 @@ public class QuizCommentsHandler {
 
     @OnOpen
     public void onOpen(Session session) {
-        System.out.println("WebSocket opened: " + session.getId());
+        System.out.println("WebSocket for quiz comments opened: " + session.getId());
 
         quizCommentSessions.add(session);
         System.out.println(quizCommentSessions.size());
