@@ -6,8 +6,7 @@ import org.json.JSONObject;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
-
-
+import java.time.LocalDate;
 
 
 public class User extends ApiHandler {
@@ -634,12 +633,12 @@ public class User extends ApiHandler {
         JSONArray jasonarray = new JSONArray();
         Connection connection = Driver.getConnection();
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * from question INNER join teacher on question.user_id = teacher.user_id INNER join user on user.user_id = teacher.user_ID INNER join question_media on question.question_id = question_media.question_id WHERE question.user_id = ?;");
+            PreparedStatement statement = connection.prepareStatement(" SELECT * FROM accept RIGHT JOIN question ON question.question_id=accept.question_id LEFT JOIN question_media ON question.question_id= question_media.question_id LEFT JOIN teacher on question.accept_teacher_id= teacher.teacher_id LEFT JOIN user on teacher.user_ID= user.user_id WHERE question.user_id=?;");
             System.out.println("aaaa");
             statement.setInt(1,id);
             ResultSet resultSet = statement.executeQuery();
 
-            jasonarray = JsonHandler.createJSONArray(resultSet,  "question_Id", "question_img","question_title","question_description", "f_name" , "l_name","status", "media", "qulification_level","pro_pic", "teacher.user_id");
+            jasonarray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description", "f_name" , "l_name","question.status", "question_media.media", "qulification_level","pro_pic","question.user_id","question.accept_teacher_id","chat_id");
         }catch (Exception exception){
             System.out.println(exception);
         }
@@ -713,17 +712,123 @@ public class User extends ApiHandler {
         JSONArray jasonarray = new JSONArray();
         Connection connection = Driver.getConnection();
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * from purchase INNER JOIN content on purchase.content_id= content.content_id INNER JOIN course ON content.content_id= course.content_id INNER JOIN user ON content.user_id= user.user_id inner JOIN course_media on course.course_id = course_media.course_id inner join teacher on content.user_id = teacher.user_ID where purchase.user_id=?;");
+            PreparedStatement statement = connection.prepareStatement("SELECT * from purchase INNER JOIN content on purchase.content_id= content.content_id INNER JOIN course ON content.content_id= course.content_id INNER JOIN user ON content.user_id= user.user_id inner join teacher on content.user_id = teacher.user_ID where purchase.user_id=?;");
             statement.setInt(1, id);
             ResultSet resultSet = statement.executeQuery();
 
-            jasonarray = JsonHandler.createJSONArray(resultSet, "course_title", "f_name", "l_name", "decription", "media" ,"qulification_level","content_id" , "pro_pic");
+            jasonarray = JsonHandler.createJSONArray(resultSet, "course_title", "f_name", "l_name", "decription","qulification_level","content_id" , "pro_pic","introduction_media", "course_id");
         }catch (Exception exception){
             System.out.println(exception);
         }
 
 
         return jasonarray;
+    }
+
+
+    public JSONObject addrates(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONObject jsonObject= new JSONObject();
+        try{
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT * from rates where user_id=? && content_id=?");
+            statement.setInt(1,id);
+            statement.setInt(2, requestObject.getInt("content_id"));
+            ResultSet rs = statement.executeQuery();
+            Integer rate= requestObject.getInt("rate_value");
+
+            if(rs.next()){
+                statement = connection.prepareStatement("update rates set rate_value=? where user_id=? && content_id=?");
+                statement.setInt(2,id);
+                statement.setInt(3, requestObject.getInt("content_id"));
+                statement.setInt(1, requestObject.getInt("rate_value"));
+                Integer num = statement.executeUpdate();
+                jsonObject.put("message", String.format("Rate %d stars.Thank You", rate));
+            }
+            else{
+                statement = connection.prepareStatement("INSERT into rates values (?,?,?);");
+                statement.setInt(1,id);
+                statement.setInt(2, requestObject.getInt("content_id"));
+                statement.setInt(3, requestObject.getInt("rate_value"));
+                Integer num = statement.executeUpdate();
+                jsonObject.put("message", String.format("Rate %d stars.Thank You", rate));
+            }
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
+
+
+
+    public JSONObject report_course(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONObject jsonObject= new JSONObject();
+        try{
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT * from report_course where user_id=? && course_id=?");
+            statement.setInt(1,id);
+            statement.setInt(2, requestObject.getInt("course_id"));
+            ResultSet rs = statement.executeQuery();
+            LocalDate currentDate = LocalDate.now();
+
+
+            if(rs.next()){
+                statement = connection.prepareStatement("update report_course set reason=?, date=? where user_id=? && course_id=?");
+                statement.setInt(3,id);
+                statement.setDate(2, Date.valueOf(currentDate));
+                statement.setInt(4, requestObject.getInt("course_id"));
+                statement.setString(1, requestObject.getString("reason"));
+                Integer num = statement.executeUpdate();
+                jsonObject.put("message","added report successfuly");
+            }
+            else{
+                statement = connection.prepareStatement("INSERT into report_course values (?,?,?,?);");
+                statement.setInt(1,id);
+                statement.setInt(2, requestObject.getInt("course_id"));
+                statement.setString(3, requestObject.getString("reason"));
+                statement.setDate(4, Date.valueOf(currentDate));
+                Integer num = statement.executeUpdate();
+                jsonObject.put("message","added report successfuly");
+            }
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
+
+
+    public JSONArray continue_course(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+
+        JSONArray jsonArray= new JSONArray();
+        try{
+
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT * FROM course_media WHERE course_id=?;");
+            statement.setInt(1,id);
+            ResultSet rs = statement.executeQuery();
+
+            jsonArray = JsonHandler.createJSONArray(rs, "meida_title", "media_description", "course_media_id");
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonArray;
     }
 
 
