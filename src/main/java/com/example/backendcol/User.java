@@ -685,30 +685,38 @@ public class User extends ApiHandler {
             statement = connection.prepareStatement("SELECT t.type, t.name, t.img_src, t.quli, t.id, t.course_title, t.quiz_title, t.content_id, t.status, CONCAT(u.f_name, ' ', u.l_name) AS creator,\n" +
                     "CASE WHEN t.type = 'course' THEN c.introduction_media ELSE NULL END AS intro_media,\n" +
                     "CASE WHEN t.type = 'quiz' THEN q.image ELSE NULL END AS quiz_img,\n" +
-                    "CASE WHEN t.type = 'teacher' THEN teacher.teacher_id ELSE NULL END AS teacher_id\n" +
+                    "CASE WHEN t.type = 'teacher' THEN teacher.teacher_id ELSE NULL END AS teacher_id,\n" +
+                    "CASE WHEN t.type = 'organization' THEN organization.organization_id ELSE NULL END AS organization_id\n" +
                     "FROM (\n" +
-                    "  SELECT 'teacher' AS type, CONCAT(user.f_name, ' ', user.l_name, ' (', teacher.teacher_id, ')') AS name, user.pro_pic AS img_src, teacher.qulification_level AS quli, teacher.teacher_id AS id, NULL AS course_title, NULL AS quiz_title, NULL AS content_id, NULL AS status, teacher.user_ID AS user_id\n" +
+                    "  SELECT 'teacher' AS type, CONCAT(user.f_name, ' ', user.l_name, ' (', teacher.teacher_id, ')') AS name, user.pro_pic AS img_src, teacher.qulification_level AS quli, teacher.teacher_id AS id, NULL AS course_title, NULL AS quiz_title, NULL AS content_id, NULL AS status, teacher.user_ID AS user_id, NULL AS organization_id\n" +
                     "  FROM user \n" +
                     "  INNER JOIN teacher ON teacher.user_ID = user.user_id\n" +
-                    "  WHERE CONCAT(user.f_name, user.l_name) like ?\n" +
+                    "  WHERE CONCAT(user.f_name, user.l_name) LIKE ? \n" +
                     "  UNION ALL\n" +
-                    "  SELECT 'course' AS type, NULL AS name, NULL AS img_src, NULL AS quli, course.course_id AS id, course.course_title, NULL AS quiz_title, content.content_id, content.status, content.user_id\n" +
+                    "  SELECT 'course' AS type, NULL AS name, NULL AS img_src, NULL AS quli, course.course_id AS id, course.course_title, NULL AS quiz_title, content.content_id, content.status, content.user_id, NULL AS organization_id\n" +
                     "  FROM course \n" +
                     "  INNER JOIN content ON course.content_id = content.content_id \n" +
                     "  WHERE course.course_title LIKE ? AND content.status = 0\n" +
                     "  UNION ALL\n" +
-                    "  SELECT 'quiz' AS type, NULL AS name, NULL AS img_src, NULL AS quli, quiz.quiz_id AS id, NULL AS course_title, quiz.quiz_title, content.content_id, content.status, content.user_id\n" +
+                    "  SELECT 'quiz' AS type, NULL AS name, NULL AS img_src, NULL AS quli, quiz.quiz_id AS id, NULL AS course_title, quiz.quiz_title, content.content_id, content.status, content.user_id, NULL AS organization_id\n" +
                     "  FROM quiz \n" +
                     "  INNER JOIN content ON quiz.content_id = content.content_id \n" +
                     "  WHERE quiz.quiz_title LIKE ? AND content.status = 0\n" +
+                    "  UNION ALL\n" +
+                    "  SELECT 'organization' AS type, CONCAT(user.f_name, ' ', user.l_name, ' (', organization.organization_id, ')') AS name, user.pro_pic AS img_src, NULL AS quli, organization.organization_id AS id, NULL AS course_title, NULL AS quiz_title, NULL AS content_id, NULL AS status, organization.user_ID AS user_id, organization.organization_id AS organization_id\n" +
+                    "  FROM user \n" +
+                    "  INNER JOIN organization ON organization.user_ID = user.user_id\n" +
+                    "  WHERE CONCAT(user.f_name, user.l_name) LIKE ? \n" +
                     ") AS t\n" +
                     "LEFT JOIN user AS u ON t.user_id = u.user_id\n" +
                     "LEFT JOIN course AS c ON t.id = c.course_id\n" +
                     "LEFT JOIN quiz AS q ON t.id = q.quiz_id\n" +
-                    "LEFT JOIN teacher ON t.id = teacher.teacher_id;");
+                    "LEFT JOIN teacher ON t.id = teacher.teacher_id\n" +
+                    "LEFT JOIN organization ON t.id = organization.organization_id;");
             statement.setString(1, "%"+ name +"%");
             statement.setString(2, "%"+ name +"%");
             statement.setString(3, "%"+ name +"%");
+            statement.setString(4, "%"+ name +"%");
 
             ResultSet rs = statement.executeQuery();
             System.out.println(rs);
