@@ -670,6 +670,128 @@ public class User extends ApiHandler {
         return jasonarray;
     }
 
+
+
+
+        public JSONArray search_main(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONArray jsonArray= new JSONArray();
+        try{
+            var name =requestObject.getString("name");
+            PreparedStatement statement;
+            System.out.println(name);
+
+            statement = connection.prepareStatement("SELECT t.type, t.name, t.img_src, t.quli, t.id, t.course_title, t.quiz_title, t.content_id, t.status, CONCAT(u.f_name, ' ', u.l_name) AS creator,\n" +
+                    "CASE WHEN t.type = 'course' THEN c.introduction_media ELSE NULL END AS intro_media,\n" +
+                    "CASE WHEN t.type = 'quiz' THEN q.image ELSE NULL END AS quiz_img,\n" +
+                    "CASE WHEN t.type = 'teacher' THEN teacher.teacher_id ELSE NULL END AS teacher_id\n" +
+                    "FROM (\n" +
+                    "  SELECT 'teacher' AS type, CONCAT(user.f_name, ' ', user.l_name, ' (', teacher.teacher_id, ')') AS name, user.pro_pic AS img_src, teacher.qulification_level AS quli, teacher.teacher_id AS id, NULL AS course_title, NULL AS quiz_title, NULL AS content_id, NULL AS status, teacher.user_ID AS user_id\n" +
+                    "  FROM user \n" +
+                    "  INNER JOIN teacher ON teacher.user_ID = user.user_id\n" +
+                    "  WHERE CONCAT(user.f_name, user.l_name) like ?\n" +
+                    "  UNION ALL\n" +
+                    "  SELECT 'course' AS type, NULL AS name, NULL AS img_src, NULL AS quli, course.course_id AS id, course.course_title, NULL AS quiz_title, content.content_id, content.status, content.user_id\n" +
+                    "  FROM course \n" +
+                    "  INNER JOIN content ON course.content_id = content.content_id \n" +
+                    "  WHERE course.course_title LIKE ? AND content.status = 0\n" +
+                    "  UNION ALL\n" +
+                    "  SELECT 'quiz' AS type, NULL AS name, NULL AS img_src, NULL AS quli, quiz.quiz_id AS id, NULL AS course_title, quiz.quiz_title, content.content_id, content.status, content.user_id\n" +
+                    "  FROM quiz \n" +
+                    "  INNER JOIN content ON quiz.content_id = content.content_id \n" +
+                    "  WHERE quiz.quiz_title LIKE ? AND content.status = 0\n" +
+                    ") AS t\n" +
+                    "LEFT JOIN user AS u ON t.user_id = u.user_id\n" +
+                    "LEFT JOIN course AS c ON t.id = c.course_id\n" +
+                    "LEFT JOIN quiz AS q ON t.id = q.quiz_id\n" +
+                    "LEFT JOIN teacher ON t.id = teacher.teacher_id;");
+            statement.setString(1, "%"+ name +"%");
+            statement.setString(2, "%"+ name +"%");
+            statement.setString(3, "%"+ name +"%");
+
+            ResultSet rs = statement.executeQuery();
+            System.out.println(rs);
+            jsonArray = JsonHandler.createJSONArray(rs, "type", "name", "img_src", "quli" ,"id", "course_title", "quiz_title", "content_id", "status", "creator", "intro_media", "quiz_img", "teacher_id");
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonArray;
+    }
+
+
+
+
+
+    public JSONObject small_card_open(Integer id, JSONObject requestObject){
+        JSONObject jasonobject = new JSONObject();
+
+        try {
+            Connection connection = Driver.getConnection();
+            PreparedStatement statement = connection.prepareStatement("SELECT * from course INNER JOIN content on course.content_id=content.content_id INNER JOIN user ON content.user_id=user.user_id inner join teacher on content.user_id = teacher.user_id where content.content_id=?;");
+            statement.setInt(1,id);
+            ResultSet resultSet = statement.executeQuery();
+            jasonobject = JsonHandler.createJSONObject(resultSet, "course_title", "introduction_media", "f_name", "l_name", "decription" , "content_id", "price","date");
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+
+
+        return jasonobject;
+    }
+
+
+
+    public JSONObject search_quiz_open(Integer id, JSONObject requestObject){
+        JSONObject jasonobject = new JSONObject();
+
+        try {
+            Connection connection = Driver.getConnection();
+            PreparedStatement statement = connection.prepareStatement("SELECT * from quiz INNER JOIN content on quiz.content_id=content.content_id INNER JOIN user ON content.user_id=user.user_id inner join teacher on content.user_id = teacher.user_id where content.content_id=?;");
+            statement.setInt(1,id);
+            ResultSet resultSet = statement.executeQuery();
+            jasonobject = JsonHandler.createJSONObject(resultSet, "quiz_title", "image", "f_name", "l_name", "description" , "content_id","date");
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+
+
+        return jasonobject;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public JSONArray getQuestions(Integer id, JSONObject requestObject){
         JSONArray jsonArray = new JSONArray();
         Connection connection = Driver.getConnection();
