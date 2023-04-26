@@ -638,7 +638,7 @@ public class User extends ApiHandler {
             statement.setInt(1,id);
             ResultSet resultSet = statement.executeQuery();
 
-            jasonarray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description", "f_name" , "l_name","question.status", "question_media.media", "qulification_level","pro_pic","question.user_id","question.accept_teacher_id","chat_id");
+            jasonarray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description", "f_name" , "l_name","question_media.media", "qulification_level","pro_pic","question.user_id","question.accept_teacher_id","chat_id","status");
         }catch (Exception exception){
             System.out.println(exception);
         }
