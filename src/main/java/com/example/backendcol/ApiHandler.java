@@ -61,6 +61,8 @@ public class ApiHandler {
     public void sendResponse(HttpServletResponse response, Object res){
         try {
             response.setContentType("application/json");
+            response.addHeader("Access-Control-Expose-Headers", "Authorization");
+
             response.addHeader("Access-Control-Allow-Origin", "*");
             response.addHeader("Access-Control-Allow-Methods" , "GET, POST, PUT, DELETE");
             response.setCharacterEncoding("UTF-8");
