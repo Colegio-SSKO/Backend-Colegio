@@ -12,7 +12,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 @WebServlet(name = "students", value = "/api/students/*")
-public class students extends HttpServlet {
+public class  students extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
@@ -23,9 +23,9 @@ public class students extends HttpServlet {
 
 
         Student student = new Student();
-        RequestsParameters requestsParameters = student.handleRequest(request, response);
-        JSONObject jsonObject = JsonHandler.getJSONObject(request);
-        Object res = student.executeFunction(requestsParameters.getFunction(), requestsParameters.getID(), jsonObject );
+        RequestsParameters requestsParameters = student.handleRequest(request, response);    //save the id and the function
+        JSONObject jsonObject = JsonHandler.getJSONObject(request);       //save the details which comming from the frontend to the jason object
+        Object res = student.executeFunction(requestsParameters.getFunction(), requestsParameters.getID(), jsonObject );        //save the object which return from the calling function
         student.sendResponse(response, res);
 
 //        Teacher teacher = new Teacher();
