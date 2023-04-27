@@ -14,7 +14,7 @@ import java.io.IOException;
 public class notificationHandler {
     @OnOpen
     public void onOpen(Session session){
-        System.out.println("WebSocket for quession chat opened: " + session.getId());
+        System.out.println("WebSocket for notifications opened: " + session.getId());
 
 
     }
