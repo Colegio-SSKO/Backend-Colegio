@@ -775,6 +775,7 @@ public class User extends ApiHandler {
 
 
 
+
     public JSONArray show_notifications(Integer id, JSONObject requestObject){
         Connection connection = Driver.getConnection();
 
@@ -809,6 +810,59 @@ public class User extends ApiHandler {
 
         return jsonArray;
     }
+
+
+
+
+
+
+    public JSONObject upgrade_to_teacher(Integer id, JSONObject requestObject){
+
+
+        JSONObject jsonObject = new JSONObject();
+        Connection connection = Driver.getConnection();
+        try{
+
+            //JDBC part
+            PreparedStatement statement = connection.prepareStatement("UPDATE user SET f_name = ?, l_name = ? WHERE user_id = ?");
+            PreparedStatement statement1 = connection.prepareStatement("UPDATE student SET education_level = ?, gender = ? WHERE user_id = ?");
+            statement.setString(1,requestObject.getString("fName"));
+            statement.setString(2,requestObject.getString("lName"));
+            statement1.setString(1,requestObject.getString("edu"));
+            statement1.setString(2,requestObject.getString("gender"));
+            System.out.println(requestObject.getString("edu"));
+            System.out.println(requestObject.getString("gender"));
+
+            statement1.setInt(3,id);
+            statement.setInt(3,id);
+            int resultSet = statement.executeUpdate();
+            int resultSet1 = statement1.executeUpdate();
+            System.out.println(resultSet);
+            System.out.println(resultSet1);
+
+            if(resultSet1==0 || resultSet == 0){
+                jsonObject.put("message", "Inavlid User!");
+                jsonObject.put("isError", 1);
+                return jsonObject;
+            }
+            System.out.printf("Methnta enkn wed");
+            jsonObject.put("message", "Profile successfully Updated!");
+            jsonObject.put("isError", 0);
+            return jsonObject;
+
+
+        }catch (SQLException sqlException){
+            System.out.println(sqlException);
+            jsonObject.put("message", "Database error!");
+            jsonObject.put("isError", 1);
+            return jsonObject;
+        }
+
+
+    }
+
+
+
 
 
 
