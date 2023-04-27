@@ -164,7 +164,3 @@ public class Teacher extends ApiHandler {
         return jsonObject;
     }
 }
-
-
-
-
