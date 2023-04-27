@@ -43,6 +43,8 @@ public class Authenticator extends ApiHandler{
                     jwt.sign();
                     Cookie cookie = new Cookie("jwtToken", jwt.token);
                     cookie.setHttpOnly(true);
+                    cookie.setPath("/");
+                    cookie.setMaxAge(18000);
                     response.addCookie(cookie);
 
 
