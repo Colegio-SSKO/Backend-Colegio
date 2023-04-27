@@ -62,8 +62,8 @@ public class ApiHandler {
         try {
             response.setContentType("application/json");
             response.addHeader("Access-Control-Expose-Headers", "Authorization");
-            response.setHeader("Access-Control-Allow-Credentials", "true");
-            response.addHeader("Access-Control-Allow-Origin", "http://localhost:8080");
+
+            response.addHeader("Access-Control-Allow-Origin", "*");
             response.addHeader("Access-Control-Allow-Methods" , "GET, POST, PUT, DELETE");
             response.setCharacterEncoding("UTF-8");
             PrintWriter out = response.getWriter();

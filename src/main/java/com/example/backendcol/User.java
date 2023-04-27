@@ -1,6 +1,5 @@
 package com.example.backendcol;
 
-import jakarta.servlet.http.Cookie;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -1000,36 +999,6 @@ public class User extends ApiHandler {
 
         return jsonArray;
     }
-
-    public JSONObject getToken (Integer id, JSONObject requestObject){
-        JSONObject jsonObject = new JSONObject();
-        String token = "";
-        try {
-            Cookie[] cookies = request.getCookies();
-            if(cookies == null){
-                System.out.println("No cookies");
-            }
-            else{
-
-                for (Cookie cookie: cookies){
-                    if(cookie.getName().equals("jwtToken")){
-
-                        token = cookie.getValue();
-                        System.out.println(token);
-                        break;
-                    }
-                }
-            }
-
-        }catch (Exception exception){
-            System.out.println(exception);
-        }
-        jsonObject.put("token" , token);
-        return jsonObject;
-
-    }
-
-
 
 
 
