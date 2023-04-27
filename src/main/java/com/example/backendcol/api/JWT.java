@@ -1,28 +1,29 @@
 package com.example.backendcol.api;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 
 public class JWT {
-    String token = "";
 
-    String signedToken = "";
+    String secret = "This is the secret";
+
     JSONObject header = new JSONObject();
     JSONObject payload = new JSONObject();
 
-    String Signature = "";
+    public String token = "";
 
-    public void putHeader(String name, String value){
-        header.put(name, value);
-    }
+    public String signature = "";
 
-    public void putPayload(String name, String value){
-        header.put(name, value);
-    }
+    public String providedSign = "";
+    public void putHeader(String name, Object value){header.put(name, value);}
+    public void putPayload(String name, Object value){payload.put(name, value);}
 
     public void createToken(){
 
@@ -31,36 +32,52 @@ public class JWT {
         token = encodedHeader+ '.' + encodedPayload;
     }
 
-    public String getSign(String unsignedToken){
-        String signature = "";
-        try{
-            MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
-            byte[] result = messageDigest.digest(unsignedToken.getBytes());
-
-            for (int i = 0; i < result.length; i++) {
-                signature += Integer.toString((result[i] & 0xff) + 0x100, 16).substring(1);
-            }
-
-
-        }
-        catch (NoSuchAlgorithmException noSuchAlgorithmException){
-            System.out.println(noSuchAlgorithmException);
-        }
-        return new String(Base64.getEncoder().encodeToString(signature.getBytes()));
-    }
-
     public void sign(){
-        signedToken = token + '.' + getSign(token);
+        signature = getSign(token);
+        token += '.' + signature;
     }
 
-    public boolean validateToken(String token){
-        String[] splitted = token.split(".");
-        String header = splitted[0];
-        String payload = splitted[1];
-        String withoutSign = header + '.' + payload;
-//        if(getSign(withoutSign).equals())
-        return false;
+
+    public String getSign(String unsignedToken){
+        String sign = "";
+        SecretKeySpec secretKeySpec = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
+        try{
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(secretKeySpec);
+
+            byte[] hmacBytes = mac.doFinal(unsignedToken.getBytes());
+            sign = Base64.getEncoder().encodeToString(hmacBytes);
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+        return sign;
     }
+
+    public void decodeJWT(String token){
+        String[] parts = token.split("\\.");
+
+        String header = new String(Base64.getUrlDecoder().decode(parts[0]));
+        String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
+
+        this.header = new JSONObject(header);
+        this.payload = new JSONObject(payload);
+        this.providedSign = parts[2];
+        System.out.println("Payload: " + payload);
+    }
+
+    public boolean validate(){
+        System.out.println(providedSign);
+        System.out.println(signature);
+        if (providedSign.equals(signature))
+            return true;
+        else
+            return false;
+    }
+
+
+
+
+
 
 
 }
