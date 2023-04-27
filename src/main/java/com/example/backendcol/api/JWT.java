@@ -18,6 +18,10 @@ public class JWT {
     JSONObject payload = new JSONObject();
 
     public String token = "";
+
+    public String signature = "";
+
+    public String providedSign = "";
     public void putHeader(String name, Object value){header.put(name, value);}
     public void putPayload(String name, Object value){payload.put(name, value);}
 
@@ -29,7 +33,8 @@ public class JWT {
     }
 
     public void sign(){
-        token += '.' + getSign(token);
+        signature = getSign(token);
+        token += '.' + signature;
     }
 
 
@@ -46,6 +51,27 @@ public class JWT {
             System.out.println(exception);
         }
         return sign;
+    }
+
+    public void decodeJWT(String token){
+        String[] parts = token.split("\\.");
+
+        String header = new String(Base64.getUrlDecoder().decode(parts[0]));
+        String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
+
+        this.header = new JSONObject(header);
+        this.payload = new JSONObject(payload);
+        this.providedSign = parts[2];
+        System.out.println("Payload: " + payload);
+    }
+
+    public boolean validate(){
+        System.out.println(providedSign);
+        System.out.println(signature);
+        if (providedSign.equals(signature))
+            return true;
+        else
+            return false;
     }
 
 
