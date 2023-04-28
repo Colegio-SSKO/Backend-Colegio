@@ -33,6 +33,7 @@ public class Authenticator extends ApiHandler{
                     jwt.putPayload("sub" , resultSet.getInt("user_id"));
                     jwt.putPayload("name" , resultSet.getString("f_name") + " " +resultSet.getString("l_name"));
                     jwt.putPayload("proPic" , resultSet.getString("pro_pic"));
+                    System.out.println("proPic: " + resultSet.getString("pro_pic"));
                     jwt.putHeader("alg" , "HS256");
                     jwt.putHeader("typ" , "JWT");
 
@@ -43,6 +44,9 @@ public class Authenticator extends ApiHandler{
                     jwt.sign();
                     Cookie cookie = new Cookie("jwtToken", jwt.token);
                     cookie.setHttpOnly(true);
+                    cookie.setMaxAge(1800);
+                    cookie.setDomain("localhost");
+                    cookie.setPath("/");
                     response.addCookie(cookie);
 
 
@@ -70,6 +74,52 @@ public class Authenticator extends ApiHandler{
         }
         return jsonObject;
 
+    }
+
+
+    public JSONObject getUserData(Integer id, JSONObject requestObject){
+        JSONObject jsonObject = new JSONObject();
+        System.out.println("getData ekt awwa");
+        String token = "";
+        try {
+
+            Cookie[] cookies = request.getCookies();
+            if(cookies == null){
+                System.out.println("No cookies");
+            }
+            else{
+
+                for (Cookie cookie: cookies){
+                    if(cookie.getName().equals("jwtToken")){
+
+                        token = cookie.getValue();
+                        System.out.println(token);
+                        break;
+                    }
+                }
+            }
+
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+        JWT jwt = new JWT();
+        System.out.println("This is the token: " + token);
+        jwt.decodeJWT(token);
+        jwt.createToken();
+        jwt.sign();
+        if (!jwt.validate()){
+            System.out.println("Invalid token");
+        }
+        else{
+            System.out.println(jwt.payload.getInt("sub"));
+            System.out.println(jwt.payload.getString("name"));
+            System.out.println(jwt.payload.getString("proPic"));
+            jsonObject.put("userID",jwt.payload.getInt("sub") );
+            jsonObject.put("userName",jwt.payload.getString("name"));
+            jsonObject.put("userProPic",jwt.payload.getString("proPic"));
+
+        }
+        return jsonObject;
     }
 
 }
