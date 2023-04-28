@@ -3,10 +3,11 @@ package com.example.backendcol.api;
 import com.example.backendcol.JsonHandler;
 import com.example.backendcol.Organization;
 import com.example.backendcol.RequestsParameters;
-import com.example.backendcol.User;
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.*;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.json.JSONObject;
 
 import java.io.IOException;
