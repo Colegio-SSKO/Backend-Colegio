@@ -12,6 +12,11 @@ import jakarta.servlet.http.Cookie;
 
 
 public class User extends ApiHandler {
+    public Integer userID ;
+    public String name ;
+    public String email;
+
+
     public JSONArray viewpurchaseCourse(Integer id, JSONObject requestObject){
         Connection connection = Driver.getConnection();
 
@@ -1082,38 +1087,6 @@ public class User extends ApiHandler {
         }
 
         return jsonArray;
-    }
-
-
-    public JSONObject getToken (Integer id, JSONObject requestObject){
-        System.out.println("gettoken function ekt awa");
-        JSONObject jsonObject = new JSONObject();
-        String token = "";
-        try {
-
-            Cookie[] cookies = request.getCookies();
-            if(cookies == null){
-                System.out.println("No cookies");
-            }
-            else{
-                System.out.println(cookies.length);
-                for (Cookie cookie: cookies){
-
-                    if(cookie.getName().equals("jwtToken")){
-
-                        token = cookie.getValue();
-                        System.out.println(token);
-                        break;
-                    }
-                }
-            }
-
-        }catch (Exception exception){
-            System.out.println(exception);
-        }
-        jsonObject.put("token" , token);
-        return jsonObject;
-
     }
 
 
