@@ -3,10 +3,9 @@ package com.example.backendcol;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 
 public class Moderator extends ApiHandler {
@@ -100,6 +99,11 @@ public class Moderator extends ApiHandler {
         System.out.println("sewwwwwwwww");
 
         JSONObject jsonObject= new JSONObject();
+
+        JSONObject jsonObject2= new JSONObject();
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
+
         try{
             PreparedStatement statement;
             statement = connection.prepareStatement("UPDATE content SET status = 1 WHERE content_id = ?;");
@@ -110,6 +114,28 @@ public class Moderator extends ApiHandler {
             statement.setInt(1,id);
             statement.setInt(2,requestObject.getInt("content_id"));
             Integer res_id2= statement.executeUpdate();
+
+
+
+            //notification part
+            PreparedStatement statement2;
+            statement2= connection.prepareStatement("Select user_id from content where content_id=?");
+            statement2.setInt(1,requestObject.getInt("content_id"));
+            ResultSet rs2= statement2.executeQuery();
+            jsonObject2 = JsonHandler.createJSONObject(rs2, "user_id");
+            System.out.println(jsonObject2.getInt("user_id"));
+            System.out.println("sew");
+
+
+            statement = connection.prepareStatement("INSERT INTO notification (title, description, date, time, type, user_id_receiver, mod_id_sender, content_id) VALUES (\"Disable Course\", \"Beacuse of the hudge reports diable your course\", ?, ?,0, ?,?,?);");
+            System.out.println("sew1");
+            statement.setDate(1, Date.valueOf(currentDate));
+            System.out.println("sew2");
+            statement.setTime(2, Time.valueOf(currentTime));
+            statement.setInt(3, jsonObject2.getInt("user_id"));
+            statement.setInt(4,id);
+            statement.setInt(5,requestObject.getInt("content_id"));
+            Integer num2 = statement.executeUpdate();
 
             if(res_id2==1){
                 jsonObject.put("message","Disable course successfully");
@@ -133,6 +159,11 @@ public class Moderator extends ApiHandler {
         System.out.println("sewwwwwwwww");
 
         JSONObject jsonObject= new JSONObject();
+
+        JSONObject jsonObject2= new JSONObject();
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
+
         try{
             PreparedStatement statement;
             statement = connection.prepareStatement("UPDATE content SET status = 1 WHERE content_id = ?;");
@@ -143,6 +174,28 @@ public class Moderator extends ApiHandler {
             statement.setInt(1,id);
             statement.setInt(2,requestObject.getInt("content_id"));
             Integer res_id2= statement.executeUpdate();
+
+
+            //notification_part
+
+            PreparedStatement statement2;
+            statement2= connection.prepareStatement("Select user_id from content where content_id=?");
+            statement2.setInt(1,requestObject.getInt("content_id"));
+            ResultSet rs2= statement2.executeQuery();
+            jsonObject2 = JsonHandler.createJSONObject(rs2, "user_id");
+            System.out.println(jsonObject2.getInt("user_id"));
+            System.out.println("sew");
+
+
+            statement = connection.prepareStatement("INSERT INTO notification (title, description, date, time, type, user_id_receiver, mod_id_sender, content_id) VALUES (\"Disable Course\", \"Beacuse of the hudge reports diable your course\", ?, ?,0, ?,?,?);");
+            System.out.println("sew1");
+            statement.setDate(1, Date.valueOf(currentDate));
+            System.out.println("sew2");
+            statement.setTime(2, Time.valueOf(currentTime));
+            statement.setInt(3, jsonObject2.getInt("user_id"));
+            statement.setInt(4,id);
+            statement.setInt(5,requestObject.getInt("content_id"));
+            Integer num2 = statement.executeUpdate();
 
             if(res_id2==1){
                 jsonObject.put("message","Disable quiz successfully");
