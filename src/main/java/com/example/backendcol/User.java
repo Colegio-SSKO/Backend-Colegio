@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import jakarta.servlet.http.Cookie;
 
 
@@ -954,6 +955,7 @@ public class User extends ApiHandler {
         Connection connection = Driver.getConnection();
 
         JSONObject jsonObject= new JSONObject();
+
         try{
             PreparedStatement statement;
             statement = connection.prepareStatement("SELECT * from rates where user_id=? && content_id=?");
@@ -979,6 +981,7 @@ public class User extends ApiHandler {
                 jsonObject.put("message", String.format("Thank you for you ratings!", rate));
             }
 
+
         }
 
         catch(SQLException sqlException){
@@ -994,13 +997,18 @@ public class User extends ApiHandler {
         Connection connection = Driver.getConnection();
 
         JSONObject jsonObject= new JSONObject();
+
+        JSONObject jsonObject2= new JSONObject();
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
+
         try{
             PreparedStatement statement;
             statement = connection.prepareStatement("SELECT * from report_course where user_id=? && course_id=?");
             statement.setInt(1,id);
             statement.setInt(2, requestObject.getInt("course_id"));
             ResultSet rs = statement.executeQuery();
-            LocalDate currentDate = LocalDate.now();
+
 
 
             if(rs.next()){
@@ -1020,6 +1028,23 @@ public class User extends ApiHandler {
                 statement.setDate(4, Date.valueOf(currentDate));
                 Integer num = statement.executeUpdate();
                 jsonObject.put("message","added report successfuly");
+
+                PreparedStatement statement2;
+                statement2= connection.prepareStatement("Select content.user_id, content.content_id from content inner join course on course.content_id=content.content_id where course_id=?");
+                statement2.setInt(1,requestObject.getInt("course_id"));
+                ResultSet rs2= statement2.executeQuery();
+                jsonObject2 = JsonHandler.createJSONObject(rs2, "user_id", "content_id");
+                System.out.println(jsonObject2.getInt("user_id"));
+                System.out.println("sew");
+
+
+                statement = connection.prepareStatement("INSERT INTO notification (title, description, date, time, type, user_id_receiver, user_id_sender, content_id) VALUES (\"Report your content\", \"Purchased user report your published content\", ?, ?,0, ?,?,?);");
+                statement.setDate(1, Date.valueOf(currentDate));
+                statement.setTime(2, Time.valueOf(currentTime));
+                statement.setInt(3, jsonObject2.getInt("user_id"));
+                statement.setInt(4,id);
+                statement.setInt(5,jsonObject2.getInt("content_id"));
+                Integer num2 = statement.executeUpdate();
             }
 
         }
@@ -1030,6 +1055,10 @@ public class User extends ApiHandler {
 
         return jsonObject;
     }
+
+
+
+
 
 
     public JSONArray continue_course(Integer id, JSONObject requestObject){
