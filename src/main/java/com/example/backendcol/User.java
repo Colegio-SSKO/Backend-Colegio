@@ -940,7 +940,7 @@ public class User extends ApiHandler {
             statement.setInt(1, id);
             ResultSet resultSet = statement.executeQuery();
 
-            jasonarray = JsonHandler.createJSONArray(resultSet, "course_title", "f_name", "l_name", "decription","qulification_level","content_id" , "pro_pic","introduction_media", "course_id");
+            jasonarray = JsonHandler.createJSONArray(resultSet, "course_title", "f_name", "l_name", "decription","qulification_level","content_id" , "pro_pic","introduction_media", "course_id", "rate_count");
         }catch (Exception exception){
             System.out.println(exception);
         }
@@ -968,7 +968,7 @@ public class User extends ApiHandler {
                 statement.setInt(3, requestObject.getInt("content_id"));
                 statement.setInt(1, requestObject.getInt("rate_value"));
                 Integer num = statement.executeUpdate();
-                jsonObject.put("message", String.format("Rate %d stars.Thank You", rate));
+                jsonObject.put("message", String.format("Updated you ratings!", rate));
             }
             else{
                 statement = connection.prepareStatement("INSERT into rates values (?,?,?);");
@@ -976,7 +976,7 @@ public class User extends ApiHandler {
                 statement.setInt(2, requestObject.getInt("content_id"));
                 statement.setInt(3, requestObject.getInt("rate_value"));
                 Integer num = statement.executeUpdate();
-                jsonObject.put("message", String.format("Rate %d stars.Thank You", rate));
+                jsonObject.put("message", String.format("Thank you for you ratings!", rate));
             }
 
         }
