@@ -14,8 +14,8 @@ public class JWT {
 
     String secret = "This is the secret";
 
-    JSONObject header = new JSONObject();
-    JSONObject payload = new JSONObject();
+    public JSONObject header = new JSONObject();
+    public JSONObject payload = new JSONObject();
 
     public String token = "";
 

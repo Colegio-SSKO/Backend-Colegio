@@ -16,50 +16,73 @@ import java.util.Map;
 @ServerEndpoint("/questionChatHandler")
 public class questionChatHandler {
 
-    public static final HashMap<String,Session> questionChatSessions = new HashMap<>();
-    public static final HashMap<Integer, String> userIdToWebSocketId = new HashMap<>();
+
+    public static final HashMap<Integer, Session> userIdToChatWebSocketId = new HashMap<>();
 
     @OnOpen
     public void onOpen(Session session){
         System.out.println("WebSocket for quession chat opened: " + session.getId());
-        questionChatSessions.put(session.getId(), session);
 
-        //get the user id from the session. hardcoded for now
-        userIdToWebSocketId.put(1, session.getId());
-        System.out.println("webuID"+userIdToWebSocketId.get(1));
     }
 
 
     @OnMessage
     public void onMessage(String message, Session session) throws IOException {
-        System.out.println("message : " + message);
+
+        System.out.println(message);
         JSONObject messageData = new JSONObject(message);
-
-        //handle database
-
-
-
-        //sending the message to the receiver
-        String receiverSocketID = userIdToWebSocketId.get(messageData.getInt("receiver"));
-        Session receiver =  questionChatSessions.get(receiverSocketID);
-        if (receiver == null){
-            System.out.println("U nidi");
+        if (messageData.getBoolean("config")){
+            String token = messageData.getString("token");
+            JWT jwt = new JWT();
+            jwt.decodeJWT(token);
+            jwt.createToken();
+            jwt.sign();
+            if (!jwt.validate()){
+                System.out.println("Invalid token");
+            }
+            else{
+                System.out.println("wedwed");
+                System.out.println(jwt.payload.getInt("sub"));
+                userIdToChatWebSocketId.put(jwt.payload.getInt("sub"), session);
+                System.out.println("onna ehenm chat ek connfigure una");
+            }
         }
-        else {
-            receiver.getAsyncRemote().sendText(message);
-        }
+        else{
+            System.out.println("nene");
+            System.out.println(messageData.getInt("receiver"));
+//            Session receiver = userIdToChatWebSocketId.get(messageData.getInt("receiver"));
 
-
-        //sending the message back to the sender
-        String senderSocketID = userIdToWebSocketId.get(messageData.getInt("sender"));
-        Session sender =  questionChatSessions.get(senderSocketID);
-        if (sender == null){
-            System.out.println("Uth nidi");
-        }
-        else {
-            sender.getAsyncRemote().sendText(message);
         }
 
+
+//        System.out.println("message : " + message);
+//        JSONObject messageData = new JSONObject(message);
+//
+//        //handle database
+//
+//
+//
+//        //sending the message to the receiver
+//        String receiverSocketID = userIdToWebSocketId.get(messageData.getInt("receiver"));
+//        Session receiver =  questionChatSessions.get(receiverSocketID);
+//        if (receiver == null){
+//            System.out.println("U nidi");
+//        }
+//        else {
+//            receiver.getAsyncRemote().sendText(message);
+//        }
+//
+//
+//        //sending the message back to the sender
+//        String senderSocketID = userIdToWebSocketId.get(messageData.getInt("sender"));
+//        Session sender =  questionChatSessions.get(senderSocketID);
+//        if (sender == null){
+//            System.out.println("Uth nidi");
+//        }
+//        else {
+//            sender.getAsyncRemote().sendText(message);
+//        }
+//
 
 
     }
