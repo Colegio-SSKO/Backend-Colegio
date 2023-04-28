@@ -1086,16 +1086,19 @@ public class User extends ApiHandler {
 
 
     public JSONObject getToken (Integer id, JSONObject requestObject){
+        System.out.println("gettoken function ekt awa");
         JSONObject jsonObject = new JSONObject();
         String token = "";
         try {
+
             Cookie[] cookies = request.getCookies();
             if(cookies == null){
                 System.out.println("No cookies");
             }
             else{
-
+                System.out.println(cookies.length);
                 for (Cookie cookie: cookies){
+
                     if(cookie.getName().equals("jwtToken")){
 
                         token = cookie.getValue();

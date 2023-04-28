@@ -15,7 +15,10 @@ import java.io.IOException;
 public class authenticate extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+        Authenticator authenticator = new Authenticator();
+        RequestsParameters requestsParameters = authenticator.handleRequest(request, response);    //save the id and the function
+        Object res = authenticator.executeFunction(requestsParameters.getFunction(), requestsParameters.getID(), new JSONObject() );        //save the object which return from the calling function
+        authenticator.sendResponse(response, res);
     }
 
     @Override
