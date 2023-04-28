@@ -15,7 +15,7 @@ public class Authenticator extends ApiHandler{
         JSONObject jsonObject = new JSONObject();
         try {
             Connection connection = Driver.getConnection();
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM User WHERE email = ?");
+            PreparedStatement statement = connection.prepareStatement("select * from user LEFT JOIN teacher on user.user_id = teacher.user_ID LEFT JOIN organization on user.user_id = organization.user_id  WHERE user.email = ? ");
             statement.setString(1, requestObject.getString("email"));
 
             ResultSet resultSet = statement.executeQuery();
@@ -26,6 +26,27 @@ public class Authenticator extends ApiHandler{
                     jsonObject.put("isError", false);
                     jsonObject.put("message", "Authentication successful");
 
+                    Integer teacherId = resultSet.getInt("teacher.teacher_id");
+                    Integer userType;
+                    if(resultSet.wasNull()){
+                        System.out.println("not a teacher");
+                        Integer organizationID = resultSet.getInt("organization.organization_id");
+
+                        if (resultSet.wasNull()){
+                            System.out.println("student knk");
+                            userType = 1;
+                        }
+                        else {
+                            System.out.println("organization ekak");
+                            userType = 3;
+                        }
+                    }
+                    else{
+                        System.out.println("teacher knk");
+                        userType = 2;
+                    }
+
+
                     //
                     JWT jwt = new JWT();
 
@@ -33,7 +54,7 @@ public class Authenticator extends ApiHandler{
                     jwt.putPayload("sub" , resultSet.getInt("user_id"));
                     jwt.putPayload("name" , resultSet.getString("f_name") + " " +resultSet.getString("l_name"));
                     jwt.putPayload("proPic" , resultSet.getString("pro_pic"));
-                    System.out.println("proPic: " + resultSet.getString("pro_pic"));
+                    jwt.putPayload("acType", userType);
                     jwt.putHeader("alg" , "HS256");
                     jwt.putHeader("typ" , "JWT");
 
@@ -114,9 +135,11 @@ public class Authenticator extends ApiHandler{
             System.out.println(jwt.payload.getInt("sub"));
             System.out.println(jwt.payload.getString("name"));
             System.out.println(jwt.payload.getString("proPic"));
+            System.out.println(jwt.payload.getInt("acType"));
             jsonObject.put("userID",jwt.payload.getInt("sub") );
             jsonObject.put("userName",jwt.payload.getString("name"));
             jsonObject.put("userProPic",jwt.payload.getString("proPic"));
+            jsonObject.put("userType",jwt.payload.getInt("acType"));
 
         }
         return jsonObject;
