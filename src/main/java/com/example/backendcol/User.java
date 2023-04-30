@@ -743,7 +743,7 @@ public class User extends ApiHandler {
             PreparedStatement statement = connection.prepareStatement("SELECT * from course INNER JOIN content on course.content_id=content.content_id INNER JOIN user ON content.user_id=user.user_id inner join teacher on content.user_id = teacher.user_id where content.content_id=?;");
             statement.setInt(1,id);
             ResultSet resultSet = statement.executeQuery();
-            jasonobject = JsonHandler.createJSONObject(resultSet, "course_title", "introduction_media", "f_name", "l_name", "decription" , "content_id", "price","date");
+            jasonobject = JsonHandler.createJSONObject(resultSet, "course_title", "introduction_media", "f_name", "l_name", "decription" , "content_id", "price","date","rate_count");
         }catch (Exception exception){
             System.out.println(exception);
         }
