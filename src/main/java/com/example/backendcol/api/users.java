@@ -1,9 +1,6 @@
 package com.example.backendcol.api;
 
-import com.example.backendcol.JsonHandler;
-import com.example.backendcol.RequestsParameters;
-import com.example.backendcol.Student;
-import com.example.backendcol.User;
+import com.example.backendcol.*;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
@@ -20,6 +17,13 @@ import java.sql.*;
 public class users extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//        JWT jwt = new JWT();
+//        Authenticator authenticator = new Authenticator();
+//        System.out.println("user eke inne");
+//        String token = authenticator.extractToken(request);
+//        jwt.decodeJWT(token);
+
+
         User user = new User();
         RequestsParameters requestsParameters = user.handleRequest(request, response); //save the id and the function
         System.out.println("heloooooooooooooo");
