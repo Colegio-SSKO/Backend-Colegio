@@ -753,6 +753,25 @@ public class User extends ApiHandler {
     }
 
 
+    public JSONArray small_card_open_comment(Integer id, JSONObject requestObject){
+        JSONArray jasonarray = new JSONArray();
+
+        try {
+            Connection connection = Driver.getConnection();
+            PreparedStatement statement = connection.prepareStatement("SELECT * from comments inner join user on comments.user_id = user.user_id WHERE comments.content_id = ?;");
+            statement.setInt(1,id);
+            ResultSet resultSet = statement.executeQuery();
+            jasonarray = JsonHandler.createJSONArray(resultSet, "message", "user_id", "f_name", "l_name", "pro_pic" , "date");
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+
+
+        return jasonarray;
+    }
+
+
+
 
     public JSONObject search_quiz_open(Integer id, JSONObject requestObject){
         JSONObject jasonobject = new JSONObject();
