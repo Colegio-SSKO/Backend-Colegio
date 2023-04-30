@@ -48,7 +48,7 @@ public class User extends ApiHandler {
         try{
             PreparedStatement statement;
             statement = connection.prepareStatement("Select course.decription as description, course.introduction_media as img_src , content.content_id as content_id, course.course_title as title, course.price as price, user.date_joined as description2, CONCAT(user.f_name, user.l_name) as author from content inner join cart on cart.content_id= content.content_id inner join course on content.content_id= course.content_id inner join user on content.user_id= user.user_id where cart.user_id=? and cart.status = 0;");
-            statement.setInt(1,1);
+            statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
 
             jsonArray = JsonHandler.createJSONArray(rs, "img_src", "description", "title" , "price", "description2", "author", "content_id");
@@ -103,10 +103,10 @@ public class User extends ApiHandler {
         try{
             System.out.println("DB connectiontt");
             PreparedStatement statement;
-            statement = connection.prepareStatement("Select CONCAT(user.f_name,' ', user.l_name) as name, user.pro_pic as img_src, user.date_joined as date, student.education_level as level, student.gender as gender from user inner join student on user.user_id=student.user_id where user.user_id=?");
+            statement = connection.prepareStatement("Select CONCAT(user.f_name,' ', user.l_name) as name, user.pro_pic as img_src, user.verification_status as veri, user.date_joined as date, student.education_level as level, student.gender as gender from user inner join student on user.user_id=student.user_id where user.user_id=?");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
-            jsonObject = JsonHandler.createJSONObject(rs, "name", "img_src", "date", "level", "gender");
+            jsonObject = JsonHandler.createJSONObject(rs, "name", "img_src", "date", "level", "gender","veri");
 
         }
 
@@ -1298,6 +1298,85 @@ public class User extends ApiHandler {
         }
 
         return jsonArray;
+    }
+
+
+
+    public JSONObject upgrade_to_organization(Integer id, JSONObject requestObject){
+        System.out.println("655555555555555555555555555555555555555");
+        Connection connection = Driver.getConnection();
+        System.out.println("okkkkkkkkkkkkkkkkkkkkk");
+
+        JSONObject jsonObject= new JSONObject();
+
+        try{
+            PreparedStatement statement;
+
+            statement = connection.prepareStatement("Update student SET status=1 WHERE user_id=?;");
+            statement.setInt(1,id);
+            Integer num= statement.executeUpdate();
+            System.out.println("sew");
+
+            statement = connection.prepareStatement("Insert into publisher values (?)");
+            statement.setInt(1,id);
+            Integer num2= statement.executeUpdate();
+            System.out.println("sew1");
+
+            statement = connection.prepareStatement("INSERT INTO organization (user_id, address, tel_no) VALUES (?,?,?);");
+            statement.setInt(1,id);
+            statement.setString(2,requestObject.getString("address"));
+            statement.setInt(3,requestObject.getInt("telnum"));
+            Integer num3= statement.executeUpdate();
+            System.out.println("sew2");
+
+            statement = connection.prepareStatement("update user set f_name=? ,l_name=?, verification_status=4 WHERE user_id=?; ");
+            statement.setString(1,requestObject.getString("fName"));
+            statement.setString(2,requestObject.getString("lName"));
+            statement.setInt(3,id);
+            Integer num4= statement.executeUpdate();
+            System.out.println("sew3");
+
+            jsonObject.put("message", "Upgrade account successfully");
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
+
+
+    public JSONObject check_user_verification(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONObject jsonObject= new JSONObject();
+        try{
+            PreparedStatement statement;
+
+            statement = connection.prepareStatement("SELECT * from user where user_id=? && verification_status=1");
+            statement.setInt(1,id);
+            ResultSet rs = statement.executeQuery();
+
+            if(rs.next()){
+                jsonObject.put("message", "Can't upgrade. Because pending upgrade to teacher");
+
+            }
+
+            else{
+                jsonObject.put("message", "Can upgrade");
+            }
+
+
+
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
     }
 
 
