@@ -6,8 +6,8 @@ import org.json.JSONObject;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
-
-
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 
 public class Teacher extends ApiHandler {
@@ -16,6 +16,10 @@ public class Teacher extends ApiHandler {
         Connection connection = Driver.getConnection();
 
         JSONObject jsonObject= new JSONObject();
+        JSONObject jsonObject2= new JSONObject();
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
+
         jsonObject.put("message","send request successfully");
         try{
             PreparedStatement statement;
@@ -57,6 +61,24 @@ public class Teacher extends ApiHandler {
                         statement.setInt(1,id);
                         statement.setInt(2,requestObject.getInt("organization_id"));
                         Integer res_id = statement.executeUpdate();
+
+
+                        //notification part
+                        PreparedStatement statement2;
+                        statement2= connection.prepareStatement("Select user_id from organization where organization_id=?");
+                        statement2.setInt(1,requestObject.getInt("organization_id"));
+                        ResultSet rs4= statement2.executeQuery();
+                        jsonObject2 = JsonHandler.createJSONObject(rs4, "user_id");
+                        System.out.println(jsonObject2.getInt("user_id"));
+                        System.out.println("sew");
+
+
+                        statement = connection.prepareStatement("INSERT INTO notification (title, description, date, time, type, user_id_receiver, user_id_sender) VALUES (\"Teacher Request\", \"You have a teacher request\", ?, ?,1, ?,?);");
+                        statement.setDate(1, Date.valueOf(currentDate));
+                        statement.setTime(2, Time.valueOf(currentTime));
+                        statement.setInt(3, jsonObject2.getInt("user_id"));
+                        statement.setInt(4,id);
+                        Integer num = statement.executeUpdate();
                     }
                 }
             }

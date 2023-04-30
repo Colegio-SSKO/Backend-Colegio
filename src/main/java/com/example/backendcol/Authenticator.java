@@ -1,6 +1,7 @@
 package com.example.backendcol;
 
 import com.example.backendcol.api.JWT;
+import jakarta.servlet.http.HttpServletRequest;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -46,13 +47,21 @@ public class Authenticator extends ApiHandler{
                         userType = 2;
                     }
 
+                    //creating user object
+                    User newUser = new User();
+                    newUser.userID = resultSet.getInt("user_id");
+                    newUser.email = requestObject.getString("email");
+                    newUser.name = resultSet.getString("f_name") + " " +resultSet.getString("l_name");
+                    ServerData.users.put(newUser.userID, newUser);
+                    System.out.println("length: "+ ServerData.users.size());
+
 
                     //
                     JWT jwt = new JWT();
 
                     //setting the header and the payload
-                    jwt.putPayload("sub" , resultSet.getInt("user_id"));
-                    jwt.putPayload("name" , resultSet.getString("f_name") + " " +resultSet.getString("l_name"));
+                    jwt.putPayload("sub" , newUser.userID);
+                    jwt.putPayload("name" , newUser.name);
                     jwt.putPayload("proPic" , resultSet.getString("pro_pic"));
                     jwt.putPayload("acType", userType);
                     jwt.putHeader("alg" , "HS256");
@@ -102,27 +111,7 @@ public class Authenticator extends ApiHandler{
         JSONObject jsonObject = new JSONObject();
         System.out.println("getData ekt awwa");
         String token = "";
-        try {
-
-            Cookie[] cookies = request.getCookies();
-            if(cookies == null){
-                System.out.println("No cookies");
-            }
-            else{
-
-                for (Cookie cookie: cookies){
-                    if(cookie.getName().equals("jwtToken")){
-
-                        token = cookie.getValue();
-                        System.out.println(token);
-                        break;
-                    }
-                }
-            }
-
-        }catch (Exception exception){
-            System.out.println(exception);
-        }
+        token = extractToken(request);
         JWT jwt = new JWT();
         System.out.println("This is the token: " + token);
         jwt.decodeJWT(token);
@@ -144,5 +133,44 @@ public class Authenticator extends ApiHandler{
         }
         return jsonObject;
     }
+
+
+
+    public JSONObject getToken (Integer id, JSONObject requestObject){
+        System.out.println("gettoken function ekt awa");
+        JSONObject jsonObject = new JSONObject();
+        String token = "";
+        token = extractToken(request);
+        jsonObject.put("token" , token);
+        return jsonObject;
+
+    }
+
+    public String extractToken (HttpServletRequest request){
+        String token = null;
+        try {
+
+            Cookie[] cookies = request.getCookies();
+            if(cookies == null){
+                System.out.println("No cookies");
+            }
+            else{
+
+                for (Cookie cookie: cookies){
+                    if(cookie.getName().equals("jwtToken")){
+
+                        token = cookie.getValue();
+                        System.out.println(token);
+                        break;
+                    }
+                }
+            }
+
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+        return token;
+    }
+
 
 }
