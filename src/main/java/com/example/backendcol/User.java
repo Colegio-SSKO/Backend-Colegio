@@ -758,6 +758,7 @@ public class User extends ApiHandler {
         return jasonobject;
     }
 
+
     public JSONArray small_card_open_comment(Integer id, JSONObject requestObject){
         JSONArray jasonarray = new JSONArray();
 
@@ -774,6 +775,9 @@ public class User extends ApiHandler {
 
         return jasonarray;
     }
+
+
+
 
     public JSONObject search_quiz_open(Integer id, JSONObject requestObject){
         JSONObject jasonobject = new JSONObject();
@@ -1107,7 +1111,7 @@ public class User extends ApiHandler {
         try{
 
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT * FROM course_media INNER JOIN course ON course_media.course_id= course.course_id INNER JOIN content ON course.content_id=content.content_id INNER JOIN user ON content.user_id= user.user_id INNER JOIN teacher on teacher.user_ID= user.user_id WHERE content.content_id=?;");
+            statement = connection.prepareStatement("SELECT * FROM course_media INNER JOIN course ON course_media.course_id= course.course_id INNER JOIN content ON course.content_id=content.content_id INNER JOIN user ON content.user_id= user.user_id INNER JOIN teacher on teacher.user_ID= user.user_id WHERE course_media.course_id=?;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
 

@@ -1,9 +1,6 @@
 package com.example.backendcol.api;
 
-import com.example.backendcol.JsonHandler;
-import com.example.backendcol.RequestsParameters;
-import com.example.backendcol.Student;
-import com.example.backendcol.User;
+import com.example.backendcol.*;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
@@ -20,7 +17,22 @@ import java.sql.*;
 public class users extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        User user = new User();
+        JWT jwt = new JWT();
+        Authenticator authenticator = new Authenticator();
+        System.out.println("user eke inne");
+        String token = authenticator.extractToken(request);
+        jwt.decodeJWT(token);
+        jwt.createToken();
+        jwt.sign();
+        if (!jwt.validate()){
+            System.out.println("Unauthorized resource request");
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("error", "Unauthorized resource request");
+            ApiHandler apiHandler = new ApiHandler();
+            apiHandler.sendResponse(response, jsonObject);
+        }
+        User user = ServerData.users.get(jwt.payload.getInt("sub"));
+        System.out.println("userID ek thmai: " + user.userID);
         RequestsParameters requestsParameters = user.handleRequest(request, response); //save the id and the function
         System.out.println("heloooooooooooooo");
         Object res = user.executeFunction(requestsParameters.getFunction(), requestsParameters.getID(),new JSONObject());        //save the object which return from the calling function
