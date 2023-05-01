@@ -1417,6 +1417,100 @@ public class User extends ApiHandler {
     }
 
 
+    public JSONObject publish_question(Integer id, JSONObject requestObject){
+        System.out.println("wedaaaaaaaaaaaaa");
+        Connection connection = Driver.getConnection();
+
+        JSONObject jsonObject= new JSONObject();
+        JSONObject jsonObject2= new JSONObject();
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime= LocalTime.now();
+
+        Integer generatedKey = -100;
+
+
+
+
+        try{
+            PreparedStatement statement;
+
+
+            //insert data to question table
+            statement = connection.prepareStatement("INSERT INTO question (subject_id, question_title, date, time, question_description, user_id, status) VALUES (?,?,?,?,?,?,0)",Statement.RETURN_GENERATED_KEYS );
+            statement.setInt(1,requestObject.getInt("subject"));
+            statement.setString(2,requestObject.getString("title"));
+            statement.setDate(3, Date.valueOf(currentDate));
+            statement.setTime(4, Time.valueOf(currentTime));
+            statement.setString(5,requestObject.getString("description"));
+            statement.setInt(6,id);
+            Integer result = statement.executeUpdate();
+            System.out.println("Hri meka wada");
+
+            if (result == 1){
+                ResultSet resultSet = statement.getGeneratedKeys();
+                if(resultSet.next()){
+                    generatedKey = resultSet.getInt(1);
+                    System.out.println("key is : "+ generatedKey);
+                }
+            }
+
+
+//            //insert data to student send question
+//            statement = connection.prepareStatement("INSERT INTO student_send_question (user_id, teacher_id, question_id) VALUES (?,?,?)" );
+//            statement.setInt(1,id);
+//
+//            statement.setInt(3, generatedKey);
+//            Integer num = statement.executeUpdate();
+//
+//            if (num == 1){
+//                ResultSet resultSet2 = statement.getGeneratedKeys();
+//                if(resultSet2.next()){
+//                    generatedKey2 = resultSet2.getInt(1);
+//                    System.out.println("key is : "+ generatedKey2);
+//                }
+//            }
+
+
+            //get questions array in the request object
+            JSONArray teachers = requestObject.getJSONArray("teachers");
+            System.out.println("teachers thiyna array eka gaththa");
+            System.out.println(teachers.length());
+
+
+            for (int i = 0;i<teachers.length();i++){
+                //get teacher_id relevernt to tag
+                statement = connection.prepareStatement("SELECT * FROM teacher where tag=?;" );
+                statement.setInt(1, teachers.getJSONObject(i).getInt("tag"));
+                ResultSet rs= statement.executeQuery();
+                System.out.println("tag ekta adla teachers row eka gaththa");
+
+                if(rs.next()){
+                    System.out.println("wedaaaaa2");
+                    //insert data to question table
+                    Integer teacher_id= rs.getInt("teacher_id");
+                    System.out.println(teacher_id);
+                    statement = connection.prepareStatement("INSERT INTO student_send_question (user_id, teacher_id, question_id) VALUES (?,?,?)" );
+                    statement.setInt(1, id);
+                    statement.setInt(2, teacher_id);
+                    statement.setInt(3, generatedKey);
+                    Integer num2= statement.executeUpdate();
+                    System.out.println("student_send_question table ekata data dmma");
+                }
+                else{
+                    System.out.println("Tag is invalid");
+                }
+            }
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
+
+
 
 
 }
