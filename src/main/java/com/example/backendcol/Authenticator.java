@@ -238,7 +238,19 @@ public class Authenticator extends ApiHandler{
 
                 for (Cookie cookie: cookies){
                     if(cookie.getName().equals("jwtToken")){
+                        //removing the user object
+                        String token = extractToken(request);
+                        JWT jwt = new JWT();
+                        jwt.decodeJWT(token);
+                        jwt.createToken();
+                        jwt.sign();
 
+                        if (!jwt.validate()){
+                            System.out.println("invalidToken");
+                            return jsonObject;
+                        }
+                        User removedUser = ServerData.users.remove(jwt.payload.getInt("sub"));
+                        System.out.println("Removed user : " + removedUser.userID);
                         Cookie newCookie = new Cookie(cookie.getName(), "");
                         newCookie.setPath("/");
                         newCookie.setMaxAge(-1);
@@ -247,6 +259,7 @@ public class Authenticator extends ApiHandler{
                         newCookie.setDomain("localhost");
                         System.out.println("have cookies");
                         response.addCookie(newCookie);
+
                         jsonObject.put("isSuccess", true);
                         break;
                     }
