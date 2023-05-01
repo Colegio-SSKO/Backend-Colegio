@@ -193,7 +193,6 @@ public class Teacher extends ApiHandler {
         Connection connection = Driver.getConnection();
 
         JSONObject jsonObject= new JSONObject();
-        JSONObject jsonObject2= new JSONObject();
         LocalDate currentDate = LocalDate.now();
 
         Integer generatedKey = -100;
@@ -203,17 +202,12 @@ public class Teacher extends ApiHandler {
 
         try{
             PreparedStatement statement;
-            // get relavent sunject id
-            statement = connection.prepareStatement("SELECT * FROM subject where name=?" );
-            statement.setString(1,requestObject.getString("subject"));
-            ResultSet rs = statement.executeQuery();
-            jsonObject2 = JsonHandler.createJSONObject(rs, "subject_id");
-            System.out.println("subject id eka gaththa");
+
 
             //create new content
             statement = connection.prepareStatement("INSERT INTO content (user_id, subject_id, date, status, type, price) VALUES (?, ?,?,0,1,?)",Statement.RETURN_GENERATED_KEYS );
             statement.setInt(1,id);
-            statement.setInt(2,jsonObject2.getInt("subject_id"));
+            statement.setInt(2,requestObject.getInt("subject"));
             statement.setDate(3, Date.valueOf(currentDate));
             statement.setInt(4, requestObject.getInt("price"));
             Integer result = statement.executeUpdate();
