@@ -185,4 +185,94 @@ public class Teacher extends ApiHandler {
 
         return jsonObject;
     }
+
+
+
+    public JSONObject published_quiz(Integer id, JSONObject requestObject){
+        System.out.println("wedaaaaaaaaaaaaa");
+        Connection connection = Driver.getConnection();
+
+        JSONObject jsonObject= new JSONObject();
+        JSONObject jsonObject2= new JSONObject();
+        LocalDate currentDate = LocalDate.now();
+
+        Integer generatedKey = -100;
+        Integer generatedKey2 = -100;
+
+
+
+        try{
+            PreparedStatement statement;
+            // get relavent sunject id
+            statement = connection.prepareStatement("SELECT * FROM subject where name=?" );
+            statement.setString(1,requestObject.getString("subject"));
+            ResultSet rs = statement.executeQuery();
+            jsonObject2 = JsonHandler.createJSONObject(rs, "subject_id");
+            System.out.println("subject id eka gaththa");
+
+            //create new content
+            statement = connection.prepareStatement("INSERT INTO content (user_id, subject_id, date, status, type, price) VALUES (?, ?,?,0,1,?)",Statement.RETURN_GENERATED_KEYS );
+            statement.setInt(1,id);
+            statement.setInt(2,jsonObject2.getInt("subject_id"));
+            statement.setDate(3, Date.valueOf(currentDate));
+            statement.setInt(4, requestObject.getInt("price"));
+            Integer result = statement.executeUpdate();
+            System.out.println("Hri meka wada");
+
+            if (result == 1){
+                ResultSet resultSet = statement.getGeneratedKeys();
+                if(resultSet.next()){
+                    generatedKey = resultSet.getInt(1);
+                    System.out.println("key is : "+ generatedKey);
+                }
+            }
+
+
+            //insert details to quiz table
+            statement = connection.prepareStatement("INSERT INTO quiz (description, quiz_title, content_id) VALUES (?,?,?)",Statement.RETURN_GENERATED_KEYS );
+            statement.setString(1,requestObject.getString("description"));
+            statement.setString(2, requestObject.getString("title"));
+            statement.setInt(3, generatedKey);
+            Integer num = statement.executeUpdate();
+
+            if (num == 1){
+                ResultSet resultSet2 = statement.getGeneratedKeys();
+                if(resultSet2.next()){
+                    generatedKey2 = resultSet2.getInt(1);
+                    System.out.println("key is : "+ generatedKey2);
+                }
+            }
+
+
+            //get questions array in the request object
+            JSONArray quizQuestions = requestObject.getJSONArray("quizQuestions");
+            System.out.println("Question thiyna array eka gaththa");
+
+            //insert questions to the quiz_question table
+            statement = connection.prepareStatement("INSERT INTO quiz_question (answer, question, op1, op2, op3, op4, quiz_id) VALUES (?,?,?,?,?,?,?)");
+
+            for (int i = 0;i<quizQuestions.length();i++){
+                statement.setString(1, quizQuestions.getJSONObject(i).getString("answer"));
+                statement.setString(2, quizQuestions.getJSONObject(i).getString("question"));
+                statement.setString(3, quizQuestions.getJSONObject(i).getString("opt1"));
+                statement.setString(4, quizQuestions.getJSONObject(i).getString("opt2"));
+                statement.setString(5, quizQuestions.getJSONObject(i).getString("opt3"));
+                statement.setString(6, quizQuestions.getJSONObject(i).getString("opt4"));
+                statement.setInt(7, generatedKey2);
+                statement.addBatch();
+            }
+
+            int[] numberOdUpdates = statement.executeBatch();
+
+            if (numberOdUpdates.length == quizQuestions.length()){
+                System.out.println("Update ek lssnt una");
+            }
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
 }
