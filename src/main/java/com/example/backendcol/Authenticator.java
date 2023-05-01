@@ -1,9 +1,18 @@
 package com.example.backendcol;
 
 import com.example.backendcol.api.JWT;
+import jakarta.mail.Message;
+import jakarta.mail.PasswordAuthentication;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import jakarta.mail.*;
+import jakarta.mail.internet.*;
+import java.util.Properties;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,6 +21,7 @@ import jakarta.servlet.http.Cookie;
 import java.security.MessageDigest;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
+
 
 
 public class Authenticator extends ApiHandler{
@@ -272,5 +282,103 @@ public class Authenticator extends ApiHandler{
         return jsonObject;
     }
 
+
+    public JSONObject sendOTP(Integer id, JSONObject requestObject){
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("isError", true);
+        jsonObject.put("message", "");
+        try {
+            Connection connection = Driver.getConnection();
+            PreparedStatement statement = connection.prepareStatement("select * from user WHERE user.email = ? ");
+            statement.setString(1, requestObject.getString("email"));
+
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()){
+                System.out.println("recover user id: " + resultSet.getInt("user_id"));
+                Integer userID = resultSet.getInt("user_id");
+
+                //generating OTP
+                ServerData.otpSessions.put(userID, new OTP());
+
+                //sending male
+                String from = "colegioacc55@gmail.com";
+                String password = "dwlysekboczdwmfr";
+                String to = "senithkarunarathneu@gmail.com";
+
+                Properties properties = System.getProperties();
+                properties.setProperty("mail.smtp.host", "smtp.gmail.com");
+                properties.setProperty("mail.smtp.port", "465");
+                properties.setProperty("mail.smtp.auth", "true");
+                properties.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+
+                Session session = Session.getInstance(properties,
+                        new jakarta.mail.Authenticator() {
+                            protected PasswordAuthentication getPasswordAuthentication() {
+                                return new PasswordAuthentication(from, password);
+                            }
+                        });
+                MimeMessage message = new MimeMessage(session);
+                message.setFrom(new InternetAddress(from));
+                message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+                message.setSubject("Reset Password");
+                message.setText("Use this OTP to recover your Colegio password. OTP is " + ServerData.otpSessions.get(userID).getOtp() + " You will be asked to enter this.");
+                Transport.send(message);
+                System.out.println("Sent message successfully....");
+                jsonObject.put("isError", false);
+                jsonObject.put("message", "OTP sent");
+                return jsonObject;
+
+            }
+
+        }
+        catch (Exception exception){
+            System.out.println(exception);
+            jsonObject.put("message", "Unknown error ocured in the server");
+        }
+        return jsonObject;
+    }
+
+
+    public JSONObject verify(Integer id, JSONObject requestObject){
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("isError", true);
+        jsonObject.put("message", "");
+        try {
+            Connection connection = Driver.getConnection();
+            PreparedStatement statement = connection.prepareStatement("select * from user WHERE user.email = ? ");
+            statement.setString(1, requestObject.getString("email"));
+
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()){
+                System.out.println("recover user id: " + resultSet.getInt("user_id"));
+                Integer userID = resultSet.getInt("user_id");
+                OTP otp = ServerData.otpSessions.get(userID);
+                if (otp.isValid()){
+                    if (otp.verify(requestObject.getString("otp"))){
+                        jsonObject.put("isError", false);
+                        jsonObject.put("message", "verified!");
+                        return jsonObject;
+                    }
+                    else{
+                        jsonObject.put("message", "Incorrect!");
+                        return jsonObject;
+                    }
+
+                }
+                else{
+                    jsonObject.put("message", "One time password is expired");
+                    return jsonObject;
+                }
+
+
+            }
+
+        }
+        catch (Exception exception){
+            System.out.println(exception);
+            jsonObject.put("message", "Unknown server error");
+        }
+        return jsonObject;
+    }
 
 }
