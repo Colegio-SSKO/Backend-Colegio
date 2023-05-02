@@ -10,8 +10,16 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 
-public class Teacher extends ApiHandler {
+public class Teacher extends User {
 
+
+    public static Teacher parseTeacher(User user){
+        Teacher teacher = new Teacher();
+        teacher.userID = user.userID;
+        teacher.name = user.name;
+        teacher.email = user.email;
+        return teacher;
+    }
     public JSONObject teacher_send_req(Integer id, JSONObject requestObject){
         System.out.println("athulata awa");
         Connection connection = Driver.getConnection();

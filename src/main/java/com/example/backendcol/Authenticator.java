@@ -61,11 +61,22 @@ public class Authenticator extends ApiHandler{
                         userType = 2;
                     }
 
-                    //creating user object
                     User newUser = new User();
                     newUser.userID = resultSet.getInt("user_id");
                     newUser.email = requestObject.getString("email");
                     newUser.name = resultSet.getString("f_name") + " " +resultSet.getString("l_name");
+
+                    if (userType==2){
+                        Teacher newTeacher = Teacher.parseTeacher(newUser);
+                        ServerData.users.put(newUser.userID, newTeacher);
+                    }
+                    else if(userType == 3){
+                        Organization newOrganization = Organization.parseOrganization(newUser);
+                        ServerData.users.put(newUser.userID, newOrganization);
+                    }
+
+                    //creating user object
+
                     ServerData.users.put(newUser.userID, newUser);
                     System.out.println("length: "+ ServerData.users.size());
 
@@ -259,7 +270,7 @@ public class Authenticator extends ApiHandler{
                             System.out.println("invalidToken");
                             return jsonObject;
                         }
-                        User removedUser = ServerData.users.remove(jwt.payload.getInt("sub"));
+                        User removedUser = (User) ServerData.users.remove(jwt.payload.getInt("sub"));
                         System.out.println("Removed user : " + removedUser.userID);
                         Cookie newCookie = new Cookie(cookie.getName(), "");
                         newCookie.setPath("/");

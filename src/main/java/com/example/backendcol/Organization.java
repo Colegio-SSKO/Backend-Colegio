@@ -8,7 +8,15 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 
-public class Organization extends ApiHandler {
+public class Organization extends User {
+
+    public static Organization parseOrganization(User user){
+        Organization organization = new Organization();
+        organization.userID = user.userID;
+        organization.name = user.name;
+        organization.email = user.email;
+        return organization;
+    }
 
     public JSONObject org_send_request(Integer id, JSONObject requestObject){
         Connection connection = Driver.getConnection();

@@ -17,6 +17,8 @@ public class User extends ApiHandler {
     public String email;
 
 
+
+
     public JSONArray viewpurchaseCourse(Integer id, JSONObject requestObject){
         Connection connection = Driver.getConnection();
 
@@ -1412,6 +1414,10 @@ public class User extends ApiHandler {
         LocalTime currentTime= LocalTime.now();
 
         try{
+
+            //sending live notifications
+            ServerData.userIdToNotifictionSession.get(1).getAsyncRemote().sendText("notification ek send una");
+
             PreparedStatement statement;
             statement = connection.prepareStatement("INSERT INTO user_req_session (user_id, teacher_id, question_id) VALUES (?,?,?);");
             statement.setInt(1,id);
@@ -1420,6 +1426,8 @@ public class User extends ApiHandler {
             Integer num = statement.executeUpdate();
             jsonObject.put("message", "Request send successfully");
             System.out.println("inser eka unaa");
+
+
 
 
             statement = connection.prepareStatement("select * from teacher where teacher_id=?");
