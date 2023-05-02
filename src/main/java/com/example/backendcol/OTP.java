@@ -6,6 +6,8 @@ import java.util.Random;
 public class OTP {
     private String otp = "";
     private LocalTime expTime = LocalTime.now().plusMinutes(2);
+    private String email = "";
+    private Boolean isVerified ;
 
     public String getOtp(){
         return otp;
@@ -33,6 +35,16 @@ public class OTP {
 
     public Boolean verify(String userEnteredOtp){
         if (otp.equals(userEnteredOtp)){
+            this.isVerified = true;
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    public Boolean authorizeToProceed(String userEnteredOtp){
+        if (isVerified && this.verify(userEnteredOtp)){
             return true;
         }
         else{

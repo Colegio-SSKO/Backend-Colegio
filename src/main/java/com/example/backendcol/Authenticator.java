@@ -21,7 +21,7 @@ import jakarta.servlet.http.Cookie;
 import java.security.MessageDigest;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
-
+import java.util.logging.SocketHandler;
 
 
 public class Authenticator extends ApiHandler{
@@ -378,6 +378,59 @@ public class Authenticator extends ApiHandler{
             System.out.println(exception);
             jsonObject.put("message", "Unknown server error");
         }
+        return jsonObject;
+    }
+
+    public JSONObject changePassword(Integer id, JSONObject requestObject){
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("isError", true);
+        jsonObject.put("message", "");
+        try{
+            String newPassword = requestObject.getString("password");
+            String email = requestObject.getString("email");
+            System.out.println("methnt enw");
+            String userOTP = requestObject.getString("otp");
+            System.out.println("methntath enw");
+            Connection connection = Driver.getConnection();
+            PreparedStatement statement = connection.prepareStatement("select * from user WHERE user.email = ? ");
+            statement.setString(1, requestObject.getString("email"));
+
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()){
+                Integer userID = resultSet.getInt("user_id");
+                OTP otp = ServerData.otpSessions.get(userID);
+                if (otp.authorizeToProceed(userOTP)){
+//                  statement.close();
+                    statement = connection.prepareStatement("UPDATE user SET password = ? WHERE user.email = ? ");
+                    statement.setString(1, newPassword);
+                    statement.setString(2, email);
+
+                    Integer result = statement.executeUpdate();
+                    if (result>0){
+                        jsonObject.put("isError", false);
+                        jsonObject.put("message", "Password Changed successfully");
+                        return jsonObject;
+                    }
+                }
+                else {
+                    jsonObject.put("message", "Unauthorized change password request");
+                    System.out.println("invalid request");
+                    return jsonObject;
+                }
+
+            }
+            else{
+                jsonObject.put("message", "Unauthorized change password request");
+                System.out.println("invalid request");
+                return jsonObject;
+            }
+
+
+        }catch (Exception exception){
+            System.out.println(exception);
+            jsonObject.put("message","unknown error occurred in the server");
+        }
+
         return jsonObject;
     }
 
