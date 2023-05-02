@@ -324,10 +324,10 @@ public class User extends ApiHandler {
         JSONArray jsonArray= new JSONArray();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("select course.course_title as title, concat(user.f_name,' ',user.l_name) as author, course.introduction_media as img_src, course.price as price , content.content_id as content_id from teacher INNER JOIN user on teacher.user_ID= user.user_id INNER JOIN content on teacher.user_ID= content.user_id INNER JOIN course on content.content_id=course.content_id where teacher.user_ID=? && content.status=0;;");
+            statement = connection.prepareStatement("select course.course_title as title, concat(user.f_name,' ',user.l_name) as author, content.rate_count as rate_count, course.introduction_media as img_src, course.price as price , content.content_id as content_id from teacher INNER JOIN user on teacher.user_ID= user.user_id INNER JOIN content on teacher.user_ID= content.user_id INNER JOIN course on content.content_id=course.content_id where teacher.user_ID=? && content.status=0;;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
-            jsonArray = JsonHandler.createJSONArray(rs, "author", "title", "price", "img_src", "content_id");
+            jsonArray = JsonHandler.createJSONArray(rs, "author", "title", "price", "img_src", "content_id","rate_count");
 
         }
 
@@ -668,7 +668,7 @@ public class User extends ApiHandler {
             statement.setInt(1,id);
             ResultSet resultSet = statement.executeQuery();
             System.out.println("methnt enw2");
-            jasonarray = JsonHandler.createJSONArray(resultSet, "quiz_title", "f_name", "l_name", "description" ,"qulification_level", "content_id", "quiz_id");
+            jasonarray = JsonHandler.createJSONArray(resultSet, "quiz_title", "f_name", "l_name", "description" ,"qulification_level", "content_id", "quiz_id","image","rate_count");
         }catch (Exception exception){
             System.out.println(exception);
         }
@@ -1111,7 +1111,7 @@ public class User extends ApiHandler {
         try{
 
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT * FROM course_media INNER JOIN course ON course_media.course_id= course.course_id INNER JOIN content ON course.content_id=content.content_id INNER JOIN user ON content.user_id= user.user_id INNER JOIN teacher on teacher.user_ID= user.user_id WHERE course_media.course_id=?;");
+            statement = connection.prepareStatement("SELECT * FROM course_media INNER JOIN course ON course_media.course_id= course.course_id INNER JOIN content ON course.content_id=content.content_id INNER JOIN user ON content.user_id= user.user_id INNER JOIN teacher on teacher.user_ID= user.user_id WHERE course.content_id=?;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
 
@@ -1129,75 +1129,6 @@ public class User extends ApiHandler {
 
 
 
-
-
-
-
-    public JSONArray teacher_published_course(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
-
-        JSONArray jsonArray= new JSONArray();
-        try{
-            System.out.println("DB connectiontt");
-            PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT course.introduction_media as img_src, course.course_title as title, course.decription as description, course.price as price, content.content_id as content_id, content.status as status from course INNER JOIN content on course.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=? && content.status=0;");
-            statement.setInt(1,id);
-            ResultSet rs = statement.executeQuery();
-
-            jsonArray = JsonHandler.createJSONArray(rs, "description", "img_src", "title", "status", "content_id","price");
-
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
-        return jsonArray;
-    }
-
-
-    public JSONObject teacher_disable_content(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
-
-        JSONObject jsonObject= new JSONObject();
-        try{
-            System.out.println("DB connectiontt");
-            PreparedStatement statement;
-            statement = connection.prepareStatement("UPDATE content SET status=1 WHERE content_id=?;");
-            statement.setInt(1, requestObject.getInt("content_id"));
-            Integer num = statement.executeUpdate();
-            jsonObject.put("num",1);
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
-        return jsonObject;
-    }
-
-
-    public JSONArray teacher_published_quiz(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
-
-        JSONArray jsonArray= new JSONArray();
-        try{
-            System.out.println("DB connectiontt");
-            PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT quiz.image as img_src, quiz.quiz_title as title, quiz.description as description, quiz.price as price, content.content_id as content_id, content.status as status from quiz INNER JOIN content on quiz.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=?;");
-            statement.setInt(1,id);
-            ResultSet rs = statement.executeQuery();
-
-            jsonArray = JsonHandler.createJSONArray(rs, "description", "img_src", "title", "status", "content_id","price");
-
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
-        return jsonArray;
-    }
 
 
 
@@ -1299,11 +1230,11 @@ public class User extends ApiHandler {
         try{
             System.out.println("DB connectiontt");
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT user.pro_pic as img_src, CONCAT(user.f_name, user.l_name) as name, teacher.qulification_level as quli, teacher.gender as gender, user.user_id as user_id from user INNER JOIN teacher on teacher.user_ID= user.user_id where teacher.user_ID=?;");
+            statement = connection.prepareStatement("SELECT user.pro_pic as img_src, CONCAT(user.f_name,' ', user.l_name) as name, teacher.tag as tag, teacher.qulification_level as quli, teacher.gender as gender, user.user_id as user_id from user INNER JOIN teacher on teacher.user_ID= user.user_id where teacher.user_ID=?;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
 
-            jsonObject = JsonHandler.createJSONObject(rs, "name", "img_src", "quli", "gender", "user_id");
+            jsonObject = JsonHandler.createJSONObject(rs, "name", "img_src", "quli", "gender", "user_id","tag");
 
         }
 
@@ -1323,10 +1254,10 @@ public class User extends ApiHandler {
         JSONArray jsonArray= new JSONArray();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("select quiz.quiz_title as title, concat(user.f_name,' ',user.l_name) as author, quiz.image as img_src, content.price as price , content.content_id as content_id from teacher INNER JOIN user on teacher.user_ID= user.user_id INNER JOIN content on teacher.user_ID= content.user_id INNER JOIN quiz on quiz.content_id=content.content_id where teacher.user_ID=? && content.status=0;;");
+            statement = connection.prepareStatement("select quiz.quiz_title as title, content.rate_count as rate_count, concat(user.f_name,' ',user.l_name) as author, quiz.image as img_src, content.price as price , content.content_id as content_id from teacher INNER JOIN user on teacher.user_ID= user.user_id INNER JOIN content on teacher.user_ID= content.user_id INNER JOIN quiz on quiz.content_id=content.content_id where teacher.user_ID=? && content.status=0;;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
-            jsonArray = JsonHandler.createJSONArray(rs, "author", "title", "price", "img_src","content_id");
+            jsonArray = JsonHandler.createJSONArray(rs, "author", "title", "price", "img_src","content_id","rate_count");
 
         }
 
@@ -1339,49 +1270,7 @@ public class User extends ApiHandler {
 
 
 
-    public JSONObject upgrade_to_organization(Integer id, JSONObject requestObject){
-        System.out.println("655555555555555555555555555555555555555");
-        Connection connection = Driver.getConnection();
-        System.out.println("okkkkkkkkkkkkkkkkkkkkk");
 
-        JSONObject jsonObject= new JSONObject();
-
-        try{
-            PreparedStatement statement;
-
-            statement = connection.prepareStatement("Update student SET status=1 WHERE user_id=?;");
-            statement.setInt(1,id);
-            Integer num= statement.executeUpdate();
-            System.out.println("sew");
-
-            statement = connection.prepareStatement("Insert into publisher values (?)");
-            statement.setInt(1,id);
-            Integer num2= statement.executeUpdate();
-            System.out.println("sew1");
-
-            statement = connection.prepareStatement("INSERT INTO organization (user_id, address, tel_no) VALUES (?,?,?);");
-            statement.setInt(1,id);
-            statement.setString(2,requestObject.getString("address"));
-            statement.setInt(3,requestObject.getInt("telnum"));
-            Integer num3= statement.executeUpdate();
-            System.out.println("sew2");
-
-            statement = connection.prepareStatement("update user set f_name=? ,l_name=?, verification_status=4 WHERE user_id=?; ");
-            statement.setString(1,requestObject.getString("fName"));
-            statement.setString(2,requestObject.getString("lName"));
-            statement.setInt(3,id);
-            Integer num4= statement.executeUpdate();
-            System.out.println("sew3");
-
-            jsonObject.put("message", "Upgrade account successfully");
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
-        return jsonObject;
-    }
 
 
     public JSONObject check_user_verification(Integer id, JSONObject requestObject){
@@ -1422,7 +1311,7 @@ public class User extends ApiHandler {
         Connection connection = Driver.getConnection();
 
         JSONObject jsonObject= new JSONObject();
-        JSONObject jsonObject2= new JSONObject();
+
         LocalDate currentDate = LocalDate.now();
         LocalTime currentTime= LocalTime.now();
 
@@ -1509,6 +1398,89 @@ public class User extends ApiHandler {
 
         return jsonObject;
     }
+
+
+
+
+    public JSONObject session_request(Integer id, JSONObject requestObject){
+
+        System.out.println("awaaaaaaaaaaaaaaaaaaaaa");
+        Connection connection = Driver.getConnection();
+
+        JSONObject jsonObject= new JSONObject();
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime= LocalTime.now();
+
+        try{
+            PreparedStatement statement;
+            statement = connection.prepareStatement("INSERT INTO user_req_session (user_id, teacher_id, question_id) VALUES (?,?,?);");
+            statement.setInt(1,id);
+            statement.setInt(2, requestObject.getInt("teacher_id"));
+            statement.setInt(3, requestObject.getInt("question_id"));
+            Integer num = statement.executeUpdate();
+            jsonObject.put("message", "Request send successfully");
+            System.out.println("inser eka unaa");
+
+
+            statement = connection.prepareStatement("select * from teacher where teacher_id=?");
+            statement.setInt(1, requestObject.getInt("teacher_id"));
+            ResultSet rs= statement.executeQuery();
+
+            if(rs.next()){
+                Integer userid= rs.getInt("user_ID");
+                System.out.println("teacherge user id eka gaththa");
+
+                //notification part
+                PreparedStatement statement3 = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver, user_id_sender, status) VALUES (?,?,5,?,?,0);");
+                statement3.setDate(1, Date.valueOf(currentDate));
+                statement3.setTime(2, Time.valueOf(currentTime));
+                statement3.setInt(3,userid);
+                statement3.setInt(4,id);
+                Integer num2 = statement3.executeUpdate();
+                System.out.println("notification eka yuwa");
+
+                jsonObject.put("message", "Request send successfully");
+                return jsonObject;
+            }
+
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+            return jsonObject;
+        }
+
+        return jsonObject;
+    }
+
+
+
+
+    public JSONArray read_notification(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONArray jsonArray= new JSONArray();
+
+        try{
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT * FROM notification INNER JOIN user ON notification.user_id_sender= user.user_id WHERE user_id_receiver=?;");
+            statement.setInt(1,id);
+            ResultSet rs= statement.executeQuery();
+            jsonArray = JsonHandler.createJSONArray(rs, "date", "time", "f_name","l_name","type","user_id_sender");
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonArray;
+    }
+
+
+
+
 
 
 

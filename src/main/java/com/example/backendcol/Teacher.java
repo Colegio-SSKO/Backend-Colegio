@@ -13,6 +13,7 @@ import java.time.LocalTime;
 public class Teacher extends ApiHandler {
 
     public JSONObject teacher_send_req(Integer id, JSONObject requestObject){
+        System.out.println("athulata awa");
         Connection connection = Driver.getConnection();
 
         JSONObject jsonObject= new JSONObject();
@@ -23,20 +24,20 @@ public class Teacher extends ApiHandler {
         jsonObject.put("message","send request successfully");
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT * from teacher_req_org where teacher_id=? && organization_id=? && status=2");
+            statement = connection.prepareStatement("SELECT * from teacher_req_org inner join teacher on teacher_req_org.teacher_id=teacher.teacher_id where teacher.user_ID=? && organization_id=? && status=2");
             statement.setInt(1,id);
             statement.setInt(2,requestObject.getInt("organization_id"));
             ResultSet rs= statement.executeQuery();
 
             if(rs.next()){
-                statement = connection.prepareStatement("UPDATE teacher_req_org set status=0 where teacher_id=? && organization_id=?");
+                statement = connection.prepareStatement("UPDATE teacher_req_org teacher inner join teacher on teacher_req_org.teacher_id=teacher.teacher_id set status=0 where teacher.user_ID=? && organization_id=?");
                 statement.setInt(1,id);
                 statement.setInt(2,requestObject.getInt("organization_id"));
                 Integer res_id = statement.executeUpdate();
             }
 
             else{
-                statement = connection.prepareStatement("SELECT * from teacher_req_org where teacher_id=? && organization_id=? && status=0");
+                statement = connection.prepareStatement("SELECT * from teacher_req_org inner join teacher on teacher_req_org.teacher_id=teacher.teacher_id where teacher.user_ID=? && organization_id=? && status=0");
                 statement.setInt(1,id);
                 statement.setInt(2,requestObject.getInt("organization_id"));
                 ResultSet rs2= statement.executeQuery();
@@ -46,7 +47,7 @@ public class Teacher extends ApiHandler {
                 }
 
                 else{
-                    statement = connection.prepareStatement("SELECT * from org_has_teacher where teacher_id=? && organization_id=? && status=0");
+                    statement = connection.prepareStatement("SELECT * from org_has_teacher  inner join teacher on org_has_teacher.teacher_id= teacher.teacher_id where teacher.user_ID=? && org_has_teacher.organization_id=? && org_has_teacher.status=0");
                     statement.setInt(1,id);
                     statement.setInt(2,requestObject.getInt("organization_id"));
                     ResultSet rs3= statement.executeQuery();
@@ -56,29 +57,33 @@ public class Teacher extends ApiHandler {
                     }
 
                     else{
-                        jsonObject.put("message","Send request successfully");
+                        statement= connection.prepareStatement("Select teacher_id from teacher where user_ID=?");
+                        statement.setInt(1,id);
+                        ResultSet rs4= statement.executeQuery();
+                        Integer teacherid= rs4.getInt("teacher_id");
                         statement = connection.prepareStatement("INSERT INTO teacher_req_org (status, teacher_id, organization_id) values (0,?,?)");
                         statement.setInt(1,id);
-                        statement.setInt(2,requestObject.getInt("organization_id"));
+                        statement.setInt(2,teacherid);
                         Integer res_id = statement.executeUpdate();
+                        jsonObject.put("message","Send request successfully");
 
 
                         //notification part
-                        PreparedStatement statement2;
-                        statement2= connection.prepareStatement("Select user_id from organization where organization_id=?");
-                        statement2.setInt(1,requestObject.getInt("organization_id"));
-                        ResultSet rs4= statement2.executeQuery();
-                        jsonObject2 = JsonHandler.createJSONObject(rs4, "user_id");
-                        System.out.println(jsonObject2.getInt("user_id"));
-                        System.out.println("sew");
-
-
-                        statement = connection.prepareStatement("INSERT INTO notification (title, description, date, time, type, user_id_receiver, user_id_sender) VALUES (\"Teacher Request\", \"You have a teacher request\", ?, ?,1, ?,?);");
-                        statement.setDate(1, Date.valueOf(currentDate));
-                        statement.setTime(2, Time.valueOf(currentTime));
-                        statement.setInt(3, jsonObject2.getInt("user_id"));
-                        statement.setInt(4,id);
-                        Integer num = statement.executeUpdate();
+//                        PreparedStatement statement2;
+//                        statement2= connection.prepareStatement("Select user_id from organization where organization_id=?");
+//                        statement2.setInt(1,requestObject.getInt("organization_id"));
+//                        ResultSet rs5= statement2.executeQuery();
+//                        jsonObject2 = JsonHandler.createJSONObject(rs5, "user_id");
+//                        System.out.println(jsonObject2.getInt("user_id"));
+//                        System.out.println("sew");
+//
+//
+//                        statement = connection.prepareStatement("INSERT INTO notification (title, description, date, time, type, user_id_receiver, user_id_sender) VALUES (\"Teacher Request\", \"You have a teacher request\", ?, ?,1, ?,?);");
+//                        statement.setDate(1, Date.valueOf(currentDate));
+//                        statement.setTime(2, Time.valueOf(currentTime));
+//                        statement.setInt(3, jsonObject2.getInt("user_id"));
+//                        statement.setInt(4,id);
+//                        Integer num = statement.executeUpdate();
                     }
                 }
             }
@@ -185,6 +190,74 @@ public class Teacher extends ApiHandler {
 
         return jsonObject;
     }
+
+    public JSONArray teacher_published_course(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONArray jsonArray= new JSONArray();
+        try{
+            System.out.println("DB connectiontt");
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT course.introduction_media as img_src, course.course_title as title, course.decription as description, course.price as price, content.content_id as content_id, content.status as status from course INNER JOIN content on course.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=? && content.status=0;");
+            statement.setInt(1,id);
+            ResultSet rs = statement.executeQuery();
+
+            jsonArray = JsonHandler.createJSONArray(rs, "description", "img_src", "title", "status", "content_id","price");
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonArray;
+    }
+
+
+    public JSONArray teacher_published_quiz(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONArray jsonArray= new JSONArray();
+        try{
+            System.out.println("DB connectiontt");
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT quiz.image as img_src, quiz.quiz_title as title, quiz.description as description, quiz.price as price, content.content_id as content_id, content.status as status from quiz INNER JOIN content on quiz.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=?;");
+            statement.setInt(1,id);
+            ResultSet rs = statement.executeQuery();
+
+            jsonArray = JsonHandler.createJSONArray(rs, "description", "img_src", "title", "status", "content_id","price");
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonArray;
+    }
+
+
+    public JSONObject teacher_disable_content(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONObject jsonObject= new JSONObject();
+        try{
+            System.out.println("DB connectiontt");
+            PreparedStatement statement;
+            statement = connection.prepareStatement("UPDATE content SET status=1 WHERE content_id=?;");
+            statement.setInt(1, requestObject.getInt("content_id"));
+            Integer num = statement.executeUpdate();
+            jsonObject.put("num",1);
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
+
+
 
 
 
