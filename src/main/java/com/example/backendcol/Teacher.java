@@ -350,4 +350,79 @@ public class Teacher extends User {
 
         return jsonObject;
     }
+
+
+
+
+    @Override
+    public JSONObject viewprofile(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONObject jsonObject= new JSONObject();
+        try{
+            System.out.println("DB connectiontt");
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT user.pro_pic as img_src, CONCAT(user.f_name,' ', user.l_name) as name, teacher.tag as tag, teacher.qulification_level as quli, teacher.gender as gender, user.user_id as user_id from user INNER JOIN teacher on teacher.user_ID= user.user_id where teacher.user_ID=?;");
+            statement.setInt(1,id);
+            ResultSet rs = statement.executeQuery();
+
+            jsonObject = JsonHandler.createJSONObject(rs, "name", "img_src", "quli", "gender", "user_id","tag");
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
+
+
+
+
+    @Override
+    public JSONObject editProfile(Integer id, JSONObject requestObject){
+
+
+        JSONObject jsonObject = new JSONObject();
+        Connection connection = Driver.getConnection();
+        try{
+
+            //JDBC part
+            PreparedStatement statement = connection.prepareStatement("UPDATE user SET f_name = ?, l_name = ?, DOB= ? WHERE user_id = ?");
+            PreparedStatement statement1 = connection.prepareStatement("UPDATE teacher SET gender = ? WHERE user_id = ?");
+            statement.setString(1,requestObject.getString("fName"));
+            statement.setString(2,requestObject.getString("lName"));
+            statement.setString(3,requestObject.getString("dob"));
+            statement1.setString(1,requestObject.getString("gender"));
+
+
+
+            statement1.setInt(2,id);
+            statement.setInt(4,id);
+            int resultSet = statement.executeUpdate();
+            int resultSet1 = statement1.executeUpdate();
+            System.out.println(resultSet);
+            System.out.println(resultSet1);
+
+            if(resultSet1==0 || resultSet == 0){
+                jsonObject.put("message", "Inavlid User!");
+                jsonObject.put("isError", 1);
+                return jsonObject;
+            }
+            System.out.printf("Methnta enkn wed");
+            jsonObject.put("message", "Profile successfully Updated!");
+            jsonObject.put("isError", 0);
+            return jsonObject;
+
+
+        }catch (SQLException sqlException){
+            System.out.println(sqlException);
+            jsonObject.put("message", "Database error!");
+            jsonObject.put("isError", 1);
+            return jsonObject;
+        }
+
+
+    }
 }

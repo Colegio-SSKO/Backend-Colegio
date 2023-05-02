@@ -211,7 +211,7 @@ public class Organization extends User {
         JSONObject jsonObject= new JSONObject();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("Update org_has_teacher set status=1 where teacher_id=? && organization_id=?");
+            statement = connection.prepareStatement("Update org_has_teacher inner join organization on org_has_teacher.organization_id= organization.organization_id set status=1 where org_has_teacher.teacher_id=? && organization.user_id=?");
             statement.setInt(1,requestObject.getInt("teacher_id"));
             statement.setInt(2,id);
             Integer res_id = statement.executeUpdate();
@@ -270,6 +270,76 @@ public class Organization extends User {
         }
 
         return jsonArray;
+    }
+
+
+
+    @Override
+    public JSONObject viewprofile(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONObject jsonObject= new JSONObject();
+        try{
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT concat(user.f_name, user.l_name) as name, organization.address as address, user.pro_pic as img_src, organization.organization_id as organization_id, organization.tel_no as tel_num from user INNER JOIN organization on organization.user_id= user.user_id where user.user_id=?;");
+            statement.setInt(1,id);
+            ResultSet rs = statement.executeQuery();
+
+            jsonObject = JsonHandler.createJSONObject(rs, "name", "address", "img_src", "organization_id", "tel_num");
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
+
+
+
+    @Override
+    public JSONObject editProfile(Integer id, JSONObject requestObject){
+
+
+        JSONObject jsonObject = new JSONObject();
+        Connection connection = Driver.getConnection();
+        try{
+
+            //JDBC part
+            PreparedStatement statement = connection.prepareStatement("UPDATE user SET f_name = ?, l_name = ? WHERE user_id = ?");
+            PreparedStatement statement1 = connection.prepareStatement("UPDATE organization SET address = ?, tel_no = ? WHERE user_id = ?");
+            statement.setString(1,requestObject.getString("fName"));
+            statement.setString(2,requestObject.getString("lName"));
+            statement1.setString(1,requestObject.getString("address"));
+            statement1.setString(2,requestObject.getString("telnum"));
+
+
+            statement1.setInt(3,id);
+            statement.setInt(3,id);
+            int resultSet = statement.executeUpdate();
+            int resultSet1 = statement1.executeUpdate();
+            System.out.println(resultSet);
+            System.out.println(resultSet1);
+
+            if(resultSet1==0 || resultSet == 0){
+                jsonObject.put("message", "Inavlid User!");
+                jsonObject.put("isError", 1);
+                return jsonObject;
+            }
+            System.out.printf("Methnta enkn wed");
+            jsonObject.put("message", "Profile successfully Updated!");
+            jsonObject.put("isError", 0);
+            return jsonObject;
+
+
+        }catch (SQLException sqlException){
+            System.out.println(sqlException);
+            jsonObject.put("message", "Database error!");
+            jsonObject.put("isError", 1);
+            return jsonObject;
+        }
+
+
     }
 
 
