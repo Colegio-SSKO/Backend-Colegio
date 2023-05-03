@@ -371,4 +371,187 @@ public class Teacher extends User {
 
         return jsonObject;
     }
+
+
+    @Override
+    public JSONObject viewprofile(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONObject jsonObject= new JSONObject();
+        try{
+            System.out.println("DB connectiontt");
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT user.pro_pic as img_src, CONCAT(user.f_name,' ', user.l_name) as name, teacher.tag as tag, teacher.qulification_level as quli, teacher.gender as gender, user.user_id as user_id from user INNER JOIN teacher on teacher.user_ID= user.user_id where teacher.user_ID=?;");
+            statement.setInt(1,id);
+            ResultSet rs = statement.executeQuery();
+
+            jsonObject = JsonHandler.createJSONObject(rs, "name", "img_src", "quli", "gender", "user_id","tag");
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
+
+
+
+    public JSONObject teacher_send_req_org(Integer id, JSONObject requestObject){
+        System.out.println("athulata awa");
+        Connection connection = Driver.getConnection();
+
+        JSONObject jsonObject= new JSONObject();
+
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
+
+        try{
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT * FROM teacher WHERE user_ID=?");
+            statement.setInt(1,id);
+            ResultSet rs= statement.executeQuery();
+
+            if(rs.next()){
+                Integer teacher_id= rs.getInt("teacher_id");
+
+                statement = connection.prepareStatement("INSERT INTO org_teacher_request (teacher_id, organization_id, status, type) VALUES (?,?,0,0) ON DUPLICATE KEY UPDATE status = 0, type=1;");
+                statement.setInt(2,requestObject.getInt("organization_id"));
+                statement.setInt(1,teacher_id);
+                Integer num = statement.executeUpdate();
+                System.out.println("request table eka update una");
+
+
+
+
+                //Notification part
+
+                PreparedStatement statement2;
+                statement2= connection.prepareStatement("SELECT * FROM organization WHERE organization_id=?");
+                statement2.setInt(1,requestObject.getInt("organization_id"));
+                ResultSet rs2= statement2.executeQuery();
+
+                if(rs2.next()){
+                    Integer organization_userid= rs2.getInt("user_id");
+                    System.out.println("user id eka gaththa");
+
+
+                    statement = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver,user_id_sender,status) values (?,?,1,?,?,0)");
+                    statement.setDate(1, Date.valueOf(currentDate));
+                    statement.setTime(2, Time.valueOf(currentTime));
+                    statement.setInt(3, organization_userid);
+                    statement.setInt(4,id);
+                    Integer num2 = statement.executeUpdate();
+                    System.out.println("notification eka damma");
+
+                    jsonObject.put("message", "Send request successfully");
+                }
+
+            }
+
+
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
+
+
+
+
+    @Override
+    public JSONObject editProfile(Integer id, JSONObject requestObject){
+
+
+        JSONObject jsonObject = new JSONObject();
+        Connection connection = Driver.getConnection();
+        try{
+
+            //JDBC part
+            PreparedStatement statement = connection.prepareStatement("UPDATE user SET f_name = ?, l_name = ?, DOB= ? WHERE user_id = ?");
+            PreparedStatement statement1 = connection.prepareStatement("UPDATE teacher SET gender = ? WHERE user_id = ?");
+            statement.setString(1,requestObject.getString("fName"));
+            statement.setString(2,requestObject.getString("lName"));
+            statement.setString(3,requestObject.getString("dob"));
+            statement1.setString(1,requestObject.getString("gender"));
+
+
+
+            statement1.setInt(2,id);
+            statement.setInt(4,id);
+            int resultSet = statement.executeUpdate();
+            int resultSet1 = statement1.executeUpdate();
+            System.out.println(resultSet);
+            System.out.println(resultSet1);
+
+            if(resultSet1==0 || resultSet == 0){
+                jsonObject.put("message", "Inavlid User!");
+                jsonObject.put("isError", 1);
+                return jsonObject;
+            }
+            System.out.printf("Methnta enkn wed");
+            jsonObject.put("message", "Profile successfully Updated!");
+            jsonObject.put("isError", 0);
+            return jsonObject;
+
+
+        }catch (SQLException sqlException){
+            System.out.println(sqlException);
+            jsonObject.put("message", "Database error!");
+            jsonObject.put("isError", 1);
+            return jsonObject;
+        }
+
+
+    }
+
+
+
+
+    @Override
+    public JSONArray vieworganization(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        Integer value;
+
+        JSONArray jsonArray= new JSONArray();
+        try{
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT concat(user.f_name,' ', user.l_name) as name, organization.address as address, user.pro_pic as img_src, organization.organization_id as organization_id from user INNER JOIN organization on organization.user_id= user.user_id where user.status=0;");
+            ResultSet rs = statement.executeQuery();
+
+            jsonArray = JsonHandler.createJSONArray(rs, "name", "address", "img_src", "organization_id");
+
+            PreparedStatement statement2;
+            statement2= connection.prepareStatement("SELECT * FROM org_teacher_request INNER JOIN teacher ON org_teacher_request.teacher_id= teacher.teacher_id WHERE teacher.user_id=? && org_teacher_request.organization_id=? && (org_teacher_request.status=0 || org_teacher_request.status=2);");
+
+            for (int i = 0;i<jsonArray.length();i++){
+                Integer organization_id= jsonArray.getJSONObject(i).getInt("organization_id");
+                statement2.setInt(1,id);
+                statement2.setInt(2,organization_id);
+                ResultSet rs2= statement2.executeQuery();
+
+                if(rs2.next()){
+                    value= 1;
+                }
+                else {
+                    value=0;
+                }
+
+                jsonArray.getJSONObject(i).put("value", value);
+            }
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonArray;
+    }
 }
