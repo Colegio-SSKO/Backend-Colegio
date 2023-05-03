@@ -425,4 +425,48 @@ public class Teacher extends User {
 
 
     }
+
+
+
+
+
+    public JSONArray viewmyorganization(Integer id, JSONObject requestObject){
+        System.out.println("sssaaa");
+        Connection connection = Driver.getConnection();
+
+        JSONArray jsonArray= new JSONArray();
+        try{
+
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT concat(f_name, \" \", l_name) as name, organization.organization_id as organization_id, organization.address as address, user.pro_pic as img_src FROM org_has_teacher INNER JOIN teacher ON org_has_teacher.teacher_id= teacher.teacher_id INNER JOIN organization ON org_has_teacher.organization_id=organization.organization_id INNER JOIN user ON organization.user_id=user.user_id WHERE teacher.user_ID=? and org_has_teacher.status = 0;");
+            statement.setInt(1,id);
+            ResultSet rs = statement.executeQuery();
+
+            jsonArray = JsonHandler.createJSONArray(rs, "name", "address", "img_src", "organization_id");
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonArray;
+    }
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+

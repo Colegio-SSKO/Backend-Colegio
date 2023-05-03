@@ -263,6 +263,8 @@ public class User extends ApiHandler {
 
 
 
+
+
     public JSONArray ViewCont_list(Integer id, JSONObject requestObject){
         Connection connection = Driver.getConnection();
 
@@ -979,6 +981,113 @@ public class User extends ApiHandler {
 
         return jasonarray;
     }
+
+
+
+    public JSONArray ad_view(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONArray jsonArray= new JSONArray();
+        try{
+            System.out.println("ane deiyo");
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT * from advertisement WHERE advertisement.organization_id = ? and advertisement.status=1;");
+            statement.setInt(1,id);
+            ResultSet rs = statement.executeQuery();
+
+            jsonArray = JsonHandler.createJSONArray(rs, "ad_media");
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonArray;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     public JSONObject addrates(Integer id, JSONObject requestObject){
