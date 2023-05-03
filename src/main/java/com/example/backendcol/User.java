@@ -1,5 +1,6 @@
 package com.example.backendcol;
 
+import jakarta.websocket.Session;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -9,21 +10,30 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+
+import java.util.Iterator;
+import java.util.Map;
+
 
 import jakarta.servlet.http.Cookie;
 
 
 public class User extends ApiHandler {
+
+    public Session session;
     public Integer userID ;
     public String name ;
     public String email;
+
+    public Integer type;
 
     public Cart cart;
 
     public List<Content> purchasedContent;
 
-    public List<Question> questions;
+    public HashMap<Integer,Question> questions;
 
     public User(){
         System.out.println("default User called");
@@ -35,7 +45,7 @@ public class User extends ApiHandler {
         this.email = email;
         this.cart = new Cart(userID);
         this.purchasedContent = new ArrayList<>();
-        this.questions = new ArrayList<>();
+        this.questions = new HashMap<>();
 
 
         Connection connection = Driver.getConnection();
@@ -47,7 +57,6 @@ public class User extends ApiHandler {
             ResultSet resultSet = preparedStatement.executeQuery();
             System.out.println("mkkd oi me");
             jsonArray = JsonHandler.createJSONArray(resultSet, "title", "f_name", "l_name", "description","qulification_level","content_id" , "pro_pic","image", "course_id", "rate_count");
-            System.out.println(jsonArray.getJSONObject(0).getInt("content_id"));
             for (int i = 0; i<jsonArray.length() ; i++){
                 Course newCourse = new Course(jsonArray.getJSONObject(i));
                 purchasedContent.add(newCourse);
@@ -63,7 +72,6 @@ public class User extends ApiHandler {
             resultSet = preparedStatement.executeQuery();
             System.out.println("mkkd oi me quiz");
             jsonArray = JsonHandler.createJSONArray(resultSet, "title", "f_name", "l_name", "description","qulification_level","content_id" , "pro_pic","image", "quiz_id", "rate_count");
-            System.out.println(jsonArray.getJSONObject(0).getInt("content_id"));
             for (int i = 0; i<jsonArray.length() ; i++){
                 Quiz newQuiz = new Quiz(jsonArray.getJSONObject(i));
                 purchasedContent.add(newQuiz);
@@ -77,11 +85,10 @@ public class User extends ApiHandler {
             preparedStatement.setInt(1, this.userID);
             resultSet = preparedStatement.executeQuery();
             System.out.println("mkkd oi me questions");
-            jsonArray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description", "f_name" , "l_name", "question_media.media", "qulification_level","pro_pic","question.user_id","question.accept_teacher_id","chat_id","status");
-            System.out.println(jsonArray.getJSONObject(0).getInt("question.question_id"));
+            jsonArray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description", "f_name" , "l_name", "question_media.media", "qulification_level","pro_pic","question.user_id","question.accept_teacher_id","chat_id","status", "teacher.user_ID");
             for (int i = 0; i<jsonArray.length() ; i++){
                 Question newQuestion = new Question(jsonArray.getJSONObject(i));
-                questions.add(newQuestion);
+                questions.put( jsonArray.getJSONObject(i).getInt("question.question_id"),newQuestion);
                 System.out.println("nidimthai q");
             }
 
@@ -515,11 +522,23 @@ public class User extends ApiHandler {
             System.out.println("view purchase questions");
             System.out.println(this.questions == null);
             System.out.println("view purchase questions");
-            for (Question question : questions){
-                System.out.println("mkkd aula question eke");
-                System.out.println(question.getClass().getName());
-                jsonArray.put(question.data);
+
+            // Getting an iterator for the map
+            Iterator<Map.Entry<Integer, Question>> iterator = questions.entrySet().iterator();
+
+// Iterating through the map using iterator
+            while (iterator.hasNext()) {
+                Map.Entry<Integer, Question> entry = iterator.next();
+                Integer key = entry.getKey();
+                Question value = entry.getValue();
+               jsonArray.put(value.data);
             }
+
+//            for (Question question : questions){
+//                System.out.println("mkkd aula question eke");
+//                System.out.println(question.getClass().getName());
+//                jsonArray.put(question.data);
+//            }
 
         }catch (Exception exception){
             System.out.println(exception);

@@ -8,11 +8,40 @@ import java.lang.reflect.Method;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.HashMap;
 
 
 public class Teacher extends User {
 
+    public HashMap<Integer,Question> answeringQuestions;
+
     public Teacher(){
+
+    }
+
+    public Teacher(JSONObject jsonObject){
+        try {
+            JSONArray jsonArray = new JSONArray();
+
+            Connection connection = Driver.getConnection();
+
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM question INNER JOIN teacher ON question.accept_teacher_id= teacher.teacher_id INNER JOIN user ON question.user_id= user.user_id INNER join question_media on question.question_id = question_media.question_id WHERE (question.status=1 OR question.status=2) AND teacher.user_ID=?;");
+            preparedStatement.setInt(1, this.userID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            System.out.println("mkkd oi me questions teacher");
+            jsonArray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description","media", "f_name" , "l_name","pro_pic","question.user_id","question.status");
+            for (int i = 0; i<jsonArray.length() ; i++){
+                Question newQuestion = new Question(jsonArray.getJSONObject(i));
+                answeringQuestions.put( jsonArray.getJSONObject(i).getInt("question.question_id"),newQuestion);
+                System.out.println("nidimthai q a");
+            }
+
+
+
+            System.out.println(questions.size());
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
 
     }
 
@@ -84,23 +113,6 @@ public class Teacher extends User {
                         Integer res_id = statement.executeUpdate();
                         jsonObject.put("message","Send request successfully");
 
-
-                        //notification part
-//                        PreparedStatement statement2;
-//                        statement2= connection.prepareStatement("Select user_id from organization where organization_id=?");
-//                        statement2.setInt(1,requestObject.getInt("organization_id"));
-//                        ResultSet rs5= statement2.executeQuery();
-//                        jsonObject2 = JsonHandler.createJSONObject(rs5, "user_id");
-//                        System.out.println(jsonObject2.getInt("user_id"));
-//                        System.out.println("sew");
-//
-//
-//                        statement = connection.prepareStatement("INSERT INTO notification (title, description, date, time, type, user_id_receiver, user_id_sender) VALUES (\"Teacher Request\", \"You have a teacher request\", ?, ?,1, ?,?);");
-//                        statement.setDate(1, Date.valueOf(currentDate));
-//                        statement.setTime(2, Time.valueOf(currentTime));
-//                        statement.setInt(3, jsonObject2.getInt("user_id"));
-//                        statement.setInt(4,id);
-//                        Integer num = statement.executeUpdate();
                     }
                 }
             }

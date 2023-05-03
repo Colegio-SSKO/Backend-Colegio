@@ -12,6 +12,7 @@ import java.io.IOException;
 public class teachers extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.println("teacher eke inne");
         JWT jwt = new JWT();
         Authenticator authenticator = new Authenticator();
         System.out.println("user eke inne");
@@ -37,7 +38,7 @@ public class teachers extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+        System.out.println("teacher eke inne");
         JWT jwt = new JWT();
         Authenticator authenticator = new Authenticator();
         System.out.println("user eke inne");

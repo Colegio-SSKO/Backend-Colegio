@@ -48,6 +48,7 @@ public class Authenticator extends ApiHandler{
                             requestObject.getString("email")
                     );
 
+                    newUser.type = 1;
 
                     if(resultSet.wasNull()){
                         System.out.println("not a teacher");
@@ -70,11 +71,13 @@ public class Authenticator extends ApiHandler{
 
                     if (userType==2){
                         Teacher newTeacher = Teacher.parseTeacher(newUser);
+                        newTeacher.type = 2;
                         ServerData.users.put(newUser.userID, newTeacher);
 
                     }
                     else if(userType == 3){
                         Organization newOrganization = Organization.parseOrganization(newUser);
+                        newOrganization.type = 3;
                         ServerData.users.put(newUser.userID, newOrganization);
                     }
 
