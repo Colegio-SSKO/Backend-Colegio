@@ -17,21 +17,21 @@ import java.sql.*;
 public class users extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-//        JWT jwt = new JWT();
-//        Authenticator authenticator = new Authenticator();
-//        System.out.println("user eke inne");
-//        String token = authenticator.extractToken(request);
-//        jwt.decodeJWT(token);
-//        jwt.createToken();
-//        jwt.sign();
-//        if (!jwt.validate()){
-//            System.out.println("Unauthorized resource request");
-//            JSONObject jsonObject = new JSONObject();
-//            jsonObject.put("error", "Unauthorized resource request");
-//            ApiHandler apiHandler = new ApiHandler();
-//            apiHandler.sendResponse(response, jsonObject);
-//        }
-        User user = new User();
+        JWT jwt = new JWT();
+        Authenticator authenticator = new Authenticator();
+        System.out.println("user eke inne");
+        String token = authenticator.extractToken(request);
+        jwt.decodeJWT(token);
+        jwt.createToken();
+        jwt.sign();
+        if (!jwt.validate()){
+            System.out.println("Unauthorized resource request");
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("error", "Unauthorized resource request");
+            ApiHandler apiHandler = new ApiHandler();
+            apiHandler.sendResponse(response, jsonObject);
+        }
+        User user = (User) ServerData.users.get(jwt.payload.getInt("sub"));
         System.out.println("userID ek thmai: " + user.userID);
         RequestsParameters requestsParameters = user.handleRequest(request, response); //save the id and the function
         System.out.println("heloooooooooooooo");
@@ -43,7 +43,23 @@ public class users extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        User user = new User();
+        JWT jwt = new JWT();
+        Authenticator authenticator = new Authenticator();
+        System.out.println("user eke inne");
+        String token = authenticator.extractToken(request);
+        jwt.decodeJWT(token);
+        jwt.createToken();
+        jwt.sign();
+        if (!jwt.validate()){
+            System.out.println("Unauthorized resource request");
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("error", "Unauthorized resource request");
+            ApiHandler apiHandler = new ApiHandler();
+            apiHandler.sendResponse(response, jsonObject);
+        }
+        System.out.println("athult ynna hdnnee2");
+        User user = (User) ServerData.users.get(jwt.payload.getInt("sub"));
+        System.out.println("athult ynna hdnnee");
         RequestsParameters requestsParameters = user.handleRequest(request, response);    //save the id and the function
         JSONObject jsonObject = JsonHandler.getJSONObject(request);       //save the details which comming from the frontend to the jason object
         Object res = user.executeFunction(requestsParameters.getFunction(), requestsParameters.getID(), jsonObject );        //save the object which return from the calling function
@@ -53,8 +69,22 @@ public class users extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        System.out.printf("delete thma");
-        User user = new User();
+
+        JWT jwt = new JWT();
+        Authenticator authenticator = new Authenticator();
+        System.out.println("user eke inne");
+        String token = authenticator.extractToken(request);
+        jwt.decodeJWT(token);
+        jwt.createToken();
+        jwt.sign();
+        if (!jwt.validate()){
+            System.out.println("Unauthorized resource request");
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("error", "Unauthorized resource request");
+            ApiHandler apiHandler = new ApiHandler();
+            apiHandler.sendResponse(response, jsonObject);
+        }
+        User user = (User) ServerData.users.get(jwt.payload.getInt("sub"));
         RequestsParameters requestsParameters = user.handleRequest(request, response);
         Object res = user.executeFunction(requestsParameters.getFunction(), requestsParameters.getID(), new JSONObject() );
         user.sendResponse(response, res);

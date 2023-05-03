@@ -43,6 +43,12 @@ public class Authenticator extends ApiHandler{
 
                     Integer teacherId = resultSet.getInt("teacher.teacher_id");
                     Integer userType;
+                    User newUser = new User(resultSet.getInt("user_id"),
+                            resultSet.getString("f_name") + " " +resultSet.getString("l_name"),
+                            requestObject.getString("email")
+                    );
+
+
                     if(resultSet.wasNull()){
                         System.out.println("not a teacher");
                         Integer organizationID = resultSet.getInt("organization.organization_id");
@@ -61,25 +67,16 @@ public class Authenticator extends ApiHandler{
                         userType = 2;
                     }
 
-                    User newUser = new User();
-                    newUser.userID = resultSet.getInt("user_id");
-                    newUser.email = requestObject.getString("email");
-                    newUser.name = resultSet.getString("f_name") + " " +resultSet.getString("l_name");
 
                     if (userType==2){
                         Teacher newTeacher = Teacher.parseTeacher(newUser);
                         ServerData.users.put(newUser.userID, newTeacher);
+
                     }
                     else if(userType == 3){
                         Organization newOrganization = Organization.parseOrganization(newUser);
                         ServerData.users.put(newUser.userID, newOrganization);
                     }
-
-                    //creating user object
-
-                    ServerData.users.put(newUser.userID, newUser);
-                    System.out.println("length: "+ ServerData.users.size());
-
 
                     //
                     JWT jwt = new JWT();

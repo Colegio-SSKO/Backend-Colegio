@@ -12,12 +12,21 @@ import java.time.LocalTime;
 
 public class Teacher extends User {
 
+    public Teacher(){
+
+    }
+
+
+
 
     public static Teacher parseTeacher(User user){
         Teacher teacher = new Teacher();
         teacher.userID = user.userID;
         teacher.name = user.name;
         teacher.email = user.email;
+        teacher.cart = user.cart;
+        teacher.purchasedContent = user.purchasedContent;
+        teacher.questions = user.questions;
         return teacher;
     }
     public JSONObject teacher_send_req(Integer id, JSONObject requestObject){
@@ -206,7 +215,7 @@ public class Teacher extends User {
         try{
             System.out.println("DB connectiontt");
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT course.introduction_media as img_src, course.course_title as title, course.decription as description, course.price as price, content.content_id as content_id, content.status as status from course INNER JOIN content on course.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=? && content.status=0;");
+            statement = connection.prepareStatement("SELECT course.introduction_media as img_src, content.title as title, course.decription as description, course.price as price, content.content_id as content_id, content.status as status from course INNER JOIN content on course.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=? && content.status=0;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
 

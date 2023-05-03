@@ -8,6 +8,9 @@ import java.lang.reflect.Method;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.servlet.http.Cookie;
 
 
@@ -16,19 +19,75 @@ public class User extends ApiHandler {
     public String name ;
     public String email;
 
+    public Cart cart;
+
+    public List<Content> purchasedContent;
+
+    public List<Question> questions;
+
+    public User(){
+        System.out.println("default User called");
+    }
+
+    public User(Integer userID, String name, String email){
+        this.userID = userID;
+        this.name = name;
+        this.email = email;
+        this.cart = new Cart(userID);
+        this.purchasedContent = new ArrayList<>();
+        this.questions = new ArrayList<>();
 
 
-
-    public JSONArray viewpurchaseCourse(Integer id, JSONObject requestObject){
         Connection connection = Driver.getConnection();
-
-
         JSONArray jsonArray= new JSONArray();
         try{
-            Statement st= connection.createStatement();
-            ResultSet rs= st.executeQuery("Select course.decription as description, course.introduction_media as content_image , course.course_title as course_title, purchase.content_id as content_ID, user.f_name as f_name, user.l_name as l_name from course inner join purchase on purchase.content_id= course.content_id inner join content on course.content_id= content.content_id inner join user on content.user_id= user.user_id where purchase.user_id=1");
+            System.out.println("methnd");
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT *  from purchase INNER JOIN content on purchase.content_id= content.content_id INNER JOIN course ON content.content_id= course.content_id INNER JOIN user ON content.user_id= user.user_id inner join teacher on content.user_id = teacher.user_ID where purchase.user_id=?;");
+            preparedStatement.setInt(1, this.userID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            System.out.println("mkkd oi me");
+            jsonArray = JsonHandler.createJSONArray(resultSet, "title", "f_name", "l_name", "description","qulification_level","content_id" , "pro_pic","image", "course_id", "rate_count");
+            System.out.println(jsonArray.getJSONObject(0).getInt("content_id"));
+            for (int i = 0; i<jsonArray.length() ; i++){
+                Course newCourse = new Course(jsonArray.getJSONObject(i));
+                purchasedContent.add(newCourse);
+                System.out.println("nidimthai");
 
-            jsonArray = JsonHandler.createJSONArray(rs, "content_image", "description", "course_title" , "content_ID", "f_name", "l_name");
+            }
+
+
+
+            //for quizzes
+            preparedStatement = connection.prepareStatement("SELECT *  from purchase INNER JOIN content on purchase.content_id= content.content_id INNER JOIN quiz ON content.content_id= quiz.content_id INNER JOIN user ON content.user_id= user.user_id inner join teacher on content.user_id = teacher.user_ID where purchase.user_id=?;");
+            preparedStatement.setInt(1, this.userID);
+            resultSet = preparedStatement.executeQuery();
+            System.out.println("mkkd oi me quiz");
+            jsonArray = JsonHandler.createJSONArray(resultSet, "title", "f_name", "l_name", "description","qulification_level","content_id" , "pro_pic","image", "quiz_id", "rate_count");
+            System.out.println(jsonArray.getJSONObject(0).getInt("content_id"));
+            for (int i = 0; i<jsonArray.length() ; i++){
+                Quiz newQuiz = new Quiz(jsonArray.getJSONObject(i));
+                purchasedContent.add(newQuiz);
+                System.out.println("nidimthai");
+
+            }
+
+            //for questions
+
+            preparedStatement = connection.prepareStatement(" SELECT * FROM accept RIGHT JOIN question ON question.question_id=accept.question_id LEFT JOIN question_media ON question.question_id= question_media.question_id LEFT JOIN teacher on question.accept_teacher_id= teacher.teacher_id LEFT JOIN user on teacher.user_ID= user.user_id WHERE question.user_id=?;");
+            preparedStatement.setInt(1, this.userID);
+            resultSet = preparedStatement.executeQuery();
+            System.out.println("mkkd oi me questions");
+            jsonArray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description", "f_name" , "l_name", "question_media.media", "qulification_level","pro_pic","question.user_id","question.accept_teacher_id","chat_id","status");
+            System.out.println(jsonArray.getJSONObject(0).getInt("question.question_id"));
+            for (int i = 0; i<jsonArray.length() ; i++){
+                Question newQuestion = new Question(jsonArray.getJSONObject(i));
+                questions.add(newQuestion);
+                System.out.println("nidimthai q");
+            }
+
+
+
+            System.out.println(questions.size());
 
         }
 
@@ -36,7 +95,6 @@ public class User extends ApiHandler {
             System.out.println(sqlException);
         }
 
-        return jsonArray;
     }
 
 
@@ -44,23 +102,16 @@ public class User extends ApiHandler {
 
 
     public JSONArray viewcart(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
+        JSONArray jsonArray = new JSONArray();
+       try {
+           System.out.println("viewcart called");
+           System.out.println(this.userID);
+           jsonArray = cart.getCartDetails(this.userID);
 
-        JSONArray jsonArray= new JSONArray();
-        try{
-            PreparedStatement statement;
-            statement = connection.prepareStatement("Select course.decription as description, course.introduction_media as img_src , content.content_id as content_id, course.course_title as title, course.price as price, user.date_joined as description2, CONCAT(user.f_name, user.l_name) as author from content inner join cart on cart.content_id= content.content_id inner join course on content.content_id= course.content_id inner join user on content.user_id= user.user_id where cart.user_id=? and cart.status = 0;");
-            statement.setInt(1,id);
-            ResultSet rs = statement.executeQuery();
-
-            jsonArray = JsonHandler.createJSONArray(rs, "img_src", "description", "title" , "price", "description2", "author", "content_id");
-
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
+       }
+       catch (Exception exception){
+           System.out.println(exception);
+       }
         return jsonArray;
     }
 
@@ -83,7 +134,7 @@ public class User extends ApiHandler {
 //        try{
 //            System.out.println("DB connectiontt");
 //            Statement st= connection.createStatement();
-//            ResultSet rs= st.executeQuery("Select question.question_description as description, question.question_title as img_src , course.course_title as title, question_question_image as price, user.date_joined as description2, CONCAT(user.f_name, user.l_name) as author from content inner join cart on cart.content_id= content.content_id inner join course on content.content_id= course.content_id inner join user on content.user_id= user.user_id where cart.user_id=4;");
+//            ResultSet rs= st.executeQuery("Select question.question_description as description, question.question_title as img_src , content.title as title, question_question_image as price, user.date_joined as description2, CONCAT(user.f_name, user.l_name) as author from content inner join cart on cart.content_id= content.content_id inner join course on content.content_id= course.content_id inner join user on content.user_id= user.user_id where cart.user_id=4;");
 //
 //            jsonArray = JsonHandler.createJSONArray(rs, "img_src", "description", "title" , "price", "description2", "author");
 //
@@ -151,7 +202,7 @@ public class User extends ApiHandler {
 
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT course.course_title as title, course.introduction_media as img_src, subject.name as subject, content.price as price, course.decription as description, content.rate_count as rates, content.content_id as content_id, concat(user.f_name,' ', user.l_name) as author, content.date as date from course inner join content on course.content_id= content.content_id INNER join user on content.user_id= user.user_id INNER JOIN subject on content.subject_id= subject.subject_id where course.content_id=?;");
+            statement = connection.prepareStatement("SELECT content.title as title, content.image as img_src, subject.name as subject, content.price as price, content.description as description, content.rate_count as rates, content.content_id as content_id, concat(user.f_name,' ', user.l_name) as author, content.date as date from course inner join content on course.content_id= content.content_id INNER join user on content.user_id= user.user_id INNER JOIN subject on content.subject_id= subject.subject_id where course.content_id=?;");
             statement.setInt(1,20);
             ResultSet rs = statement.executeQuery();
 
@@ -168,71 +219,32 @@ public class User extends ApiHandler {
 
 
     public JSONObject delete_cart(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
-
-        JSONObject jsonObject= new JSONObject();
-        try{
-            PreparedStatement statement;
-            statement = connection.prepareStatement("Update cart set status=1 where user_id=? && content_id=?");
-            statement.setInt(1,id);
-            statement.setInt(2,requestObject.getInt("content_id"));
-            Integer res_id = statement.executeUpdate();
-
+        System.out.println("enne ndd halo");
+        JSONObject jsonObject  = new JSONObject();
+        try {
+            System.out.println("remove cart called");
+            System.out.println(this.userID);
+            jsonObject = cart.removeItem(this.userID, requestObject);
 
         }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
+        catch (Exception exception){
+            System.out.println(exception);
         }
-
         return jsonObject;
     }
 
 
     public JSONObject addtocart(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
+        JSONObject jsonObject  = new JSONObject();
+        try {
+            System.out.println("add to cart called");
+            System.out.println(this.userID);
+            jsonObject = cart.addItem(this.userID, requestObject);
 
-        JSONObject jsonObject= new JSONObject();
-        try{
-            PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT * from cart where user_id=? && content_id=? && status=0");
-            statement.setInt(1,id);
-            statement.setInt(2,requestObject.getInt("content_id"));
-            ResultSet rs= statement.executeQuery();
-
-            if(rs.next()){
-                jsonObject.put("message","You already added this content");
-            }
-
-            else{
-                statement = connection.prepareStatement("SELECT * from cart where user_id=? && content_id=? && status=1");
-                statement.setInt(1,id);
-                statement.setInt(2,requestObject.getInt("content_id"));
-                ResultSet rs2= statement.executeQuery();
-
-                if(rs2.next()){
-                    jsonObject.put("message","Added to cart");
-                    statement = connection.prepareStatement("Update cart set status=0 where user_id=? && content_id=?");
-                    statement.setInt(1,id);
-                    statement.setInt(2,requestObject.getInt("content_id"));
-                    Integer num= statement.executeUpdate();
-                }
-                else{
-                    jsonObject.put("message","Added to cart");
-                    PreparedStatement statement2;
-                    statement2 = connection.prepareStatement("INSERT INTO cart (status, user_id, content_id) values (0,?,?)");
-                    statement2.setInt(1,id);
-                    statement2.setInt(2,requestObject.getInt("content_id"));
-                    Integer res_id = statement2.executeUpdate();
-                }
-
-            }
         }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
+        catch (Exception exception){
+            System.out.println(exception);
         }
-
         return jsonObject;
     }
 
@@ -283,7 +295,7 @@ public class User extends ApiHandler {
         JSONArray jsonArray= new JSONArray();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT course.course_title as title, course.introduction_media as img_src, content.rate_count as rate_count, content.price as price,content.content_id as content_id, concat(user.f_name,' ', user.l_name) as author from course inner join content on course.content_id= content.content_id INNER join user on content.user_id= user.user_id where content.status=0;");
+            statement = connection.prepareStatement("SELECT content.title as title, content.image as img_src, content.rate_count as rate_count, content.price as price,content.content_id as content_id, concat(user.f_name,' ', user.l_name) as author from course inner join content on course.content_id= content.content_id INNER join user on content.user_id= user.user_id where content.status=0;");
             ResultSet rs = statement.executeQuery();
 
             jsonArray = JsonHandler.createJSONArray(rs, "img_src", "title" , "price", "author", "content_id","rate_count");
@@ -326,7 +338,7 @@ public class User extends ApiHandler {
         JSONArray jsonArray= new JSONArray();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("select course.course_title as title, concat(user.f_name,' ',user.l_name) as author, content.rate_count as rate_count, course.introduction_media as img_src, course.price as price , content.content_id as content_id from teacher INNER JOIN user on teacher.user_ID= user.user_id INNER JOIN content on teacher.user_ID= content.user_id INNER JOIN course on content.content_id=course.content_id where teacher.user_ID=? && content.status=0;;");
+            statement = connection.prepareStatement("select content.title as title, concat(user.f_name,' ',user.l_name) as author, content.rate_count as rate_count, content.image as img_src, course.price as price , content.content_id as content_id from teacher INNER JOIN user on teacher.user_ID= user.user_id INNER JOIN content on teacher.user_ID= content.user_id INNER JOIN course on content.content_id=course.content_id where teacher.user_ID=? && content.status=0;;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
             jsonArray = JsonHandler.createJSONArray(rs, "author", "title", "price", "img_src", "content_id","rate_count");
@@ -340,146 +352,6 @@ public class User extends ApiHandler {
         return jsonArray;
     }
 
-
-
-
-
-
-
-//    public JSONArray search_teacher(Integer id, JSONObject requestObject){
-//        Connection connection = Driver.getConnection();
-//
-//        JSONArray jsonArray= new JSONArray();
-//        try{
-//            var name =requestObject.getString("teacher_name");
-//            PreparedStatement statement;
-//            statement = connection.prepareStatement("SELECT CONCAT(user.f_name, user.l_name) as name, user.pro_pic as img_src, teacher.qulification_level as quli, teacher.teacher_id as teacher_id FROM user INNER JOIN teacher WHERE CONCAT(user.f_name, user.l_name) like ? && teacher.user_ID= user.user_id;");
-//            statement.setString(1, "%" + name + "%");
-//            ResultSet rs = statement.executeQuery();
-//            jsonArray = JsonHandler.createJSONArray(rs, "img_src", "name", "quli", "teacher_id");
-//
-//        }
-//
-//        catch(SQLException sqlException){
-//            System.out.println(sqlException);
-//        }
-//
-//        return jsonArray;
-//    }
-
-
-
-
-
-
-//    public JSONObject org_accept_teacher(Integer id, JSONObject requestObject){
-//        Connection connection = Driver.getConnection();
-//
-//        JSONObject jsonObject= new JSONObject();
-//        try{
-//            PreparedStatement statement;
-//            statement = connection.prepareStatement("INSERT INTO org_has_teacher (organization_id, teacher_id, status) VALUES (?, ?, 0);");
-//            statement.setInt(1,id);
-//            statement.setInt(2,requestObject.getInt("teacher_id"));
-//            Integer res_id = statement.executeUpdate();
-//
-//            statement = connection.prepareStatement("UPDATE org_teacher_request SET status=1 WHERE teacher_id=? && organization_id=?; ");
-//            statement.setInt(2,id);
-//            statement.setInt(1,requestObject.getInt("teacher_id"));
-//            res_id = statement.executeUpdate();
-//
-//
-//        }
-//
-//        catch(SQLException sqlException){
-//            System.out.println(sqlException);
-//        }
-//
-//        return jsonObject;
-//    }
-
-
-//    public JSONObject org_send_request(Integer id, JSONObject requestObject){
-//        Connection connection = Driver.getConnection();
-//
-//        JSONObject jsonObject= new JSONObject();
-//        try{
-//            PreparedStatement statement;
-//            statement = connection.prepareStatement("INSERT into org_req_teacher (teacher_id, organization_id, status) values (?,?,0)");
-//            statement.setInt(1,requestObject.getInt("teacher_id"));
-//            statement.setInt(2,id);
-//            Integer res_id = statement.executeUpdate();
-//
-//
-//        }
-//
-//        catch(SQLException sqlException){
-//            System.out.println(sqlException);
-//        }
-//
-//        return jsonObject;
-//    }
-
-
-
-
-
-//    public JSONObject teacher_send_req(Integer id, JSONObject requestObject){
-//        Connection connection = Driver.getConnection();
-//
-//        JSONObject jsonObject= new JSONObject();
-//        jsonObject.put("message","send request successfully");
-//        try{
-//            PreparedStatement statement;
-//            statement = connection.prepareStatement("SELECT * from teacher_req_org where teacher_id=? && organization_id=? && status=2");
-//            statement.setInt(1,id);
-//            statement.setInt(2,requestObject.getInt("organization_id"));
-//            ResultSet rs= statement.executeQuery();
-//
-//            if(rs.next()){
-//                statement = connection.prepareStatement("UPDATE teacher_req_org set status=0 where teacher_id=? && organization_id=?");
-//                statement.setInt(1,id);
-//                statement.setInt(2,requestObject.getInt("organization_id"));
-//                Integer res_id = statement.executeUpdate();
-//            }
-//
-//            else{
-//                statement = connection.prepareStatement("SELECT * from teacher_req_org where teacher_id=? && organization_id=? && status=0");
-//                statement.setInt(1,id);
-//                statement.setInt(2,requestObject.getInt("organization_id"));
-//                ResultSet rs2= statement.executeQuery();
-//
-//                if(rs2.next()){
-//                    jsonObject.put("message","You already send request");
-//                }
-//
-//                else{
-//                    statement = connection.prepareStatement("SELECT * from org_has_teacher where teacher_id=? && organization_id=? && status=0");
-//                    statement.setInt(1,id);
-//                    statement.setInt(2,requestObject.getInt("organization_id"));
-//                    ResultSet rs3= statement.executeQuery();
-//
-//                    if(rs3.next()){
-//                        jsonObject.put("message","You already a teacher of this organization");
-//                    }
-//
-//                    else{
-//                        statement = connection.prepareStatement("INSERT INTO teacher_req_org (status, teacher_id, organization_id) values (0,?,?)");
-//                        statement.setInt(1,id);
-//                        statement.setInt(2,requestObject.getInt("organization_id"));
-//                        Integer res_id = statement.executeUpdate();
-//                    }
-//
-//                }
-//            }
-//        }
-//
-//        catch(SQLException sqlException){
-//            System.out.println(sqlException);
-//        }
-//
-//        return jsonObject;
-//    }
 
 
 
@@ -638,45 +510,48 @@ public class User extends ApiHandler {
 
 
     public JSONArray myQuestions(Integer id, JSONObject requestObject){
-        System.out.println(id);
-        JSONArray jasonarray = new JSONArray();
-        Connection connection = Driver.getConnection();
+        JSONArray jsonArray = new JSONArray();
         try {
-            PreparedStatement statement = connection.prepareStatement(" SELECT * FROM accept RIGHT JOIN question ON question.question_id=accept.question_id LEFT JOIN question_media ON question.question_id= question_media.question_id LEFT JOIN teacher on question.accept_teacher_id= teacher.teacher_id LEFT JOIN user on teacher.user_ID= user.user_id WHERE question.user_id=?;");
-            System.out.println("aaaa");
-            statement.setInt(1,id);
-            ResultSet resultSet = statement.executeQuery();
+            System.out.println("view purchase questions");
+            System.out.println(this.questions == null);
+            System.out.println("view purchase questions");
+            for (Question question : questions){
+                System.out.println("mkkd aula question eke");
+                System.out.println(question.getClass().getName());
+                jsonArray.put(question.data);
+            }
 
-            jasonarray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description", "f_name" , "l_name", "question_media.media", "qulification_level","pro_pic","question.user_id","question.accept_teacher_id","chat_id","status");
         }catch (Exception exception){
             System.out.println(exception);
         }
 
-
-        return jasonarray;
+        System.out.println(jsonArray.length());
+        return jsonArray;
     }
 
 
 
 
     public JSONArray myQuizes(Integer id, JSONObject requestObject){
-        System.out.println("methnt enw");
-
-        JSONArray jasonarray = new JSONArray();
-
+        JSONArray jsonArray = new JSONArray();
         try {
-            Connection connection = Driver.getConnection();
-            PreparedStatement statement = connection.prepareStatement("SELECT * from content INNER JOIN purchase on purchase.content_id=content.content_id INNER JOIN quiz ON purchase.content_id=quiz.content_id INNER JOIN user on content.user_id= user.user_id inner join teacher on content.user_id = teacher.user_id where purchase.user_id=?");
-            statement.setInt(1,id);
-            ResultSet resultSet = statement.executeQuery();
-            System.out.println("methnt enw2");
-            jasonarray = JsonHandler.createJSONArray(resultSet, "quiz_title", "f_name", "l_name", "description" ,"qulification_level", "content_id", "quiz_id","image","rate_count");
+            System.out.println("view purchase quiz");
+            System.out.println(this.purchasedContent == null);
+            System.out.println("view purchase quiz");
+            for (Content content : purchasedContent){
+                System.out.println("mkkd aula quiz eke");
+                System.out.println(content.getClass().getName());
+                if (content instanceof Quiz){
+                    jsonArray.put(content.data);
+                }
+            }
+
         }catch (Exception exception){
             System.out.println(exception);
         }
 
-
-        return jasonarray;
+        System.out.println(jsonArray.length());
+        return jsonArray;
     }
 
 
@@ -690,7 +565,7 @@ public class User extends ApiHandler {
             var name =requestObject.getString("name");
             PreparedStatement statement;
             System.out.println(name);
-
+            System.out.println("pre search");
             statement = connection.prepareStatement("SELECT t.type, t.name, t.img_src, t.quli, t.id, t.course_title, t.quiz_title, t.content_id, t.status, CONCAT(u.f_name, ' ', u.l_name) AS creator,\n" +
                     "CASE WHEN t.type = 'course' THEN c.introduction_media ELSE NULL END AS intro_media,\n" +
                     "CASE WHEN t.type = 'quiz' THEN q.image ELSE NULL END AS quiz_img,\n" +
@@ -921,24 +796,6 @@ public class User extends ApiHandler {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public JSONArray getQuestions(Integer id, JSONObject requestObject){
         JSONArray jsonArray = new JSONArray();
         Connection connection = Driver.getConnection();
@@ -977,21 +834,25 @@ public class User extends ApiHandler {
 
 
     public JSONArray myCources(Integer id, JSONObject requestObject){
-        System.out.println("myssss");
-        JSONArray jasonarray = new JSONArray();
-        Connection connection = Driver.getConnection();
+        JSONArray jsonArray = new JSONArray();
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * from purchase INNER JOIN content on purchase.content_id= content.content_id INNER JOIN course ON content.content_id= course.content_id INNER JOIN user ON content.user_id= user.user_id inner join teacher on content.user_id = teacher.user_ID where purchase.user_id=?;");
-            statement.setInt(1, id);
-            ResultSet resultSet = statement.executeQuery();
+            System.out.println("view purchase course");
+            System.out.println(this.purchasedContent == null);
+            System.out.println("view purchase course");
+            for (Content content : purchasedContent){
+                System.out.println("mkkd aula");
+                System.out.println(content.getClass().getName());
+                if (content instanceof Course){
+                    jsonArray.put(content.data);
+                }
+            }
 
-            jasonarray = JsonHandler.createJSONArray(resultSet, "course_title", "f_name", "l_name", "decription","qulification_level","content_id" , "pro_pic","introduction_media", "course_id", "rate_count");
         }catch (Exception exception){
             System.out.println(exception);
         }
 
-
-        return jasonarray;
+        System.out.println(jsonArray.length());
+        return jsonArray;
     }
 
 
@@ -1106,23 +967,38 @@ public class User extends ApiHandler {
 
 
     public JSONArray continue_course(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
-
-
+        System.out.println("cont course1");
         JSONArray jsonArray= new JSONArray();
+        Course newCourse = new Course();
         try{
+            System.out.println("cont course2");
+            for(int i =0 ; i < purchasedContent.size() ;i ++){
+                System.out.println("cont course3");
+                if (purchasedContent.get(i) instanceof Course && purchasedContent.get(i).data.getInt("content_id") == id){
+                    newCourse = new Course((JSONObject) purchasedContent.get(i).data);
+                    System.out.println(newCourse.courseMedia.size());
+                }
+            }
+            System.out.println("cont course4");
+            if (newCourse.data == null){
+                System.out.println("no course media");
+                return jsonArray;
+            }
 
-            PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT * FROM course_media INNER JOIN course ON course_media.course_id= course.course_id INNER JOIN content ON course.content_id=content.content_id INNER JOIN user ON content.user_id= user.user_id INNER JOIN teacher on teacher.user_ID= user.user_id WHERE course.content_id=?;");
-            statement.setInt(1,id);
-            ResultSet rs = statement.executeQuery();
-
-            jsonArray = JsonHandler.createJSONArray(rs, "meida_title", "media_description", "course_media_id", "f_name", "l_name", "qulification_level","media", "pro_pic");
+            for (int i=0 ; i < newCourse.courseMedia.size() ; i++){
+                JSONObject newJsonObject = new JSONObject();
+                newJsonObject.put("f_name", newCourse.data.getString("f_name"));
+                newJsonObject.put("l_name", newCourse.data.getString("l_name"));
+                newJsonObject.put("qulification_level", newCourse.data.getString("qulification_level"));
+                newJsonObject.put("pro_pic", newCourse.data.getString("pro_pic"));
+                newJsonObject.put("course_media_id",  newCourse.courseMedia.get(i).data);
+                jsonArray.put(newJsonObject);
+            }
 
         }
 
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
+        catch(Exception exception){
+            System.out.println(exception);
         }
 
         return jsonArray;
