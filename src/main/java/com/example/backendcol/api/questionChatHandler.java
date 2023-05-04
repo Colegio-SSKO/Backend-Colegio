@@ -55,8 +55,9 @@ public class questionChatHandler {
             else{
                 System.out.println("nene");
                 System.out.println(messageData.getInt("receiver"));
-                User receiver = (User) ServerData.users.get(messageData.getInt("receiver"));
-                User sender = (User) ServerData.users.get(messageData.getInt("sender"));
+
+                Object receiver = ServerData.users.get(messageData.getInt("receiver"));
+                Object sender = ServerData.users.get(messageData.getInt("sender"));
 
                 if (receiver == null) {
                     System.out.println("receiver not logged in");
@@ -65,16 +66,90 @@ public class questionChatHandler {
                     System.out.println("sender logged out");
                 }
                 else{
-                    System.out.println("receiver" + receiver.userID);
-                    System.out.println("sender" + sender.userID);
-                    Question question = sender.questions.get(messageData.getInt("questionId"));
-                    System.out.println(question.data.getInt("question.question_id"));
-                    question.storeMessage(message, sender.userID);
-                }
-                Question question = sender.questions.get(messageData.getInt("questionId"));
-                System.out.println(question.data.getInt("question.question_id"));
-                question.storeMessage(messageData.getString("message"), sender.userID);
 
+
+                    Boolean isAcceptedSender = false;
+
+                    if (sender instanceof Teacher){
+                        System.out.println(sender.getClass().getName());
+                        Question question = ((Teacher) sender).questions.get(messageData.getInt("questionId"));
+                        Question answerQuestion = ((Teacher) sender).answeringQuestions.get(messageData.getInt("questionId"));
+                        if (question != null){
+                            System.out.println("question");
+                            if (question.data.getInt("question.user_id") == messageData.getInt("sender")
+                                    &&
+                                    question.data.getInt("teacher.user_ID") == messageData.getInt("receiver")
+                            ){
+                                isAcceptedSender = true;
+                                question.storeMessage(messageData.getString("message"), ((Teacher) sender).userID);
+                            }
+                            else {
+                                System.out.println("invalid message");
+                            }
+                        }
+                        else if (answerQuestion != null){
+                            System.out.println("question answer");
+                            if (answerQuestion.data.getInt("question.user_id") == messageData.getInt("receiver")
+                                    &&
+                                    answerQuestion.data.getInt("teacher.user_ID") == messageData.getInt("sender")
+                            ){
+                                isAcceptedSender = true;
+                                answerQuestion.storeMessage(messageData.getString("message"), ((Teacher) sender).userID);
+                            }
+                            else {
+                                System.out.println("invalid message");
+                            }
+                        }
+                        else {
+                            System.out.println("invalid sender");
+                        }
+
+                    }
+
+                    else {
+                        System.out.println(sender.getClass().getName());
+                        Question question = ((User) sender).questions.get(messageData.getInt("questionId"));
+                        if (question != null){
+                            if (question.data.getInt("question.user_id") == messageData.getInt("sender")
+                                    &&
+                                    question.data.getInt("teacher.user_ID") == messageData.getInt("receiver")
+                            ){
+                                isAcceptedSender = true;
+                                question.storeMessage(messageData.getString("message"), ((User) sender).userID);
+                            }
+                        }
+
+                        else {
+                            System.out.println("invalid sender");
+                        }
+
+                    }
+
+                    if (isAcceptedSender){
+                        System.out.println("valid massage");
+                        ((User)receiver).session.getAsyncRemote().sendText(message);
+
+                    }
+
+                }
+
+
+
+//                if (receiver == null) {
+//                    System.out.println("receiver not logged in");
+//                }
+//                else if(sender == null) {
+//                    System.out.println("sender logged out");
+//                }
+//                else{
+//                    System.out.println("receiver" + receiver.userID);
+//                    System.out.println("sender" + sender.userID);
+//                    Question question = sender.questions.get(messageData.getInt("questionId"));
+//                    System.out.println(question.data.getInt("question.question_id"));
+//                    question.storeMessage(message, sender.userID);
+//                }
+//
+//               receiver.session.getAsyncRemote().sendText(message);
 
             }
         }

@@ -17,8 +17,8 @@ public class SetHeaderFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws ServletException, IOException {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-
-        System.out.println("filteree wda he he");
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        System.out.println("API URL : " + httpRequest.getRequestURI());
         httpResponse.setContentType("application/json");
         httpResponse.setHeader("Access-Control-Allow-Credentials", "true");
         httpResponse.addHeader("Access-Control-Allow-Origin", "http://localhost:8080");

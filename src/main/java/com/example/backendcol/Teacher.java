@@ -9,27 +9,31 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 
 public class Teacher extends User {
 
     public HashMap<Integer,Question> answeringQuestions;
 
-    public Teacher(){
 
-    }
 
-    public Teacher(JSONObject jsonObject){
+    public Teacher(Integer userid){
+        System.out.println("Teacher Constructor called");
         try {
             JSONArray jsonArray = new JSONArray();
 
             Connection connection = Driver.getConnection();
 
+            System.out.println("teacher ge id ek : " + userid);
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM question INNER JOIN teacher ON question.accept_teacher_id= teacher.teacher_id INNER JOIN user ON question.user_id= user.user_id INNER join question_media on question.question_id = question_media.question_id WHERE (question.status=1 OR question.status=2) AND teacher.user_ID=?;");
-            preparedStatement.setInt(1, this.userID);
+            preparedStatement.setInt(1, userid);
             ResultSet resultSet = preparedStatement.executeQuery();
             System.out.println("mkkd oi me questions teacher");
-            jsonArray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description","media", "f_name" , "l_name","pro_pic","question.user_id","question.status");
+            jsonArray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description","media", "f_name" , "l_name","pro_pic","question.user_id","question.status", "teacher.user_ID");
+            System.out.println("meka empty kypnko: "+ jsonArray.length());
+            this.answeringQuestions = new HashMap<>();
             for (int i = 0; i<jsonArray.length() ; i++){
                 Question newQuestion = new Question(jsonArray.getJSONObject(i));
                 answeringQuestions.put( jsonArray.getJSONObject(i).getInt("question.question_id"),newQuestion);
@@ -49,7 +53,7 @@ public class Teacher extends User {
 
 
     public static Teacher parseTeacher(User user){
-        Teacher teacher = new Teacher();
+        Teacher teacher = new Teacher(user.userID);
         teacher.userID = user.userID;
         teacher.name = user.name;
         teacher.email = user.email;
@@ -553,5 +557,35 @@ public class Teacher extends User {
         }
 
         return jsonArray;
+    }
+
+
+    public JSONArray answer_questions(Integer id, JSONObject requestObject){
+        JSONArray jsonArray = new JSONArray();
+        try {
+            System.out.println("view purchase questions answer");
+            System.out.println(this.questions == null);
+            System.out.println("view purchase questions answer");
+
+            if (this.answeringQuestions == null){
+                return jsonArray;
+            }
+
+            Iterator<Map.Entry<Integer, Question>> iterator = answeringQuestions.entrySet().iterator();
+
+            while (iterator.hasNext()) {
+                Map.Entry<Integer, Question> entry = iterator.next();
+                Integer key = entry.getKey();
+                Question value = entry.getValue();
+                jsonArray.put(value.data);
+            }
+
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+
+        System.out.println(jsonArray.length());
+        return jsonArray;
+
     }
 }

@@ -66,8 +66,6 @@ public class JWT {
     }
 
     public boolean validate(){
-        System.out.println(providedSign);
-        System.out.println(signature);
         if (providedSign.equals(signature))
             return true;
         else

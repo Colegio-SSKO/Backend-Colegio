@@ -201,28 +201,28 @@ public class User extends ApiHandler {
 //        return jsonObject;
 //    }
 //
-//    public JSONObject view_featured_cont(Integer id, JSONObject requestObject){
-//        Connection connection = Driver.getConnection();
-//        System.out.println("DB connectionqq");
-//
-//        JSONObject jsonObject= new JSONObject();
-//
-//        try{
-//            PreparedStatement statement;
-//            statement = connection.prepareStatement("SELECT content.title as title, content.image as img_src, subject.name as subject, content.price as price, content.description as description, content.rate_count as rates, content.content_id as content_id, concat(user.f_name,' ', user.l_name) as author, content.date as date from course inner join content on course.content_id= content.content_id INNER join user on content.user_id= user.user_id INNER JOIN subject on content.subject_id= subject.subject_id where course.content_id=?;");
-//            statement.setInt(1,20);
-//            ResultSet rs = statement.executeQuery();
-//
-//            jsonObject = JsonHandler.createJSONObject(rs, "title", "img_src", "price", "description", "content_id", "author", "date", "subject","rates");
-//
-//        }
-//
-//        catch(SQLException sqlException){
-//            System.out.println(sqlException);
-//        }
-//
-//        return jsonObject;
-//    }
+    public JSONObject view_featured_cont(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+        System.out.println("DB connectionqq");
+
+        JSONObject jsonObject= new JSONObject();
+
+        try{
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT content.title as title, content.image as img_src, subject.name as subject, content.price as price, content.description as description, content.rate_count as rates, content.content_id as content_id, concat(user.f_name,' ', user.l_name) as author, content.date as date from course inner join content on course.content_id= content.content_id INNER join user on content.user_id= user.user_id INNER JOIN subject on content.subject_id= subject.subject_id where course.content_id=?;");
+            statement.setInt(1,20);
+            ResultSet rs = statement.executeQuery();
+
+            jsonObject = JsonHandler.createJSONObject(rs, "title", "img_src", "price", "description", "content_id", "author", "date", "subject","rates");
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
 
 
     public JSONObject delete_cart(Integer id, JSONObject requestObject){
@@ -523,22 +523,15 @@ public class User extends ApiHandler {
             System.out.println(this.questions == null);
             System.out.println("view purchase questions");
 
-            // Getting an iterator for the map
+
             Iterator<Map.Entry<Integer, Question>> iterator = questions.entrySet().iterator();
 
-// Iterating through the map using iterator
             while (iterator.hasNext()) {
                 Map.Entry<Integer, Question> entry = iterator.next();
                 Integer key = entry.getKey();
                 Question value = entry.getValue();
                jsonArray.put(value.data);
             }
-
-//            for (Question question : questions){
-//                System.out.println("mkkd aula question eke");
-//                System.out.println(question.getClass().getName());
-//                jsonArray.put(question.data);
-//            }
 
         }catch (Exception exception){
             System.out.println(exception);

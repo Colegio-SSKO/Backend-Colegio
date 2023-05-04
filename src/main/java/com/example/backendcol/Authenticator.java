@@ -70,6 +70,7 @@ public class Authenticator extends ApiHandler{
 
 
                     if (userType==2){
+                        System.out.println(newUser.userID);
                         Teacher newTeacher = Teacher.parseTeacher(newUser);
                         newTeacher.type = 2;
                         ServerData.users.put(newUser.userID, newTeacher);
@@ -145,7 +146,6 @@ public class Authenticator extends ApiHandler{
         else {
             isTokenPresent = 1;
             JWT jwt = new JWT();
-            System.out.println("This is the token: " + token);
             jwt.decodeJWT(token);
             jwt.createToken();
             jwt.sign();
@@ -197,7 +197,6 @@ public class Authenticator extends ApiHandler{
                     if(cookie.getName().equals("jwtToken")){
 
                         token = cookie.getValue();
-                        System.out.println(token);
                         break;
                     }
                 }
