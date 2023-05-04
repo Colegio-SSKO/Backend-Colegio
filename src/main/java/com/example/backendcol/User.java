@@ -23,6 +23,8 @@ import jakarta.servlet.http.Cookie;
 public class User extends ApiHandler {
 
     public Session session;
+
+    public Session notificationSession;
     public Integer userID ;
     public String name ;
     public String email;
@@ -1331,11 +1333,9 @@ public class User extends ApiHandler {
 
         try{
 
-            //sending live notifications
-            ServerData.userIdToNotifictionSession.get(1).getAsyncRemote().sendText("notification ek send una");
 
             PreparedStatement statement;
-            statement = connection.prepareStatement("INSERT INTO user_req_session (user_id, teacher_id, question_id) VALUES (?,?,?);");
+            statement = connection.prepareStatement("INSERT IGNORE INTO user_req_session (user_id, teacher_id, question_id) VALUES (?,?,?);");
             statement.setInt(1,id);
             statement.setInt(2, requestObject.getInt("teacher_id"));
             statement.setInt(3, requestObject.getInt("question_id"));
@@ -1356,12 +1356,23 @@ public class User extends ApiHandler {
 
                 //notification part
                 PreparedStatement statement3 = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver, user_id_sender, status) VALUES (?,?,5,?,?,0);");
-                statement3.setDate(1, Date.valueOf(currentDate));
-                statement3.setTime(2, Time.valueOf(currentTime));
+                Date date = Date.valueOf(currentDate);
+                Time time = Time.valueOf(currentTime);
+                statement3.setDate(1, date);
+                statement3.setTime(2, time);
                 statement3.setInt(3,userid);
-                statement3.setInt(4,id);
+                statement3.setInt(4,this.userID);
                 Integer num2 = statement3.executeUpdate();
                 System.out.println("notification eka yuwa");
+                JSONObject notificationObject = new JSONObject();
+                jsonObject.put("date", date);
+                jsonObject.put("time", time);
+                jsonObject.put("type", type);
+                jsonObject.put("user_id_receiver", userid);
+                jsonObject.put("user_id_sender", this.userID);
+                System.out.println(jsonObject.toString());
+
+
 
                 jsonObject.put("message", "Request send successfully");
                 return jsonObject;
