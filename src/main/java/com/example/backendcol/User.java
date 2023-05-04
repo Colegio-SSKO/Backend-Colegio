@@ -674,40 +674,40 @@ public class User extends ApiHandler {
 
 
 
-    public JSONArray show_notifications(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
-
-        JSONArray jsonArray= new JSONArray();
-        try{
-            PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT n.notification_id, n.title, n.description, n.date, n.time, n.type, n.status, \n" +
-                    "    CONCAT(u.f_name, ' ', u.l_name) AS sender_name, 'user' AS sender_type\n" +
-                    "FROM notification n\n" +
-                    "JOIN user u ON n.user_id_sender = u.user_id\n" +
-                    "WHERE n.user_id_receiver = ? OR n.mod_id_receiver = ? \n" +
-                    "UNION ALL\n" +
-                    "SELECT n.notification_id, n.title, n.description, n.date, n.time, n.type, n.status, \n" +
-                    "    CONCAT(m.f_name, ' (Moderator)') AS sender_name, 'moderator' AS sender_type\n" +
-                    "FROM notification n\n" +
-                    "JOIN moderator m ON n.mod_id_sender = m.moderator_id\n" +
-                    "WHERE n.user_id_receiver = ? OR n.mod_id_receiver = ? ;\n");
-            statement.setInt(1, id);
-            statement.setInt(2, id);
-            statement.setInt(3, id);
-            statement.setInt(4, id);
-
-
-            ResultSet rs = statement.executeQuery();
-            System.out.println(rs);
-            jsonArray = JsonHandler.createJSONArray(rs, "notification_id", "sender_name", "sender_type", "date" ,"time", "title", "description", "type", "status");
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
-        return jsonArray;
-    }
+//    public JSONArray show_notifications(Integer id, JSONObject requestObject){
+//        Connection connection = Driver.getConnection();
+//
+//        JSONArray jsonArray= new JSONArray();
+//        try{
+//            PreparedStatement statement;
+//            statement = connection.prepareStatement("SELECT n.notification_id, n.title, n.description, n.date, n.time, n.type, n.status, \n" +
+//                    "    CONCAT(u.f_name, ' ', u.l_name) AS sender_name, 'user' AS sender_type\n" +
+//                    "FROM notification n\n" +
+//                    "JOIN user u ON n.user_id_sender = u.user_id\n" +
+//                    "WHERE n.user_id_receiver = ? OR n.mod_id_receiver = ? \n" +
+//                    "UNION ALL\n" +
+//                    "SELECT n.notification_id, n.title, n.description, n.date, n.time, n.type, n.status, \n" +
+//                    "    CONCAT(m.f_name, ' (Moderator)') AS sender_name, 'moderator' AS sender_type\n" +
+//                    "FROM notification n\n" +
+//                    "JOIN moderator m ON n.mod_id_sender = m.moderator_id\n" +
+//                    "WHERE n.user_id_receiver = ? OR n.mod_id_receiver = ? ;\n");
+//            statement.setInt(1, id);
+//            statement.setInt(2, id);
+//            statement.setInt(3, id);
+//            statement.setInt(4, id);
+//
+//
+//            ResultSet rs = statement.executeQuery();
+//            System.out.println(rs);
+//            jsonArray = JsonHandler.createJSONArray(rs, "notification_id", "sender_name", "sender_type", "date" ,"time", "title", "description", "type", "status");
+//        }
+//
+//        catch(SQLException sqlException){
+//            System.out.println(sqlException);
+//        }
+//
+//        return jsonArray;
+//    }
 
 
 
@@ -1295,7 +1295,7 @@ public class User extends ApiHandler {
                     System.out.println("student_send_question table ekata data dmma");
 
                     //notification part
-                    statement= connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver,user_id_sender,status) values (?,?,6,?,?,0)");
+                    statement= connection.prepareStatement("INSERT INTO notification (date, time, type, message, user_id_receiver,user_id_sender,status) values (?,?,6,'send_question request',?,?,0)");
                     statement.setDate(1, Date.valueOf(currentDate));
                     statement.setTime(2, Time.valueOf(currentTime));
                     statement.setInt(3, teacher_userid);
@@ -1355,7 +1355,7 @@ public class User extends ApiHandler {
                 System.out.println("teacherge user id eka gaththa");
 
                 //notification part
-                PreparedStatement statement3 = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver, user_id_sender, status) VALUES (?,?,5,?,?,0);");
+                PreparedStatement statement3 = connection.prepareStatement("INSERT INTO notification (date, time, type, message,user_id_receiver, user_id_sender, status) VALUES (?,?,5,'request session',?,?,0);");
                 statement3.setDate(1, Date.valueOf(currentDate));
                 statement3.setTime(2, Time.valueOf(currentTime));
                 statement3.setInt(3,userid);
