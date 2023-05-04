@@ -737,7 +737,7 @@ public class User extends ApiHandler {
             PreparedStatement statement = connection.prepareStatement("SELECT * from course INNER JOIN content on course.content_id=content.content_id INNER JOIN user ON content.user_id=user.user_id inner join teacher on content.user_id = teacher.user_id where content.content_id=?;");
             statement.setInt(1,id);
             ResultSet resultSet = statement.executeQuery();
-            jasonobject = JsonHandler.createJSONObject(resultSet, "course_title", "introduction_media", "f_name", "l_name", "decription" , "content_id", "price","date","rate_count");
+            jasonobject = JsonHandler.createJSONObject(resultSet, "course_title", "introduction_media", "f_name", "l_name", "decription" , "content_id", "price","date","rate_count","content.type");
         }catch (Exception exception){
             System.out.println(exception);
         }
@@ -1030,6 +1030,7 @@ public class User extends ApiHandler {
 
         JSONObject jsonObject2= new JSONObject();
         LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
 
 
         try{
@@ -1047,22 +1048,22 @@ public class User extends ApiHandler {
 
 
 
-//                PreparedStatement statement2;
-//                statement2= connection.prepareStatement("Select content.user_id, content.content_id from content inner join course on course.content_id=content.content_id where course_id=?");
-//                statement2.setInt(1,requestObject.getInt("course_id"));
-//                ResultSet rs2= statement2.executeQuery();
-//                jsonObject2 = JsonHandler.createJSONObject(rs2, "user_id", "content_id");
-//                System.out.println(jsonObject2.getInt("user_id"));
-//                System.out.println("sew");
-//
-//
-//                statement = connection.prepareStatement("INSERT INTO notification (title, description, date, time, type, user_id_receiver, user_id_sender, content_id) VALUES (\"Report your content\", \"Purchased user report your published content\", ?, ?,0, ?,?,?);");
-//                statement.setDate(1, Date.valueOf(currentDate));
-//                statement.setTime(2, Time.valueOf(currentTime));
-//                statement.setInt(3, jsonObject2.getInt("user_id"));
-//                statement.setInt(4,id);
-//                statement.setInt(5,jsonObject2.getInt("content_id"));
-//                Integer num2 = statement.executeUpdate();
+            PreparedStatement statement2;
+            statement2= connection.prepareStatement("Select content.user_id course.title from content inner join course on course.content_id=content.content_id where course_id=?");
+            statement2.setInt(1,requestObject.getInt("course_id"));
+            ResultSet rs2= statement2.executeQuery();
+            Integer content_userid= rs2.getInt("content.user_id");
+            String title= rs2.getString("course.title");
+            System.out.println("sew");
+
+
+            statement = connection.prepareStatement("INSERT INTO notification (date,time,message,type, user_id_sender, user_id,receiver) VALUES (?,?,?,11,?,?);");
+            statement.setDate(1, Date.valueOf(currentDate));
+            statement.setTime(2, Time.valueOf(currentTime));
+            statement.setString(3, "report your course " + title);
+            statement.setInt(4, id);
+            statement.setInt(5,content_userid);
+            Integer num2 = statement.executeUpdate();
 
 
         }
@@ -1101,22 +1102,14 @@ public class User extends ApiHandler {
             jsonObject.put("message", "Report added");
 
 
-//                PreparedStatement statement2;
-//                statement2= connection.prepareStatement("Select content.user_id, content.content_id from content inner join course on course.content_id=content.content_id where course_id=?");
-//                statement2.setInt(1,requestObject.getInt("course_id"));
-//                ResultSet rs2= statement2.executeQuery();
-//                jsonObject2 = JsonHandler.createJSONObject(rs2, "user_id", "content_id");
-//                System.out.println(jsonObject2.getInt("user_id"));
-//                System.out.println("sew");
-//
-//
-//                statement = connection.prepareStatement("INSERT INTO notification (title, description, date, time, type, user_id_receiver, user_id_sender, content_id) VALUES (\"Report your content\", \"Purchased user report your published content\", ?, ?,0, ?,?,?);");
-//                statement.setDate(1, Date.valueOf(currentDate));
-//                statement.setTime(2, Time.valueOf(currentTime));
-//                statement.setInt(3, jsonObject2.getInt("user_id"));
-//                statement.setInt(4,id);
-//                statement.setInt(5,jsonObject2.getInt("content_id"));
-//                Integer num2 = statement.executeUpdate();
+            //notification part
+            statement = connection.prepareStatement("INSERT INTO notification (date,time,message,type, user_id_sender, user_id_receiver, status) VALUES (?,?,'report your account',9,?,?,0);");
+            statement.setDate(1, Date.valueOf(currentDate));
+            statement.setTime(2, Time.valueOf(currentTime));
+            statement.setInt(3, id);
+            statement.setInt(4,requestObject.getInt("user_id"));
+            Integer num2 = statement.executeUpdate();
+            System.out.println("notifiaction eka giyaa");
 
 
         }
@@ -1250,9 +1243,6 @@ public class User extends ApiHandler {
 
         Integer generatedKey = -100;
 
-
-
-
         try{
             PreparedStatement statement;
 
@@ -1310,6 +1300,7 @@ public class User extends ApiHandler {
                     System.out.println("wedaaaaa2");
                     //insert data to question table
                     Integer teacher_id= rs.getInt("teacher_id");
+                    Integer teacher_userid= rs.getInt("user_ID");
                     System.out.println(teacher_id);
                     statement = connection.prepareStatement("INSERT INTO student_send_question (user_id, teacher_id, question_id) VALUES (?,?,?)" );
                     statement.setInt(1, id);
@@ -1317,6 +1308,17 @@ public class User extends ApiHandler {
                     statement.setInt(3, generatedKey);
                     Integer num2= statement.executeUpdate();
                     System.out.println("student_send_question table ekata data dmma");
+
+                    //notification part
+                    statement= connection.prepareStatement("INSERT INTO notification (date, time, type, message,user_id_receiver,user_id_sender,status) values (?,?,6,'send question request',?,?,0)");
+                    statement.setDate(1, Date.valueOf(currentDate));
+                    statement.setTime(2, Time.valueOf(currentTime));
+                    statement.setInt(3, teacher_userid);
+                    statement.setInt(4,id);
+                    Integer num3 = statement.executeUpdate();
+                    jsonObject.put("message", "send question request you");
+
+                    System.out.println("notification eka damma");
                 }
                 else{
                     System.out.println("Tag is invalid");
@@ -1336,7 +1338,6 @@ public class User extends ApiHandler {
 
 
     public JSONObject session_request(Integer id, JSONObject requestObject){
-
         System.out.println("awaaaaaaaaaaaaaaaaaaaaa");
         Connection connection = Driver.getConnection();
 
@@ -1359,8 +1360,6 @@ public class User extends ApiHandler {
             System.out.println("inser eka unaa");
 
 
-
-
             statement = connection.prepareStatement("select * from teacher where teacher_id=?");
             statement.setInt(1, requestObject.getInt("teacher_id"));
             ResultSet rs= statement.executeQuery();
@@ -1370,19 +1369,18 @@ public class User extends ApiHandler {
                 System.out.println("teacherge user id eka gaththa");
 
                 //notification part
-                PreparedStatement statement3 = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver, user_id_sender, status) VALUES (?,?,5,?,?,0);");
+                PreparedStatement statement3 = connection.prepareStatement("INSERT INTO notification (date, time, type, message, user_id_receiver, user_id_sender, status) VALUES (?,?,5,'send request to get session',?,?,0);");
                 statement3.setDate(1, Date.valueOf(currentDate));
                 statement3.setTime(2, Time.valueOf(currentTime));
                 statement3.setInt(3,userid);
                 statement3.setInt(4,id);
                 Integer num2 = statement3.executeUpdate();
                 System.out.println("notification eka yuwa");
+                jsonObject.put("message", "send request to get session");
 
                 jsonObject.put("message", "Request send successfully");
                 return jsonObject;
             }
-
-
         }
 
         catch(SQLException sqlException){
@@ -1403,11 +1401,11 @@ public class User extends ApiHandler {
 
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT * FROM notification INNER JOIN user ON notification.user_id_sender= user.user_id WHERE user_id_receiver=?;");
+            statement = connection.prepareStatement("SELECT * FROM notification INNER JOIN user ON notification.user_id_sender= user.user_id WHERE notification.user_id_receiver=? && notification.status=0;");
             statement.setInt(1,id);
             ResultSet rs= statement.executeQuery();
-            jsonArray = JsonHandler.createJSONArray(rs, "date", "time", "f_name","l_name","type","user_id_sender");
-
+            jsonArray = JsonHandler.createJSONArray(rs, "date", "time", "f_name","l_name","type","user_id_sender", "pro_pic", "message","notification_id");
+            System.out.println("data dunna");
         }
 
         catch(SQLException sqlException){

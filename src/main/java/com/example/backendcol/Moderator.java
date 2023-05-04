@@ -117,27 +117,22 @@ public class Moderator extends ApiHandler {
 
 
 
-            //notification part
-//            PreparedStatement statement2;
-//            statement2= connection.prepareStatement("Select user_id from content where content_id=?");
-//            statement2.setInt(1,requestObject.getInt("content_id"));
-//            ResultSet rs2= statement2.executeQuery();
-//            jsonObject2 = JsonHandler.createJSONObject(rs2, "user_id");
-//            System.out.println(jsonObject2.getInt("user_id"));
-//            System.out.println("sew");
-//
-//
-//            statement = connection.prepareStatement("INSERT INTO notification (title, description, date, time, type, user_id_receiver, mod_id_sender, content_id) VALUES (\"Disable Course\", \"Beacuse of the hudge reports diable your course\", ?, ?,0, ?,?,?);");
-//            System.out.println("sew1");
-//            statement.setDate(1, Date.valueOf(currentDate));
-//            System.out.println("sew2");
-//            statement.setTime(2, Time.valueOf(currentTime));
-//            statement.setInt(3, jsonObject2.getInt("user_id"));
-//            statement.setInt(4,id);
-//            statement.setInt(5,requestObject.getInt("content_id"));
-//            Integer num2 = statement.executeUpdate();
+//            notification part
+            PreparedStatement statement2;
+            statement2= connection.prepareStatement("Select user_id from content where content_id=?");
+            statement2.setInt(1,requestObject.getInt("content_id"));
+            ResultSet rs2= statement2.executeQuery();
+            Integer user_id= rs2.getInt("user_id");
 
-            if(res_id2==1){
+
+            statement = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver,mod_id_sender,status) values (?,?,13,?,?,0)");
+            statement.setDate(1, Date.valueOf(currentDate));
+            statement.setTime(2, Time.valueOf(currentTime));
+            statement.setInt(3, user_id);
+            statement.setInt(4,id);
+            Integer num2 = statement.executeUpdate();
+
+            if(res_id2==1 && num2==1){
                 jsonObject.put("message","Disable course successfully");
             }
             else{
@@ -152,6 +147,7 @@ public class Moderator extends ApiHandler {
 
         return jsonObject;
     }
+
 
 
     public JSONObject disable_quiz(Integer id, JSONObject requestObject){
