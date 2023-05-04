@@ -37,7 +37,7 @@ public class Moderator extends ApiHandler {
         JSONArray jsonArray= new JSONArray();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("select report_quiz.reason as reason, report_quiz.date as date, concat(user.f_name,' ', user.l_name) as name, quiz.quiz_title as title, content.content_id as content_id, report_quiz.quiz_id as quiz_id from quiz INNER JOIN report_quiz on report_quiz.quiz_id= quiz.quiz_id INNER JOIN user on report_quiz.user_id= user.user_id INNER JOIN content on quiz.content_id= content.content_id where report_quiz.quiz_id=?;");
+            statement = connection.prepareStatement("select report_quiz.reason as reason, report_quiz.date as date, concat(user.f_name,' ', user.l_name) as name, quiz.quiz_title as title, content.content_id as content_id, report_quiz.quiz_id as quiz_id from quiz INNER JOIN report_quiz on report_quiz.quiz_id= quiz.quiz_id INNER JOIN user on report_quiz.user_id= user.user_id INNER JOIN content on quiz.content_id= content.content_id where report_quiz.quiz_id=? && content.status=0;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
             jsonArray = JsonHandler.createJSONArray(rs, "date", "name", "title", "reason", "quiz_id","content_id");
@@ -117,27 +117,22 @@ public class Moderator extends ApiHandler {
 
 
 
-            //notification part
+//            notification part
             PreparedStatement statement2;
             statement2= connection.prepareStatement("Select user_id from content where content_id=?");
             statement2.setInt(1,requestObject.getInt("content_id"));
             ResultSet rs2= statement2.executeQuery();
-            jsonObject2 = JsonHandler.createJSONObject(rs2, "user_id");
-            System.out.println(jsonObject2.getInt("user_id"));
-            System.out.println("sew");
+            Integer user_id= rs2.getInt("user_id");
 
 
-            statement = connection.prepareStatement("INSERT INTO notification (title, description, date, time, type, user_id_receiver, mod_id_sender, content_id) VALUES (\"Disable Course\", \"Beacuse of the hudge reports diable your course\", ?, ?,0, ?,?,?);");
-            System.out.println("sew1");
+            statement = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver,mod_id_sender,status) values (?,?,13,?,?,0)");
             statement.setDate(1, Date.valueOf(currentDate));
-            System.out.println("sew2");
             statement.setTime(2, Time.valueOf(currentTime));
-            statement.setInt(3, jsonObject2.getInt("user_id"));
+            statement.setInt(3, user_id);
             statement.setInt(4,id);
-            statement.setInt(5,requestObject.getInt("content_id"));
             Integer num2 = statement.executeUpdate();
 
-            if(res_id2==1){
+            if(res_id2==1 && num2==1){
                 jsonObject.put("message","Disable course successfully");
             }
             else{
@@ -152,6 +147,7 @@ public class Moderator extends ApiHandler {
 
         return jsonObject;
     }
+
 
 
     public JSONObject disable_quiz(Integer id, JSONObject requestObject){
@@ -178,31 +174,31 @@ public class Moderator extends ApiHandler {
 
             //notification_part
 
-            PreparedStatement statement2;
-            statement2= connection.prepareStatement("Select user_id from content where content_id=?");
-            statement2.setInt(1,requestObject.getInt("content_id"));
-            ResultSet rs2= statement2.executeQuery();
-            jsonObject2 = JsonHandler.createJSONObject(rs2, "user_id");
-            System.out.println(jsonObject2.getInt("user_id"));
-            System.out.println("sew");
-
-
-            statement = connection.prepareStatement("INSERT INTO notification (title, description, date, time, type, user_id_receiver, mod_id_sender, content_id) VALUES (\"Disable Course\", \"Beacuse of the hudge reports diable your course\", ?, ?,0, ?,?,?);");
-            System.out.println("sew1");
-            statement.setDate(1, Date.valueOf(currentDate));
-            System.out.println("sew2");
-            statement.setTime(2, Time.valueOf(currentTime));
-            statement.setInt(3, jsonObject2.getInt("user_id"));
-            statement.setInt(4,id);
-            statement.setInt(5,requestObject.getInt("content_id"));
-            Integer num2 = statement.executeUpdate();
-
-            if(res_id2==1){
-                jsonObject.put("message","Disable quiz successfully");
-            }
-            else{
-                jsonObject.put("message","Error");
-            }
+//            PreparedStatement statement2;
+//            statement2= connection.prepareStatement("Select user_id from content where content_id=?");
+//            statement2.setInt(1,requestObject.getInt("content_id"));
+//            ResultSet rs2= statement2.executeQuery();
+//            jsonObject2 = JsonHandler.createJSONObject(rs2, "user_id");
+//            System.out.println(jsonObject2.getInt("user_id"));
+//            System.out.println("sew");
+//
+//
+//            statement = connection.prepareStatement("INSERT INTO notification (title, description, date, time, type, user_id_receiver, mod_id_sender, content_id) VALUES (\"Disable Course\", \"Beacuse of the hudge reports diable your course\", ?, ?,0, ?,?,?);");
+//            System.out.println("sew1");
+//            statement.setDate(1, Date.valueOf(currentDate));
+//            System.out.println("sew2");
+//            statement.setTime(2, Time.valueOf(currentTime));
+//            statement.setInt(3, jsonObject2.getInt("user_id"));
+//            statement.setInt(4,id);
+//            statement.setInt(5,requestObject.getInt("content_id"));
+//            Integer num2 = statement.executeUpdate();
+//
+//            if(res_id2==1){
+//                jsonObject.put("message","Disable quiz successfully");
+//            }
+//            else{
+//                jsonObject.put("message","Error");
+//            }
 
         }
 

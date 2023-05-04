@@ -152,41 +152,55 @@ public class Teacher extends User {
 
     public JSONObject teacher_accept_org(Integer id, JSONObject requestObject){
         Connection connection = Driver.getConnection();
+        System.out.println(requestObject);
 
         JSONObject jsonObject= new JSONObject();
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT * from org_has_teacher where organization_id=? && teacher_id=?");
-            statement.setInt(2,id);
-            statement.setInt(1,requestObject.getInt("organization_id"));
-            ResultSet rs = statement.executeQuery();
+            statement= connection.prepareStatement("Select * from organization where user_id=?");
+            statement.setInt(1,requestObject.getInt("sender_userid"));
+            ResultSet rs= statement.executeQuery();
+
+            System.out.println("weda klaaa1");
 
             if(rs.next()){
-                statement = connection.prepareStatement("UPDATE org_has_teacher SET status=0 WHERE organization_id=? && teacher_id=?");
-                statement.setInt(2,id);
-                statement.setInt(1,requestObject.getInt("organization_id"));
-                Integer res_id = statement.executeUpdate();
-            }
-            else{
-                statement = connection.prepareStatement("INSERT INTO org_has_teacher (organization_id, teacher_id, status) VALUES (?, ?, 0);");
-                statement.setInt(2,id);
-                statement.setInt(1,requestObject.getInt("organization_id"));
-                Integer res_id = statement.executeUpdate();
-            }
+                Integer organization_id= rs.getInt("organization_id");
+                statement= connection.prepareStatement("Select * from teacher where user_ID=?");
+                statement.setInt(1,id);
+                ResultSet rs2= statement.executeQuery();
 
+                System.out.println("weda klaaa2");
 
-            statement = connection.prepareStatement("UPDATE org_teacher_request SET status=1 WHERE teacher_id=? && organization_id=?; ");
-            statement.setInt(1,id);
-            statement.setInt(2,requestObject.getInt("organization_id"));
-            Integer res_id2 = statement.executeUpdate();
+                if(rs2.next()){
+                    Integer teacher_id= rs2.getInt("teacher_id");
+                    statement = connection.prepareStatement("INSERT INTO org_has_teacher (organization_id, teacher_id, status) VALUES (?,?,0) ON DUPLICATE KEY UPDATE status = 0;");
+                    statement.setInt(1,organization_id);
+                    statement.setInt(2,teacher_id);
+                    Integer num= statement.executeUpdate();
+                    System.out.println("weda klaaa3");
 
-            if(res_id2==1){
-                jsonObject.put("message","Join organization successfully");
+                    statement = connection.prepareStatement("UPDATE org_teacher_request SET status=2 where organization_id=? && teacher_id=?");
+                    statement.setInt(1,organization_id);
+                    statement.setInt(2,teacher_id);
+                    Integer num2= statement.executeUpdate();
+                    System.out.println("weda klaaa4");
+
+                    statement = connection.prepareStatement("UPDATE notification SET status=1 WHERE notification_id=?");
+                    statement.setInt(1,requestObject.getInt("notification_id"));
+                    Integer num3= statement.executeUpdate();
+                    System.out.println("weda klaaa6");
+
+                    statement = connection.prepareStatement("INSERT INTO notification (date, time, message, user_id_sender, user_id_receiver, status, type) VALUES (?,?,'accept your request to join with your organization', ?,?,0,2);");
+                    statement.setDate(1, Date.valueOf(currentDate));
+                    statement.setTime(2, Time.valueOf(currentTime));
+                    statement.setInt(3,id);
+                    statement.setInt(4,requestObject.getInt("sender_userid"));
+                    Integer num4= statement.executeUpdate();
+                    System.out.println("weda klaaa67");
+                }
             }
-            else{
-                jsonObject.put("message","Error");
-            }
-
         }
 
         catch(SQLException sqlException){
@@ -197,23 +211,40 @@ public class Teacher extends User {
     }
 
 
-
-    public JSONObject teacher_remove_org_req(Integer id, JSONObject requestObject){
+    public JSONObject teacher_delete_org_request(Integer id, JSONObject requestObject){
         Connection connection = Driver.getConnection();
+        System.out.println(requestObject);
 
         JSONObject jsonObject= new JSONObject();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("UPDATE org_teacher_request SET status=2 WHERE teacher_id=? && organization_id=?");
-            statement.setInt(1,id);
-            statement.setInt(2,requestObject.getInt("organization_id"));
-            Integer res_id = statement.executeUpdate();
+            statement= connection.prepareStatement("Select * from organization where user_id=?");
+            statement.setInt(1,requestObject.getInt("sender_userid"));
+            ResultSet rs= statement.executeQuery();
 
-            if(res_id==1){
-                jsonObject.put("message","Remove organization request successfully");
-            }
-            else{
-                jsonObject.put("message","Error");
+            System.out.println("weda klaaa1");
+
+            if(rs.next()){
+                Integer organization_id= rs.getInt("organization_id");
+                statement= connection.prepareStatement("Select * from teacher where user_ID=?");
+                statement.setInt(1,id);
+                ResultSet rs2= statement.executeQuery();
+
+                System.out.println("weda klaaa2");
+
+                if(rs2.next()){
+                    Integer teacher_id= rs2.getInt("teacher_id");
+                    statement = connection.prepareStatement("UPDATE org_teacher_request SET status=1 where organization_id=? && teacher_id=?");
+                    statement.setInt(1,organization_id);
+                    statement.setInt(2,teacher_id);
+                    Integer num2= statement.executeUpdate();
+                    System.out.println("weda klaaa4");
+
+                    statement = connection.prepareStatement("UPDATE notification SET status=1 WHERE notification_id=?");
+                    statement.setInt(1,requestObject.getInt("notification_id"));
+                    Integer num3= statement.executeUpdate();
+                    System.out.println("weda klaaa6");
+                }
             }
         }
 
@@ -223,6 +254,9 @@ public class Teacher extends User {
 
         return jsonObject;
     }
+
+
+
 
     public JSONArray teacher_published_course(Integer id, JSONObject requestObject){
         Connection connection = Driver.getConnection();
@@ -441,7 +475,7 @@ public class Teacher extends User {
                     System.out.println("user id eka gaththa");
 
 
-                    statement = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver,user_id_sender,status) values (?,?,1,?,?,0)");
+                    statement = connection.prepareStatement("INSERT INTO notification (date, time, type, message,user_id_receiver,user_id_sender,status) values (?,?,1,'send request to join your organization',?,?,0)");
                     statement.setDate(1, Date.valueOf(currentDate));
                     statement.setTime(2, Time.valueOf(currentTime));
                     statement.setInt(3, organization_userid);
@@ -449,7 +483,7 @@ public class Teacher extends User {
                     Integer num2 = statement.executeUpdate();
                     System.out.println("notification eka damma");
 
-                    jsonObject.put("message", "Send request successfully");
+                    jsonObject.put("message", "send request to join your organization");
                 }
 
             }
@@ -587,5 +621,28 @@ public class Teacher extends User {
         System.out.println(jsonArray.length());
         return jsonArray;
 
+    }
+
+
+    public JSONArray viewmyorganization(Integer id, JSONObject requestObject){
+        System.out.println("sssaaa");
+        Connection connection = Driver.getConnection();
+
+        JSONArray jsonArray= new JSONArray();
+        try{
+
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT concat(f_name, \" \", l_name) as name, organization.organization_id as organization_id, organization.address as address, user.pro_pic as img_src FROM org_has_teacher INNER JOIN teacher ON org_has_teacher.teacher_id= teacher.teacher_id INNER JOIN organization ON org_has_teacher.organization_id=organization.organization_id INNER JOIN user ON organization.user_id=user.user_id WHERE teacher.user_ID=? and org_has_teacher.status = 0;");
+            statement.setInt(1,id);
+            ResultSet rs = statement.executeQuery();
+
+            jsonArray = JsonHandler.createJSONArray(rs, "name", "address", "img_src", "organization_id");
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonArray;
     }
 }
