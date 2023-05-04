@@ -114,6 +114,8 @@ public class Organization extends User {
     public JSONObject org_accept_teacher(Integer id, JSONObject requestObject){
         Connection connection = Driver.getConnection();
         System.out.println(requestObject);
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
 
         JSONObject jsonObject= new JSONObject();
         try{
@@ -150,6 +152,14 @@ public class Organization extends User {
                     statement.setInt(1,requestObject.getInt("notification_id"));
                     Integer num3= statement.executeUpdate();
                     System.out.println("weda klaaa6");
+
+                    statement = connection.prepareStatement("INSERT INTO notification (date, time, message, user_id_sender, user_id_receiver, status, type) VALUES (?,?,'accept your request to join with their organization', ?,?,0,4);");
+                    statement.setDate(1, Date.valueOf(currentDate));
+                    statement.setTime(2, Time.valueOf(currentTime));
+                    statement.setInt(3,id);
+                    statement.setInt(4,requestObject.getInt("sender_userid"));
+                    Integer num4= statement.executeUpdate();
+                    System.out.println("weda klaaa67");
                 }
             }
         }

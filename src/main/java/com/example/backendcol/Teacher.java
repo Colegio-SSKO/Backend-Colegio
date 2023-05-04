@@ -63,92 +63,92 @@ public class Teacher extends User {
         teacher.type = user.type;
         return teacher;
     }
-    public JSONObject teacher_send_req(Integer id, JSONObject requestObject){
-        System.out.println("athulata awa");
-        Connection connection = Driver.getConnection();
+//    public JSONObject teacher_send_req(Integer id, JSONObject requestObject){
+//        System.out.println("athulata awa");
+//        Connection connection = Driver.getConnection();
+//
+//        JSONObject jsonObject= new JSONObject();
+//        JSONObject jsonObject2= new JSONObject();
+//        LocalDate currentDate = LocalDate.now();
+//        LocalTime currentTime = LocalTime.now();
+//
+//        jsonObject.put("message","send request successfully");
+//        try{
+//            PreparedStatement statement;
+//            statement = connection.prepareStatement("SELECT * from teacher_req_org inner join teacher on teacher_req_org.teacher_id=teacher.teacher_id where teacher.user_ID=? && organization_id=? && status=2");
+//            statement.setInt(1,id);
+//            statement.setInt(2,requestObject.getInt("organization_id"));
+//            ResultSet rs= statement.executeQuery();
+//
+//            if(rs.next()){
+//                statement = connection.prepareStatement("UPDATE teacher_req_org teacher inner join teacher on teacher_req_org.teacher_id=teacher.teacher_id set status=0 where teacher.user_ID=? && organization_id=?");
+//                statement.setInt(1,id);
+//                statement.setInt(2,requestObject.getInt("organization_id"));
+//                Integer res_id = statement.executeUpdate();
+//            }
+//
+//            else{
+//                statement = connection.prepareStatement("SELECT * from teacher_req_org inner join teacher on teacher_req_org.teacher_id=teacher.teacher_id where teacher.user_ID=? && organization_id=? && status=0");
+//                statement.setInt(1,id);
+//                statement.setInt(2,requestObject.getInt("organization_id"));
+//                ResultSet rs2= statement.executeQuery();
+//
+//                if(rs2.next()){
+//                    jsonObject.put("message","You already send request");
+//                }
+//
+//                else{
+//                    statement = connection.prepareStatement("SELECT * from org_has_teacher  inner join teacher on org_has_teacher.teacher_id= teacher.teacher_id where teacher.user_ID=? && org_has_teacher.organization_id=? && org_has_teacher.status=0");
+//                    statement.setInt(1,id);
+//                    statement.setInt(2,requestObject.getInt("organization_id"));
+//                    ResultSet rs3= statement.executeQuery();
+//
+//                    if(rs3.next()){
+//                        jsonObject.put("message","You already a teacher of this organization");
+//                    }
+//
+//                    else{
+//                        statement= connection.prepareStatement("Select teacher_id from teacher where user_ID=?");
+//                        statement.setInt(1,id);
+//                        ResultSet rs4= statement.executeQuery();
+//                        Integer teacherid= rs4.getInt("teacher_id");
+//                        statement = connection.prepareStatement("INSERT INTO teacher_req_org (status, teacher_id, organization_id) values (0,?,?)");
+//                        statement.setInt(1,id);
+//                        statement.setInt(2,teacherid);
+//                        Integer res_id = statement.executeUpdate();
+//                        jsonObject.put("message","Send request successfully");
+//
+//                    }
+//                }
+//            }
+//        }
+//
+//        catch(SQLException sqlException){
+//            System.out.println(sqlException);
+//        }
+//        return jsonObject;
+//    }
 
-        JSONObject jsonObject= new JSONObject();
-        JSONObject jsonObject2= new JSONObject();
-        LocalDate currentDate = LocalDate.now();
-        LocalTime currentTime = LocalTime.now();
 
-        jsonObject.put("message","send request successfully");
-        try{
-            PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT * from teacher_req_org inner join teacher on teacher_req_org.teacher_id=teacher.teacher_id where teacher.user_ID=? && organization_id=? && status=2");
-            statement.setInt(1,id);
-            statement.setInt(2,requestObject.getInt("organization_id"));
-            ResultSet rs= statement.executeQuery();
-
-            if(rs.next()){
-                statement = connection.prepareStatement("UPDATE teacher_req_org teacher inner join teacher on teacher_req_org.teacher_id=teacher.teacher_id set status=0 where teacher.user_ID=? && organization_id=?");
-                statement.setInt(1,id);
-                statement.setInt(2,requestObject.getInt("organization_id"));
-                Integer res_id = statement.executeUpdate();
-            }
-
-            else{
-                statement = connection.prepareStatement("SELECT * from teacher_req_org inner join teacher on teacher_req_org.teacher_id=teacher.teacher_id where teacher.user_ID=? && organization_id=? && status=0");
-                statement.setInt(1,id);
-                statement.setInt(2,requestObject.getInt("organization_id"));
-                ResultSet rs2= statement.executeQuery();
-
-                if(rs2.next()){
-                    jsonObject.put("message","You already send request");
-                }
-
-                else{
-                    statement = connection.prepareStatement("SELECT * from org_has_teacher  inner join teacher on org_has_teacher.teacher_id= teacher.teacher_id where teacher.user_ID=? && org_has_teacher.organization_id=? && org_has_teacher.status=0");
-                    statement.setInt(1,id);
-                    statement.setInt(2,requestObject.getInt("organization_id"));
-                    ResultSet rs3= statement.executeQuery();
-
-                    if(rs3.next()){
-                        jsonObject.put("message","You already a teacher of this organization");
-                    }
-
-                    else{
-                        statement= connection.prepareStatement("Select teacher_id from teacher where user_ID=?");
-                        statement.setInt(1,id);
-                        ResultSet rs4= statement.executeQuery();
-                        Integer teacherid= rs4.getInt("teacher_id");
-                        statement = connection.prepareStatement("INSERT INTO teacher_req_org (status, teacher_id, organization_id) values (0,?,?)");
-                        statement.setInt(1,id);
-                        statement.setInt(2,teacherid);
-                        Integer res_id = statement.executeUpdate();
-                        jsonObject.put("message","Send request successfully");
-
-                    }
-                }
-            }
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-        return jsonObject;
-    }
-
-
-    public JSONArray teacher_view_org_req(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
-
-        JSONArray jsonArray= new JSONArray();
-        try{
-            PreparedStatement statement;
-            statement = connection.prepareStatement("select concat(user.f_name,' ', user.l_name) as name, user.pro_pic as img_src, organization.organization_id as organization_id, organization.address as address from organization INNER JOIN org_teacher_request on org_teacher_request.organization_id= organization.organization_id INNER JOIN user on organization.user_id= user.user_id WHERE org_teacher_request.teacher_id=? && org_teacher_request.status=0;");
-            statement.setInt(1,id);
-            ResultSet rs = statement.executeQuery();
-            jsonArray = JsonHandler.createJSONArray(rs, "name", "img_src", "organization_id","address");
-
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
-        return jsonArray;
-    }
+//    public JSONArray teacher_view_org_req(Integer id, JSONObject requestObject){
+//        Connection connection = Driver.getConnection();
+//
+//        JSONArray jsonArray= new JSONArray();
+//        try{
+//            PreparedStatement statement;
+//            statement = connection.prepareStatement("select concat(user.f_name,' ', user.l_name) as name, user.pro_pic as img_src, organization.organization_id as organization_id, organization.address as address from organization INNER JOIN org_teacher_request on org_teacher_request.organization_id= organization.organization_id INNER JOIN user on organization.user_id= user.user_id WHERE org_teacher_request.teacher_id=? && org_teacher_request.status=0;");
+//            statement.setInt(1,id);
+//            ResultSet rs = statement.executeQuery();
+//            jsonArray = JsonHandler.createJSONArray(rs, "name", "img_src", "organization_id","address");
+//
+//        }
+//
+//        catch(SQLException sqlException){
+//            System.out.println(sqlException);
+//        }
+//
+//        return jsonArray;
+//    }
 
 
     public JSONObject teacher_accept_org(Integer id, JSONObject requestObject){
@@ -266,7 +266,7 @@ public class Teacher extends User {
         try{
             System.out.println("DB connectiontt");
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT course.introduction_media as img_src, content.title as title, course.decription as description, course.price as price, content.content_id as content_id, content.status as status from course INNER JOIN content on course.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=? && content.status=0;");
+            statement = connection.prepareStatement("SELECT content.image as img_src, content.title as title, content.description as description, content.price as price, content.content_id as content_id, content.status as status from course INNER JOIN content on course.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=? && content.status=0;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
 
@@ -289,7 +289,7 @@ public class Teacher extends User {
         try{
             System.out.println("DB connectiontt");
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT quiz.image as img_src, quiz.quiz_title as title, quiz.description as description, quiz.price as price, content.content_id as content_id, content.status as status from quiz INNER JOIN content on quiz.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=?;");
+            statement = connection.prepareStatement("SELECT content.image as img_src, content.title as title, content.description as description, content.price as price, content.content_id as content_id, content.status as status from quiz INNER JOIN content on quiz.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=?;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
 
@@ -425,7 +425,7 @@ public class Teacher extends User {
             ResultSet rs = statement.executeQuery();
 
             jsonObject = JsonHandler.createJSONObject(rs, "name", "img_src", "quli", "gender", "user_id","tag");
-
+            System.out.println(jsonObject);
         }
 
         catch(SQLException sqlException){
