@@ -1354,17 +1354,16 @@ public class User extends ApiHandler {
                 Integer userid= rs.getInt("user_ID");
                 System.out.println("teacherge user id eka gaththa");
 
+                String message = "message";
                 //notification part
-                PreparedStatement statement3 = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver, user_id_sender, status) VALUES (?,?,5,?,?,0);");
+                PreparedStatement statement3 = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver, user_id_sender, status, message) VALUES (?,?,5,?,?,0, ?);");
                 Date date = Date.valueOf(currentDate);
                 Time time = Time.valueOf(currentTime);
                 statement3.setDate(1, date);
                 statement3.setTime(2, time);
-                PreparedStatement statement3 = connection.prepareStatement("INSERT INTO notification (date, time, type, message,user_id_receiver, user_id_sender, status) VALUES (?,?,5,'request session',?,?,0);");
-                statement3.setDate(1, Date.valueOf(currentDate));
-                statement3.setTime(2, Time.valueOf(currentTime));
                 statement3.setInt(3,userid);
                 statement3.setInt(4,this.userID);
+                statement3.setString(5,message);
                 Integer num2 = statement3.executeUpdate();
                 System.out.println("notification eka yuwa");
                 JSONObject notificationObject = new JSONObject();
@@ -1373,7 +1372,18 @@ public class User extends ApiHandler {
                 jsonObject.put("type", type);
                 jsonObject.put("user_id_receiver", userid);
                 jsonObject.put("user_id_sender", this.userID);
+                jsonObject.put("message", message);
                 System.out.println(jsonObject.toString());
+                System.out.println(userid);
+                System.out.println(this.userID);
+
+                if (!ServerData.users.containsKey(userid)){
+                    System.out.println("receiver is offline");
+                }
+                else{
+                    User receiver = (User) ServerData.users.get(userid);
+                    receiver.notificationSession.getAsyncRemote().sendText(jsonObject.toString());
+                }
 
 
 
