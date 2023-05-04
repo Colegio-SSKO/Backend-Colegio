@@ -60,6 +60,7 @@ public class Teacher extends User {
         teacher.cart = user.cart;
         teacher.purchasedContent = user.purchasedContent;
         teacher.questions = user.questions;
+        teacher.type = user.type;
         return teacher;
     }
     public JSONObject teacher_send_req(Integer id, JSONObject requestObject){
