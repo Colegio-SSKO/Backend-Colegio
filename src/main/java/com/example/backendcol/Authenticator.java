@@ -41,18 +41,20 @@ public class Authenticator extends ApiHandler{
                     jsonObject.put("isError", false);
                     jsonObject.put("message", "Authentication successful");
 
-                    Integer teacherId = resultSet.getInt("teacher.teacher_id");
+
                     Integer userType;
 
                     System.out.println("onna login ek wed krnna gnna hdnne");
-
+                    Integer teacherId = resultSet.getInt("teacher.teacher_id");
                     if(resultSet.wasNull()){
+
                         System.out.println("not a teacher");
                         Integer organizationID = resultSet.getInt("organization.organization_id");
 
                         if (resultSet.wasNull()){
                             System.out.println("student knk");
                             userType = 1;
+
                         }
                         else {
                             System.out.println("organization ekak");
@@ -60,6 +62,7 @@ public class Authenticator extends ApiHandler{
                         }
                     }
                     else{
+                        System.out.println(teacherId);
                         System.out.println("teacher knk");
                         userType = 2;
                     }
@@ -80,6 +83,9 @@ public class Authenticator extends ApiHandler{
                     else if(userType == 3){
                         Organization newOrganization = Organization.parseOrganization(newUser);
                         ServerData.users.put(newUser.userID, newOrganization);
+                    }
+                    else if (userType == 1){
+                        ServerData.users.put(newUser.userID, newUser);
                     }
 
                     //

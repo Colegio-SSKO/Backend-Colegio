@@ -35,6 +35,8 @@ public class User extends ApiHandler {
 
     public HashMap<Integer,Question> questions;
 
+
+
     public User(){
         System.out.println("default User called");
     }
@@ -127,32 +129,6 @@ public class User extends ApiHandler {
 
 
 
-
-
-
-
-
-
-//    public JSONArray viewquession(Integer id, JSONObject requestObject){
-//        Connection connection = Driver.getConnection();
-//        System.out.println("DB connectionqq");
-//
-//        JSONArray jsonArray= new JSONArray();
-//        try{
-//            System.out.println("DB connectiontt");
-//            Statement st= connection.createStatement();
-//            ResultSet rs= st.executeQuery("Select question.question_description as description, question.question_title as img_src , content.title as title, question_question_image as price, user.date_joined as description2, CONCAT(user.f_name, user.l_name) as author from content inner join cart on cart.content_id= content.content_id inner join course on content.content_id= course.content_id inner join user on content.user_id= user.user_id where cart.user_id=4;");
-//
-//            jsonArray = JsonHandler.createJSONArray(rs, "img_src", "description", "title" , "price", "description2", "author");
-//
-//        }
-//
-//        catch(SQLException sqlException){
-//            System.out.println(sqlException);
-//        }
-//
-//        return jsonArray;
-//    }
 
 
     public JSONObject viewprofile(Integer id, JSONObject requestObject){
@@ -362,6 +338,7 @@ public class User extends ApiHandler {
 
 
 
+    //meka hari
     public JSONObject editProfile(Integer id, JSONObject requestObject){
 
 
@@ -392,6 +369,8 @@ public class User extends ApiHandler {
                 return jsonObject;
             }
             System.out.printf("Methnta enkn wed");
+
+            this.name = requestObject.getString("fName") + requestObject.getString("lName");
             jsonObject.put("message", "Profile successfully Updated!");
             jsonObject.put("isError", 0);
             return jsonObject;
@@ -409,6 +388,7 @@ public class User extends ApiHandler {
 
 
 
+    //meka omkay
     public JSONObject changePassword(Integer id, JSONObject requestObject){
         JSONObject jsonObject = new JSONObject();
         try{
@@ -462,6 +442,7 @@ public class User extends ApiHandler {
 
 
 
+    //mek omkay
     public JSONObject editEmail(Integer id, JSONObject requestObject){
         JSONObject jsonObject = new JSONObject();
         try{
@@ -487,6 +468,8 @@ public class User extends ApiHandler {
                     int resultset = statement.executeUpdate();
                     jsonObject.put("message", "email successfully Updated!");
                     System.out.println("email updated bosa");
+                    this.email = requestObject.getString("newEmail1");
+                    this.email = requestObject.getString("newEmail1");
                     jsonObject.put("isError", 0);
                     return jsonObject;
 
@@ -516,6 +499,7 @@ public class User extends ApiHandler {
 
 
 
+    //mek omkay
     public JSONArray myQuestions(Integer id, JSONObject requestObject){
         JSONArray jsonArray = new JSONArray();
         try {
@@ -544,6 +528,7 @@ public class User extends ApiHandler {
 
 
 
+    // meka omkay
     public JSONArray myQuizes(Integer id, JSONObject requestObject){
         JSONArray jsonArray = new JSONArray();
         try {
@@ -844,6 +829,7 @@ public class User extends ApiHandler {
 
 
 
+    //meka omkay
     public JSONArray myCources(Integer id, JSONObject requestObject){
         JSONArray jsonArray = new JSONArray();
         try {
@@ -1460,11 +1446,6 @@ public class User extends ApiHandler {
 
         return jsonArray;
     }
-
-
-
-
-
 
 
 
