@@ -16,6 +16,7 @@ public class Organization extends User {
         organization.name = user.name;
         organization.email = user.email;
         organization.cart = user.cart;
+        organization.type  = user.type;
         organization.purchasedContent = user.purchasedContent;
         organization.questions = user.questions;
         return organization;
