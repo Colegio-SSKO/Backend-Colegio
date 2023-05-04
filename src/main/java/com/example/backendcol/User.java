@@ -321,10 +321,10 @@ public class User extends ApiHandler {
         JSONArray jsonArray= new JSONArray();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("select content.title as title, concat(user.f_name,' ',user.l_name) as author, content.rate_count as rate_count, content.image as img_src, course.price as price , content.content_id as content_id from teacher INNER JOIN user on teacher.user_ID= user.user_id INNER JOIN content on teacher.user_ID= content.user_id INNER JOIN course on content.content_id=course.content_id where teacher.user_ID=? && content.status=0;;");
+            statement = connection.prepareStatement("select content.title as title, concat(user.f_name,' ',user.l_name) as author, content.type as type, content.rate_count as rate_count, content.image as img_src, content.price as price , content.content_id as content_id from teacher INNER JOIN user on teacher.user_ID= user.user_id INNER JOIN content on teacher.user_ID= content.user_id INNER JOIN course on content.content_id=course.content_id where teacher.user_ID=? && content.status=0;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
-            jsonArray = JsonHandler.createJSONArray(rs, "author", "title", "price", "img_src", "content_id","rate_count");
+            jsonArray = JsonHandler.createJSONArray(rs, "author", "title", "price", "img_src", "content_id","rate_count", "type");
 
         }
 
@@ -1165,10 +1165,10 @@ public class User extends ApiHandler {
         JSONArray jsonArray= new JSONArray();
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("select quiz.quiz_title as title, content.rate_count as rate_count, concat(user.f_name,' ',user.l_name) as author, quiz.image as img_src, content.price as price , content.content_id as content_id from teacher INNER JOIN user on teacher.user_ID= user.user_id INNER JOIN content on teacher.user_ID= content.user_id INNER JOIN quiz on quiz.content_id=content.content_id where teacher.user_ID=? && content.status=0;;");
+            statement = connection.prepareStatement("select content.title as title, content.rate_count as rate_count, concat(user.f_name,' ',user.l_name) as author, content.type as type, content.image as img_src, content.price as price , content.content_id as content_id from teacher INNER JOIN user on teacher.user_ID= user.user_id INNER JOIN content on teacher.user_ID= content.user_id INNER JOIN quiz on quiz.content_id=content.content_id where teacher.user_ID=? && content.status=0;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
-            jsonArray = JsonHandler.createJSONArray(rs, "author", "title", "price", "img_src","content_id","rate_count");
+            jsonArray = JsonHandler.createJSONArray(rs, "author", "title", "price", "img_src","content_id","rate_count","type");
 
         }
 

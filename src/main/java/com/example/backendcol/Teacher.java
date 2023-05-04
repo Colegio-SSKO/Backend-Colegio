@@ -266,7 +266,7 @@ public class Teacher extends User {
         try{
             System.out.println("DB connectiontt");
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT course.introduction_media as img_src, content.title as title, course.decription as description, course.price as price, content.content_id as content_id, content.status as status from course INNER JOIN content on course.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=? && content.status=0;");
+            statement = connection.prepareStatement("SELECT content.image as img_src, content.title as title, content.description as description, content.price as price, content.content_id as content_id, content.status as status from course INNER JOIN content on course.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=? && content.status=0;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
 
@@ -289,7 +289,7 @@ public class Teacher extends User {
         try{
             System.out.println("DB connectiontt");
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT quiz.image as img_src, quiz.quiz_title as title, quiz.description as description, quiz.price as price, content.content_id as content_id, content.status as status from quiz INNER JOIN content on quiz.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=?;");
+            statement = connection.prepareStatement("SELECT content.image as img_src, content.title as title, content.description as description, content.price as price, content.content_id as content_id, content.status as status from quiz INNER JOIN content on quiz.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=?;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
 
