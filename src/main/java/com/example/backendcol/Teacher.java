@@ -424,7 +424,7 @@ public class Teacher extends User {
             ResultSet rs = statement.executeQuery();
 
             jsonObject = JsonHandler.createJSONObject(rs, "name", "img_src", "quli", "gender", "user_id","tag");
-
+            System.out.println(jsonObject);
         }
 
         catch(SQLException sqlException){

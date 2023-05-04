@@ -631,6 +631,7 @@ public class User extends ApiHandler {
 
 
     public JSONObject small_card_open(Integer id, JSONObject requestObject){
+        System.out.println("small card eka oprn klaa");
         JSONObject jasonobject = new JSONObject();
 
         try {
@@ -638,12 +639,10 @@ public class User extends ApiHandler {
             PreparedStatement statement = connection.prepareStatement("SELECT * from course INNER JOIN content on course.content_id=content.content_id INNER JOIN user ON content.user_id=user.user_id inner join teacher on content.user_id = teacher.user_id where content.content_id=?;");
             statement.setInt(1,id);
             ResultSet resultSet = statement.executeQuery();
-            jasonobject = JsonHandler.createJSONObject(resultSet, "course_title", "introduction_media", "f_name", "l_name", "decription" , "content_id", "price","date","rate_count","content.type");
+            jasonobject = JsonHandler.createJSONObject(resultSet, "title", "image", "f_name", "l_name", "description" , "content_id", "price","date","rate_count","content.type");
         }catch (Exception exception){
             System.out.println(exception);
         }
-
-
         return jasonobject;
     }
 
@@ -1040,6 +1039,7 @@ public class User extends ApiHandler {
                 newJsonObject.put("pro_pic", newCourse.data.getString("pro_pic"));
                 newJsonObject.put("course_media_id",  newCourse.courseMedia.get(i).data);
                 jsonArray.put(newJsonObject);
+                System.out.println(jsonArray);
             }
 
         }
@@ -1430,6 +1430,28 @@ public class User extends ApiHandler {
             ResultSet rs = statement.executeQuery();
 
             jsonArray = JsonHandler.createJSONArray(rs, "ad_media");
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonArray;
+    }
+
+
+    public JSONArray get_content_media(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONArray jsonArray= new JSONArray();
+        try{
+            System.out.println("ane deiyo");
+            PreparedStatement statement;
+            statement = connection.prepareStatement("SELECT * FROM course_media INNER JOIN course ON course_media.course_id= course.course_id WHERE course.content_id=?");
+            statement.setInt(1,id);
+            ResultSet rs = statement.executeQuery();
+
+            jsonArray = JsonHandler.createJSONArray(rs, "media","meida_title","media_description","course_media_id");
         }
 
         catch(SQLException sqlException){
