@@ -12,6 +12,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
+
+import java.security.NoSuchAlgorithmException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Properties;
 
 import java.sql.Connection;
@@ -25,6 +28,68 @@ import java.util.logging.SocketHandler;
 
 
 public class Authenticator extends ApiHandler{
+
+    public String hashPassword(String plainTextPassword) throws NoSuchAlgorithmException {
+        String password = plainTextPassword;
+        MessageDigest md = MessageDigest.getInstance("SHA-1");
+        byte[] hash = md.digest(password.getBytes());
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : hash) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
+
+
+    public JSONObject signup(Integer id, JSONObject requestObject){
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("isError", true);
+        jsonObject.put("message", "" );
+        System.out.println("signup");
+        try {
+
+
+            String hashedPassword = hashPassword(requestObject.getString("password"));
+            Connection connection = Driver.getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement("INSERT into user (f_name, l_name, email, password, DOB) values (?, ?, ?, ?, ?)");
+            preparedStatement.setString(1, requestObject.getString("fname"));
+            preparedStatement.setString(2, requestObject.getString("lname"));
+            preparedStatement.setString(3, requestObject.getString("email"));
+            preparedStatement.setString(4, hashedPassword);
+            preparedStatement.setString(5, "2020-02-01");
+
+            int result = preparedStatement.executeUpdate();
+            if (result == 0){
+                System.out.println("save une ne yako");
+                jsonObject.put("message" , "Unknown error happened");
+            }
+            else {
+                System.out.println("save una yako");
+                jsonObject.put("isError", false);
+                jsonObject.put("message" , "Congratulations! You are in.");
+            }
+
+
+        }
+        catch (SQLIntegrityConstraintViolationException exception){
+            System.out.println("This email is already taken");
+            jsonObject.put("message", "This email is already taken");
+        }
+
+        catch (Exception exception){
+            System.out.println(exception);
+            jsonObject.put("message", "Internal server error");
+        }
+
+
+
+        return jsonObject;
+    }
+
 
     public JSONObject signin(Integer id, JSONObject requestObject){
         JSONObject jsonObject = new JSONObject();

@@ -2,6 +2,7 @@ package com.example.backendcol.api;
 
 
 import com.example.backendcol.ServerData;
+import com.example.backendcol.User;
 import jakarta.enterprise.inject.New;
 import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
@@ -40,7 +41,8 @@ public class notificationHandler {
             else{
                 System.out.println("wedwed");
                 System.out.println(jwt.payload.getInt("sub"));
-                ServerData.userIdToNotifictionSession.put(jwt.payload.getInt("sub"), session);
+                User owner = (User) ServerData.users.get(jwt.payload.getInt("sub"));
+                owner.notificationSession = session;
                 System.out.println("onna ehenm notification ek connfigure una");
             }
         }
