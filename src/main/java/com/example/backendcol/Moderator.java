@@ -124,20 +124,41 @@ public class Moderator extends ApiHandler {
             ResultSet rs2= statement2.executeQuery();
             Integer user_id= rs2.getInt("user_id");
 
-
-            statement = connection.prepareStatement("INSERT INTO notification (date, time, type,message,user_id_receiver,mod_id_sender,status) values (?,?,13,'because of the reports moderator disable your course',?,?,0)");
-            statement.setDate(1, Date.valueOf(currentDate));
-            statement.setTime(2, Time.valueOf(currentTime));
+            Date date = Date.valueOf(currentDate);
+            Time time = Time.valueOf(currentTime);
+            int type = 13;
+            statement = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver,mod_id_sender,status) values (?,?,?,?,?,0)");
+            statement.setDate(1, date);
+            statement.setTime(2, time);
             statement.setInt(3, user_id);
             statement.setInt(4,id);
             Integer num2 = statement.executeUpdate();
+            jsonObject.put("date", date);
+            jsonObject.put("time", time);
+            jsonObject.put("user_id_sender", id);
+            jsonObject.put("user_id_receiver", user_id);
+            jsonObject.put("type", type);
+            System.out.println(jsonObject.toString());
+            System.out.println(user_id);
+            System.out.println(id);
 
-            if(res_id2==1 && num2==1){
-                jsonObject.put("message","Disable course successfully");
+            if (!ServerData.users.containsKey(user_id)){
+                System.out.println("receiver is offline");
             }
             else{
-                jsonObject.put("message","Error");
+                User receiver = (User) ServerData.users.get(user_id);
+                receiver.notificationSession.getAsyncRemote().sendText(jsonObject.toString());
             }
+
+            return jsonObject;
+
+
+//            if(res_id2==1 && num2==1){
+//                jsonObject.put("message","Disable course successfully");
+//            }
+//            else{
+//                jsonObject.put("message","Error");
+//            }
 
         }
 
@@ -174,19 +195,24 @@ public class Moderator extends ApiHandler {
 
             //notification_part
 
-            PreparedStatement statement2;
-            statement2= connection.prepareStatement("Select user_id from content where content_id=?");
-            statement2.setInt(1,requestObject.getInt("content_id"));
-            ResultSet rs2= statement2.executeQuery();
-            Integer user_id= rs2.getInt("user_id");
-
-
-            statement = connection.prepareStatement("INSERT INTO notification (date, time, type,message,user_id_receiver,mod_id_sender,status) values (?,?,13,'because of the reports moderator disable your quiz',?,?,0)");
-            statement.setDate(1, Date.valueOf(currentDate));
-            statement.setTime(2, Time.valueOf(currentTime));
-            statement.setInt(3, user_id);
-            statement.setInt(4,id);
-            Integer num2 = statement.executeUpdate();
+//            PreparedStatement statement2;
+//            statement2= connection.prepareStatement("Select user_id from content where content_id=?");
+//            statement2.setInt(1,requestObject.getInt("content_id"));
+//            ResultSet rs2= statement2.executeQuery();
+//            jsonObject2 = JsonHandler.createJSONObject(rs2, "user_id");
+//            System.out.println(jsonObject2.getInt("user_id"));
+//            System.out.println("sew");
+//
+//
+//            statement = connection.prepareStatement("INSERT INTO notification (title, description, date, time, type, user_id_receiver, mod_id_sender, content_id) VALUES (\"Disable Course\", \"Beacuse of the hudge reports diable your course\", ?, ?,0, ?,?,?);");
+//            System.out.println("sew1");
+//            statement.setDate(1, Date.valueOf(currentDate));
+//            System.out.println("sew2");
+//            statement.setTime(2, Time.valueOf(currentTime));
+//            statement.setInt(3, jsonObject2.getInt("user_id"));
+//            statement.setInt(4,id);
+//            statement.setInt(5,requestObject.getInt("content_id"));
+//            Integer num2 = statement.executeUpdate();
 //
 //            if(res_id2==1){
 //                jsonObject.put("message","Disable quiz successfully");
@@ -274,104 +300,6 @@ public class Moderator extends ApiHandler {
 
         return jsonObject;
     }
-
-
-    public JSONArray view_verification_list(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
-
-        JSONArray jsonArray= new JSONArray();
-        try{
-            PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT * from upgrade_to_teacher INNER JOIN user ON upgrade_to_teacher.user_id= user.user_id where upgrade_to_teacher.status=0;");
-            ResultSet rs = statement.executeQuery();
-            jsonArray = JsonHandler.createJSONArray(rs, "user_id","education_level", "f_name", "l_name","pro_pic", "certificate","refers","email");
-
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
-        return jsonArray;
-    }
-
-
-
-    public JSONObject generate_report_verify_teacher(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
-
-        JSONObject jsonObject= new JSONObject();
-        try{
-            PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT * from upgrade_to_teacher INNER JOIN user ON upgrade_to_teacher.user_id= user.user_id where upgrade_to_teacher.status=0 && upgrade_to_teacher.user_id=? ;");
-            statement.setInt(1,id);
-            ResultSet rs = statement.executeQuery();
-            jsonObject = JsonHandler.createJSONObject(rs, "user_id","upgrade_id","education_level", "f_name", "l_name","pro_pic", "certificate","refers","email");
-
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
-        return jsonObject;
-    }
-
-
-    public JSONObject accept_teacher_verify(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
-
-        JSONObject jsonObject= new JSONObject();
-        try{
-            PreparedStatement statement;
-            statement = connection.prepareStatement("UPDATE upgrade_to_teacher SET status=2 WHERE upgrade_id=?;");
-            statement.setInt(1,requestObject.getInt("upgrade_id"));
-            Integer num= statement.executeUpdate();
-            System.out.println("upgrade ek1");
-
-            statement = connection.prepareStatement("INSERT INTO verify_teacher (upgrade_id, moderator_id, status) VALUES (?,?,0);");
-            statement.setInt(1,requestObject.getInt("upgrade_id"));
-            statement.setInt(2,id);
-            Integer num2= statement.executeUpdate();
-
-
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
-        return jsonObject;
-    }
-
-
-
-    public JSONObject delete_teacher_verify(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
-
-        JSONObject jsonObject= new JSONObject();
-        try{
-            PreparedStatement statement;
-            statement = connection.prepareStatement("UPDATE upgrade_to_teacher SET status=1 WHERE upgrade_id=?;");
-            statement.setInt(1,requestObject.getInt("upgrade_id"));
-            Integer num= statement.executeUpdate();
-
-            statement = connection.prepareStatement("INSERT INTO verify_teacher (upgrade_id, moderator_id, status) VALUES (?,?,1);");
-            statement.setInt(1,requestObject.getInt("upgrade_id"));
-            statement.setInt(2,id);
-            Integer num2= statement.executeUpdate();
-
-
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
-        return jsonObject;
-    }
-
-
 
 }
 
