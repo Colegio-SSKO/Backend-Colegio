@@ -157,13 +157,39 @@ public class Organization extends User {
                     Integer num3= statement.executeUpdate();
                     System.out.println("weda klaaa6");
 
-                    statement = connection.prepareStatement("INSERT INTO notification (date, time, message, user_id_sender, user_id_receiver, status, type) VALUES (?,?,'accept your request to join with their organization', ?,?,0,4);");
-                    statement.setDate(1, Date.valueOf(currentDate));
-                    statement.setTime(2, Time.valueOf(currentTime));
-                    statement.setInt(3,id);
+
+                    Date date = Date.valueOf(currentDate);
+                    String message = "accept your request to join with their organization";
+                    Time time = Time.valueOf(currentTime);
+                    statement = connection.prepareStatement("INSERT INTO notification (date, time, message, user_id_sender, user_id_receiver, status, type) VALUES (?,?,?, ?,?,0,4);");
+                    statement.setDate(1, date);
+                    statement.setTime(2, time);
+                    statement.setString(3, message);
                     statement.setInt(4,requestObject.getInt("sender_userid"));
+                    statement.setInt(5,id);
                     Integer num4= statement.executeUpdate();
                     System.out.println("weda klaaa67");
+                    JSONObject notificationObject = new JSONObject();
+                    jsonObject.put("date", date);
+                    jsonObject.put("time", time);
+                    jsonObject.put("message", message);
+                    jsonObject.put("user_id_sender", this.userID);
+                    jsonObject.put("user_id_receiver", id);
+                    jsonObject.put("type", type);
+                    System.out.println(jsonObject.toString());
+                    System.out.println(id);
+                    System.out.println(this.userID);
+
+                    if (!ServerData.users.containsKey(id)){
+                        System.out.println("receiver is offline");
+                    }
+                    else{
+                        User receiver = (User) ServerData.users.get(id);
+                        receiver.notificationSession.getAsyncRemote().sendText(jsonObject.toString());
+                    }
+
+                    jsonObject.put("message", "accept your request to join with their organization");
+                    return jsonObject;
                 }
             }
         }
@@ -216,16 +242,39 @@ public class Organization extends User {
                     Integer teacher_userid= rs2.getInt("user_ID");
                     System.out.println("user id eka gaththa");
 
-
-                    statement = connection.prepareStatement("INSERT INTO notification (date, time, type, message,user_id_receiver,user_id_sender,status) values (?,?,3,'organization send request to join with their organization',?,?,0)");
-                    statement.setDate(1, Date.valueOf(currentDate));
-                    statement.setTime(2, Time.valueOf(currentTime));
-                    statement.setInt(3, teacher_userid);
-                    statement.setInt(4,id);
+                    Date date = Date.valueOf(currentDate);
+                    Time time = Time.valueOf(currentTime);
+                    String message = "organization send request to join with their organization";
+                    statement = connection.prepareStatement("INSERT INTO notification (date, time, type, message,user_id_receiver,user_id_sender,status) values (?,?,3,?,?,?,0)");
+                    statement.setDate(1, date);
+                    statement.setTime(2, time);
+                    statement.setString(3,message);
+                    statement.setInt(4, teacher_userid);
+                    statement.setInt(5,id);
                     Integer num2 = statement.executeUpdate();
                     System.out.println("notification eka damma");
+                    JSONObject notificationObject = new JSONObject();
+                    jsonObject.put("date", date);
+                    jsonObject.put("time", time);
+                    jsonObject.put("message", message);
+                    jsonObject.put("user_id_sender", this.userID);
+                    jsonObject.put("user_id_receiver", id);
+                    jsonObject.put("type", type);
+                    System.out.println(jsonObject.toString());
+                    System.out.println(id);
+                    System.out.println(this.userID);
+
+                    if (!ServerData.users.containsKey(id)){
+                        System.out.println("receiver is offline");
+                    }
+                    else{
+                        User receiver = (User) ServerData.users.get(id);
+                        receiver.notificationSession.getAsyncRemote().sendText(jsonObject.toString());
+                    }
 
                     jsonObject.put("message", "organization send request to join with their organization");
+                    return jsonObject;
+
                 }
 
             }
