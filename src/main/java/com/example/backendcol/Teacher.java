@@ -706,4 +706,115 @@ public class Teacher extends User {
 
         return jsonObject;
     }
+
+
+    public JSONObject createCourse(Integer id, JSONObject requestObject){
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("isError", true);
+        Connection connection = Driver.getConnection();
+        try{
+            System.out.println("create course ekt awa");
+            System.out.println(requestObject.toString());
+
+
+
+
+            connection.setAutoCommit(false);
+            PreparedStatement statement = connection.prepareStatement("insert into content (user_id, subject_id, status, type, title, description, image, price) values (?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+            statement.setInt(1, this.userID);
+            statement.setInt(2, requestObject.getInt("courseSubject"));
+            statement.setInt(3, 0);
+            statement.setInt(4, 0);
+            statement.setString(5, requestObject.getString("courseTitle"));
+            statement.setString(6, requestObject.getString("courseDescription"));
+            statement.setString(7, requestObject.getString("thumbnailPath"));
+            statement.setString(8, requestObject.getString("coursePrice"));
+            Integer result = statement.executeUpdate();
+
+
+
+            Integer generatedKey = -100;
+            if (result == 1){
+                ResultSet resultSet = statement.getGeneratedKeys();
+                if(resultSet.next()){
+                    generatedKey = resultSet.getInt(1);
+                    System.out.println("key is : "+ generatedKey);
+                }
+            }
+
+
+           if (generatedKey<0){
+               System.out.println("could not insert to content  table");
+               return jsonObject;
+           }
+
+
+            PreparedStatement statement2 = connection.prepareStatement("insert into course (content_id) values (?)", Statement.RETURN_GENERATED_KEYS);
+            statement2.setInt(1, generatedKey);
+
+
+            result = statement2.executeUpdate();
+
+
+            generatedKey = -100;
+            if (result == 1){
+                ResultSet resultSet = statement2.getGeneratedKeys();
+                if(resultSet.next()){
+                    generatedKey = resultSet.getInt(1);
+                    System.out.println("key is : "+ generatedKey);
+                }
+            }
+
+
+
+            JSONArray videoTitles = requestObject.getJSONArray("videoTitles");
+
+            System.out.println("video json hri");
+            JSONArray videoDescriptions = requestObject.getJSONArray("videoDescriptions");
+            System.out.println("description json hri");
+            JSONArray videoPaths = requestObject.getJSONArray("videoPaths");
+
+            statement = connection.prepareStatement("insert into course_media (course_id, media, meida_title, media_description) values (?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+
+            for (int i = 0;i<videoTitles.length();i++){
+                statement.setInt(1, generatedKey);
+                statement.setString(2, ((JSONObject)videoPaths.get(i)).getString("path"));
+                statement.setString(3, videoTitles.getString(i));
+                statement.setString(4, videoDescriptions.getString(i));
+                statement.addBatch();
+            }
+
+            int[] numberOdUpdates = statement.executeBatch();
+
+            if (numberOdUpdates.length == videoTitles.length() &&
+                    numberOdUpdates.length == videoDescriptions.length() &&
+                    numberOdUpdates.length == videoPaths.length()
+            ){
+                connection.commit();
+                System.out.println("Update ek lssnt una");
+            }
+
+
+
+
+        }catch (Exception exception){
+            System.out.println(exception);
+            try {
+                connection.rollback();
+            }catch (Exception exception1){
+                System.out.println("sys: "+exception);
+            }
+
+        }
+        finally {
+            try {
+                connection.close();
+            }catch (Exception exception){
+                System.out.println("sys: "+exception);
+            }
+
+        }
+
+        return jsonObject;
+    }
 }
