@@ -286,6 +286,8 @@ public class Organization extends User {
 
     public JSONObject remove_teacher(Integer id, JSONObject requestObject){
         Connection connection = Driver.getConnection();
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
 
         JSONObject jsonObject= new JSONObject();
         try{
@@ -295,22 +297,32 @@ public class Organization extends User {
             statement.setInt(2,id);
             Integer res_id = statement.executeUpdate();
 
-            statement = connection.prepareStatement("SELECT * FROM teacher_req_org where teacher_id=? && organization_id=?");
-            statement.setInt(1,requestObject.getInt("teacher_id"));
-            statement.setInt(2,id);
+            statement = connection.prepareStatement("SELECT * FROM organization WHERE organization.user_id=?;");
+            statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
 
             if(rs.next()){
-                statement = connection.prepareStatement("Update teacher_req_org set status=2 where teacher_id=? && organization_id=?");
-                statement.setInt(1,requestObject.getInt("teacher_id"));
-                statement.setInt(2,id);
+                Integer org_id= rs.getInt("organization_id");
+                statement = connection.prepareStatement("UPDATE org_teacher_request SET status=1 WHERE organization_id=? && teacher_id=?;");
+                statement.setInt(2,requestObject.getInt("teacher_id"));
+                statement.setInt(1,org_id);
                 Integer res_id2 = statement.executeUpdate();
-            }
-            else{
-                statement = connection.prepareStatement("Update org_teacher_request set status=2 where teacher_id=? && organization_id=?");
-                statement.setInt(1,requestObject.getInt("teacher_id"));
-                statement.setInt(2,id);
-                Integer res_id2 = statement.executeUpdate();
+
+                //notification part
+                statement= connection.prepareStatement("Select * from  teacher where teacher_id=?");
+                statement.setInt(1, requestObject.getInt("teacher_id"));
+                ResultSet rs2= statement.executeQuery();
+
+                if(rs2.next()){
+                    Integer teacher_userid= rs2.getInt("user_ID");
+                    statement= connection.prepareStatement("insert INTO notification (date, time, message, type, user_id_sender, user_id_receiver,status) VALUES (?,?,'organization remove you', 14,?,?,0);");
+                    statement.setDate(1, Date.valueOf(currentDate));
+                    statement.setTime(2, Time.valueOf(currentTime));
+                    statement.setInt(3,id);
+                    statement.setInt(4,teacher_userid);
+                    Integer num2 = statement.executeUpdate();
+                    System.out.println("notification eka yuwa");
+                }
             }
 
             if(res_id==1){
@@ -331,25 +343,6 @@ public class Organization extends User {
     }
 
 
-//    public JSONArray org_view_teacher_req(Integer id, JSONObject requestObject){
-//        Connection connection = Driver.getConnection();
-//
-//        JSONArray jsonArray= new JSONArray();
-//        try{
-//            PreparedStatement statement;
-//            statement = connection.prepareStatement("select concat(user.f_name,' ', user.l_name) as name, user.pro_pic as img_src, teacher.teacher_id as teacher_id, teacher.qulification_level as quli from teacher INNER JOIN teacher_req_org on teacher_req_org.teacher_id= teacher.teacher_id INNER JOIN user on teacher.user_ID= user.user_id WHERE teacher_req_org.organization_id=? && teacher_req_org.status=0;");
-//            statement.setInt(1,id);
-//            ResultSet rs = statement.executeQuery();
-//            jsonArray = JsonHandler.createJSONArray(rs, "name", "img_src", "teacher_id","quli");
-//
-//        }
-//
-//        catch(SQLException sqlException){
-//            System.out.println(sqlException);
-//        }
-//
-//        return jsonArray;
-//    }
 
 
 

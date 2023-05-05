@@ -921,7 +921,7 @@ public class User extends ApiHandler {
 
 
             PreparedStatement statement2;
-            statement2= connection.prepareStatement("Select content.user_id course.title from content inner join course on course.content_id=content.content_id where course_id=?");
+            statement2= connection.prepareStatement("Select content.user_id, content.title from content inner join course on course.content_id=content.content_id where course_id=?");
             statement2.setInt(1,requestObject.getInt("course_id"));
             ResultSet rs2= statement2.executeQuery();
             Integer content_userid= rs2.getInt("content.user_id");

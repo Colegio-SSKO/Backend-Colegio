@@ -646,4 +646,64 @@ public class Teacher extends User {
 
         return jsonArray;
     }
+
+
+
+    public JSONObject leave_from_org(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
+
+        JSONObject jsonObject= new JSONObject();
+        try{
+            PreparedStatement statement;
+            statement = connection.prepareStatement("Update org_has_teacher inner join teacher on org_has_teacher.teacher_id= teacher.teacher_id set status=1 where org_has_teacher.organization_id=? && teacher.user_ID=?");
+            statement.setInt(1,requestObject.getInt("organization_id"));
+            statement.setInt(2,id);
+            Integer res_id = statement.executeUpdate();
+
+            statement = connection.prepareStatement("SELECT * FROM teacher WHERE teacher.user_id=?;");
+            statement.setInt(1,id);
+            ResultSet rs = statement.executeQuery();
+
+            if(rs.next()){
+                Integer teacher_id= rs.getInt("teacher_id");
+                statement = connection.prepareStatement("UPDATE org_teacher_request SET status=1 WHERE organization_id=? && teacher_id=?;");
+                statement.setInt(1,requestObject.getInt("organization_id"));
+                statement.setInt(2,teacher_id);
+                Integer res_id2 = statement.executeUpdate();
+
+                //notification part
+//                statement= connection.prepareStatement("Select * from  teacher where teacher_id=?");
+//                statement.setInt(1, requestObject.getInt("teacher_id"));
+//                ResultSet rs2= statement.executeQuery();
+//
+//                if(rs2.next()){
+//                    Integer teacher_userid= rs2.getInt("user_ID");
+//                    statement= connection.prepareStatement("insert INTO notification (date, time, message, type, user_id_sender, user_id_receiver,status) VALUES (?,?,'organization remove you', 14,?,?,0);");
+//                    statement.setDate(1, Date.valueOf(currentDate));
+//                    statement.setTime(2, Time.valueOf(currentTime));
+//                    statement.setInt(3,id);
+//                    statement.setInt(4,teacher_userid);
+//                    Integer num2 = statement.executeUpdate();
+//                    System.out.println("notification eka yuwa");
+//                }
+            }
+
+            if(res_id==1){
+                jsonObject.put("message","Leave successfully");
+            }
+            else{
+                jsonObject.put("message","Error");
+            }
+
+
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
 }
