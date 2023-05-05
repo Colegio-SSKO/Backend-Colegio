@@ -930,15 +930,37 @@ public class User extends ApiHandler {
             String title= rs2.getString("course.title");
             System.out.println("sew");
 
-
+            Date date = Date.valueOf(currentDate);
+            Time time = Time.valueOf(currentTime);
+            String message ="report your course " + title;
             statement = connection.prepareStatement("INSERT INTO notification (date,time,message,type, user_id_sender, user_id_receiver) VALUES (?,?,?,11,?,?);");
-            statement.setDate(1, Date.valueOf(currentDate));
-            statement.setTime(2, Time.valueOf(currentTime));
-            statement.setString(3, "report your course " + title);
+            statement.setDate(1, date);
+            statement.setTime(2, time);
+            statement.setString(3, message);
             statement.setInt(4, id);
             statement.setInt(5,content_userid);
             Integer num2 = statement.executeUpdate();
+            JSONObject notificationObject = new JSONObject();
+            jsonObject.put("date", date);
+            jsonObject.put("time", time);
+            jsonObject.put("message", message);
+            jsonObject.put("user_id_sender", this.userID);
+            jsonObject.put("user_id_receiver", content_userid);
+            jsonObject.put("type", type);
+            System.out.println(jsonObject.toString());
+            System.out.println("reciver " + content_userid);
+            System.out.println("sender " +this.userID);
 
+            if (!ServerData.users.containsKey(content_userid)){
+                System.out.println("receiver is offline");
+            }
+            else{
+                User receiver = (User) ServerData.users.get(content_userid);
+                receiver.notificationSession.getAsyncRemote().sendText(jsonObject.toString());
+            }
+
+            jsonObject.put("message", "report your course " + title);
+            return jsonObject;
 
         }
 
@@ -977,14 +999,37 @@ public class User extends ApiHandler {
 
 
             //notification part
-            statement = connection.prepareStatement("INSERT INTO notification (date,time,message,type, user_id_sender, user_id_receiver, status) VALUES (?,?,'report your account',9,?,?,0);");
-            statement.setDate(1, Date.valueOf(currentDate));
-            statement.setTime(2, Time.valueOf(currentTime));
+            Date date = Date.valueOf(currentDate);
+            Time time = Time.valueOf(currentTime);
+            String message ="report your account";
+            statement = connection.prepareStatement("INSERT INTO notification (date,time,message,type, user_id_sender, user_id_receiver, status) VALUES (?,?,?,9,?,?,0);");
+            statement.setDate(1, date);
+            statement.setTime(2, time);
             statement.setInt(3, id);
             statement.setInt(4,requestObject.getInt("user_id"));
             Integer num2 = statement.executeUpdate();
             System.out.println("notifiaction eka giyaa");
+            JSONObject notificationObject = new JSONObject();
+            jsonObject.put("date", date);
+            jsonObject.put("time", time);
+            jsonObject.put("message", message);
+            jsonObject.put("user_id_sender", this.userID);
+            jsonObject.put("user_id_receiver", id);
+            jsonObject.put("type", type);
+            System.out.println(jsonObject.toString());
+            System.out.println(id);
+            System.out.println(this.userID);
 
+            if (!ServerData.users.containsKey(id)){
+                System.out.println("receiver is offline");
+            }
+            else{
+                User receiver = (User) ServerData.users.get(id);
+                receiver.notificationSession.getAsyncRemote().sendText(jsonObject.toString());
+            }
+
+            jsonObject.put("message", "report your account");
+            return jsonObject;
 
         }
 
@@ -1297,13 +1342,38 @@ public class User extends ApiHandler {
                     System.out.println("student_send_question table ekata data dmma");
 
                     //notification part
-                    statement= connection.prepareStatement("INSERT INTO notification (date, time, type, message, user_id_receiver,user_id_sender,status) values (?,?,6,'send_question request',?,?,0)");
+                    Date date = Date.valueOf(currentDate);
+                    Time time = Time.valueOf(currentTime);
+                    String message = "send_question request";
+                    statement= connection.prepareStatement("INSERT INTO notification (date, time, type, message, user_id_receiver,user_id_sender,status) values (?,?,6,?,?,?,0)");
                     statement.setDate(1, Date.valueOf(currentDate));
                     statement.setTime(2, Time.valueOf(currentTime));
-                    statement.setInt(3, teacher_userid);
+                    statement.setString(3, message);
                     statement.setInt(4,id);
+                    statement.setInt(5, teacher_userid);
                     Integer num3 = statement.executeUpdate();
                     System.out.println("notification eka damma");
+                    JSONObject notificationObject = new JSONObject();
+                    jsonObject.put("date", date);
+                    jsonObject.put("time", time);
+                    jsonObject.put("message", message);
+                    jsonObject.put("user_id_sender", this.userID);
+                    jsonObject.put("user_id_receiver", id);
+                    jsonObject.put("type", type);
+                    System.out.println(jsonObject.toString());
+                    System.out.println(id);
+                    System.out.println(this.userID);
+
+                    if (!ServerData.users.containsKey(id)){
+                        System.out.println("receiver is offline");
+                    }
+                    else{
+                        User receiver = (User) ServerData.users.get(id);
+                        receiver.notificationSession.getAsyncRemote().sendText(jsonObject.toString());
+                    }
+
+                    jsonObject.put("message","send_question request");
+                    return jsonObject;
                 }
                 else{
                     System.out.println("Tag is invalid");

@@ -124,20 +124,41 @@ public class Moderator extends ApiHandler {
             ResultSet rs2= statement2.executeQuery();
             Integer user_id= rs2.getInt("user_id");
 
-
-            statement = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver,mod_id_sender,status) values (?,?,13,?,?,0)");
-            statement.setDate(1, Date.valueOf(currentDate));
-            statement.setTime(2, Time.valueOf(currentTime));
+            Date date = Date.valueOf(currentDate);
+            Time time = Time.valueOf(currentTime);
+            int type = 13;
+            statement = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver,mod_id_sender,status) values (?,?,?,?,?,0)");
+            statement.setDate(1, date);
+            statement.setTime(2, time);
             statement.setInt(3, user_id);
             statement.setInt(4,id);
             Integer num2 = statement.executeUpdate();
+            jsonObject.put("date", date);
+            jsonObject.put("time", time);
+            jsonObject.put("user_id_sender", id);
+            jsonObject.put("user_id_receiver", user_id);
+            jsonObject.put("type", type);
+            System.out.println(jsonObject.toString());
+            System.out.println(user_id);
+            System.out.println(id);
 
-            if(res_id2==1 && num2==1){
-                jsonObject.put("message","Disable course successfully");
+            if (!ServerData.users.containsKey(user_id)){
+                System.out.println("receiver is offline");
             }
             else{
-                jsonObject.put("message","Error");
+                User receiver = (User) ServerData.users.get(user_id);
+                receiver.notificationSession.getAsyncRemote().sendText(jsonObject.toString());
             }
+
+            return jsonObject;
+
+
+//            if(res_id2==1 && num2==1){
+//                jsonObject.put("message","Disable course successfully");
+//            }
+//            else{
+//                jsonObject.put("message","Error");
+//            }
 
         }
 
