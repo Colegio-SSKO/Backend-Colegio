@@ -12,14 +12,13 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.security.NoSuchAlgorithmException;
-import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.*;
 import java.util.Properties;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import jakarta.servlet.http.Cookie;
 import java.security.MessageDigest;
 import java.math.BigInteger;
@@ -50,11 +49,12 @@ public class Authenticator extends ApiHandler{
         jsonObject.put("isError", true);
         jsonObject.put("message", "" );
         System.out.println("signup");
+        Connection connection = Driver.getConnection();
         try {
 
 
             String hashedPassword = hashPassword(requestObject.getString("password"));
-            Connection connection = Driver.getConnection();
+
             PreparedStatement preparedStatement = connection.prepareStatement("INSERT into user (f_name, l_name, email, password, DOB) values (?, ?, ?, ?, ?)");
             preparedStatement.setString(1, requestObject.getString("fname"));
             preparedStatement.setString(2, requestObject.getString("lname"));
@@ -71,6 +71,8 @@ public class Authenticator extends ApiHandler{
                 System.out.println("save una yako");
                 jsonObject.put("isError", false);
                 jsonObject.put("message" , "Congratulations! You are in.");
+                preparedStatement.close();
+
             }
 
 
@@ -84,6 +86,15 @@ public class Authenticator extends ApiHandler{
             System.out.println(exception);
             jsonObject.put("message", "Internal server error");
         }
+        finally {
+            try
+            {
+                connection.close();
+            }
+            catch (Exception exception){
+                System.out.println(exception);
+            }
+        }
 
 
 
@@ -93,8 +104,9 @@ public class Authenticator extends ApiHandler{
 
     public JSONObject signin(Integer id, JSONObject requestObject){
         JSONObject jsonObject = new JSONObject();
+        Connection connection = Driver.getConnection();
         try {
-            Connection connection = Driver.getConnection();
+
             PreparedStatement statement = connection.prepareStatement("select * from user LEFT JOIN teacher on user.user_id = teacher.user_ID LEFT JOIN organization on user.user_id = organization.user_id  WHERE user.email = ? ");
             statement.setString(1, requestObject.getString("email"));
 
@@ -131,9 +143,15 @@ public class Authenticator extends ApiHandler{
                         System.out.println("teacher knk");
                         userType = 2;
                     }
+                    System.out.println("tel no:" + resultSet.getString("tel_no"));
+                    System.out.println(resultSet.getInt("user_id"));
                     User newUser = new User(resultSet.getInt("user_id"),
                             resultSet.getString("f_name") + " " +resultSet.getString("l_name"),
-                            requestObject.getString("email")
+                            requestObject.getString("email"),resultSet.getString("pro_pic"),
+                            resultSet.getString("tel_no"), resultSet.getString("address"),
+                            resultSet.getString("city"), resultSet.getString("country")
+
+
                     );
 
                     newUser.type = userType;
@@ -195,9 +213,18 @@ public class Authenticator extends ApiHandler{
             }
 
 
-
+            statement.close();
         }catch (Exception exception){
             System.out.println(exception);
+        }
+        finally {
+            try
+            {
+                connection.close();
+            }
+            catch (Exception exception){
+                System.out.println(exception);
+            }
         }
         return jsonObject;
 
@@ -279,24 +306,6 @@ public class Authenticator extends ApiHandler{
         return token;
     }
 
-    public JSONObject getOrderHash (Integer id, JSONObject requestObject){
-
-        JSONObject jsonObject = new JSONObject();
-        String merchantId = requestObject.getString("merchant_id");
-
-
-        String merahantID     = "1222924";
-        String merchantSecret = "Mjc1MzAzMDc3MDc5NjUyOTgxNDI4NTc1ODE1OTUxMzgzODY4NTA===";
-        String orderID        = "12345";
-        double amount         = 1000;
-        String currency       = "LKR";
-        DecimalFormat df       = new DecimalFormat("0.00");
-        String amountFormatted = df.format(amount);
-        String hash    = getMd5(merahantID + orderID + amountFormatted + currency + getMd5(merchantSecret));
-        System.out.println("Generated Hash: " + hash);
-        jsonObject.put("hash", hash);
-        return jsonObject;
-    }
 
     public static String getMd5(String input) {
         try {
@@ -368,8 +377,9 @@ public class Authenticator extends ApiHandler{
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("isError", true);
         jsonObject.put("message", "");
+        Connection connection = Driver.getConnection();
         try {
-            Connection connection = Driver.getConnection();
+
             PreparedStatement statement = connection.prepareStatement("select * from user WHERE user.email = ? ");
             statement.setString(1, requestObject.getString("email"));
 
@@ -410,11 +420,19 @@ public class Authenticator extends ApiHandler{
                 return jsonObject;
 
             }
-
+            statement.close();
         }
         catch (Exception exception){
             System.out.println(exception);
             jsonObject.put("message", "Unknown error ocured in the server");
+        }finally {
+            try
+            {
+                connection.close();
+            }
+            catch (Exception exception){
+                System.out.println(exception);
+            }
         }
         return jsonObject;
     }
@@ -424,8 +442,9 @@ public class Authenticator extends ApiHandler{
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("isError", true);
         jsonObject.put("message", "");
+        Connection connection = Driver.getConnection();
         try {
-            Connection connection = Driver.getConnection();
+
             PreparedStatement statement = connection.prepareStatement("select * from user WHERE user.email = ? ");
             statement.setString(1, requestObject.getString("email"));
 
@@ -453,11 +472,21 @@ public class Authenticator extends ApiHandler{
 
 
             }
+            statement.close();
 
         }
         catch (Exception exception){
             System.out.println(exception);
             jsonObject.put("message", "Unknown server error");
+        }
+        finally {
+            try
+            {
+                connection.close();
+            }
+            catch (Exception exception){
+                System.out.println(exception);
+            }
         }
         return jsonObject;
     }
@@ -466,13 +495,14 @@ public class Authenticator extends ApiHandler{
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("isError", true);
         jsonObject.put("message", "");
+        Connection connection = Driver.getConnection();
         try{
             String newPassword = requestObject.getString("password");
             String email = requestObject.getString("email");
             System.out.println("methnt enw");
             String userOTP = requestObject.getString("otp");
             System.out.println("methntath enw");
-            Connection connection = Driver.getConnection();
+
             PreparedStatement statement = connection.prepareStatement("select * from user WHERE user.email = ? ");
             statement.setString(1, requestObject.getString("email"));
 
@@ -506,10 +536,19 @@ public class Authenticator extends ApiHandler{
                 return jsonObject;
             }
 
-
+            statement.close();
         }catch (Exception exception){
             System.out.println(exception);
             jsonObject.put("message","unknown error occurred in the server");
+        }
+        finally {
+            try
+            {
+                connection.close();
+            }
+            catch (Exception exception){
+                System.out.println(exception);
+            }
         }
 
         return jsonObject;

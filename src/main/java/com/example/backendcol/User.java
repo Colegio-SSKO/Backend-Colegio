@@ -1,6 +1,8 @@
 package com.example.backendcol;
 
 import jakarta.websocket.Session;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -27,6 +29,15 @@ public class User extends ApiHandler {
     public Session notificationSession;
     public Integer userID ;
     public String name ;
+    public String phone;
+
+    public String address;
+
+    public String city;
+
+    public String country;
+
+    public String profilePicture;
     public String email;
 
     public Integer type;
@@ -43,13 +54,19 @@ public class User extends ApiHandler {
         System.out.println("default User called");
     }
 
-    public User(Integer userID, String name, String email){
+    public User(Integer userID, String name, String email, String proPic, String phone, String address, String city, String country){
         this.userID = userID;
         this.name = name;
         this.email = email;
+        this.profilePicture = proPic;
+        this.phone = phone;
+        this.address = address;
+        this.city = city;
+        this.country = country;
         this.cart = new Cart(userID);
         this.purchasedContent = new ArrayList<>();
         this.questions = new HashMap<>();
+
 
 
         Connection connection = Driver.getConnection();
@@ -205,11 +222,14 @@ public class User extends ApiHandler {
 
     public JSONObject delete_cart(Integer id, JSONObject requestObject){
         System.out.println("enne ndd halo");
+
         JSONObject jsonObject  = new JSONObject();
+        jsonObject.put("isError", true);
         try {
             System.out.println("remove cart called");
             System.out.println(this.userID);
             jsonObject = cart.removeItem(this.userID, requestObject);
+            jsonObject.put("isError", false);
 
         }
         catch (Exception exception){
@@ -221,6 +241,7 @@ public class User extends ApiHandler {
 
     public JSONObject addtocart(Integer id, JSONObject requestObject){
         JSONObject jsonObject  = new JSONObject();
+        jsonObject.put("isError", true);
         try {
             System.out.println("add to cart called");
             System.out.println(this.userID);
@@ -229,6 +250,7 @@ public class User extends ApiHandler {
         }
         catch (Exception exception){
             System.out.println(exception);
+            jsonObject.put("isError", false);
         }
         return jsonObject;
     }
@@ -1354,7 +1376,7 @@ public class User extends ApiHandler {
                 Integer userid= rs.getInt("user_ID");
                 System.out.println("teacherge user id eka gaththa");
 
-                String message = "message";
+                String message = this.name + " has requested a session";
                 //notification part
                 PreparedStatement statement3 = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver, user_id_sender, status, message) VALUES (?,?,5,?,?,0, ?);");
                 Date date = Date.valueOf(currentDate);
@@ -1373,6 +1395,7 @@ public class User extends ApiHandler {
                 jsonObject.put("user_id_receiver", userid);
                 jsonObject.put("user_id_sender", this.userID);
                 jsonObject.put("message", message);
+                jsonObject.put("img_src", this.profilePicture);
                 System.out.println(jsonObject.toString());
                 System.out.println(userid);
                 System.out.println(this.userID);
@@ -1470,6 +1493,167 @@ public class User extends ApiHandler {
 
         return jsonArray;
     }
+
+
+    public JSONObject getOrderData(Integer id, JSONObject requestObject){
+        System.out.println("get order hash");
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("isError", true);
+        Connection connection = Driver.getConnection();
+
+        try {
+            connection.setAutoCommit(false);
+            JSONArray content = requestObject.getJSONArray("content");
+            if (content.length()==0){
+                jsonObject.put("errorMessage", "No content were added to purchase");
+                return jsonObject;
+            }
+
+            String quaryParameter = "content_id = " + content.getJSONObject(0).getInt("content_id");
+            for (int i = 1; i<content.length() ; i++){
+                quaryParameter += " or content_id = " + content.getJSONObject(i).getInt("content_id");
+            }
+
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT price from content where "+ quaryParameter);
+            System.out.println("SELECT price from content where "  + quaryParameter);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            Integer totalAmount = 0;
+            while(resultSet.next()){
+                System.out.println("price : " + resultSet.getInt("price"));
+                totalAmount += resultSet.getInt("price");
+            }
+            System.out.println("iwrai");
+
+            long currentTimeMillis = System.currentTimeMillis();
+            System.out.println(currentTimeMillis);
+
+            PreparedStatement preparedStatement1 = connection.prepareStatement("Insert into content_order (user_id, content_id, order_id) values (?, ?, ?)");
+
+            for (int i = 0;i<content.length();i++){
+                System.out.println(i);
+                preparedStatement1.setInt(1, this.userID);
+                preparedStatement1.setInt(2, content.getJSONObject(i).getInt("content_id"));
+                preparedStatement1.setLong(3, currentTimeMillis);
+                preparedStatement1.addBatch();
+            }
+
+            int[] result = preparedStatement1.executeBatch();
+
+            System.out.println(result.length);
+
+            if (result.length!= content.length()){
+                jsonObject.put("errorMessage", "Unknown error occurred");
+                return jsonObject;
+            }
+
+
+            String merahantID     = "1223119";
+            String merchantSecret = "Mjc3OTAzNDIzMjM2OTQ1ODc1MzI2NDgzNDY3ODgxMzkwNjgwNDQw";
+            double amount         = totalAmount;
+            String currency       = "LKR";
+            String orderID        = Long.toString(currentTimeMillis);
+            String hash =  DigestUtils.md5Hex(
+                    (merahantID +
+                            orderID +
+                            String.format("%.2f", amount) +
+                            currency +
+                            StringUtils.upperCase(DigestUtils.md5Hex(merchantSecret)))
+            ).toUpperCase();
+
+            System.out.println("Generated Hash: " + hash);
+            jsonObject.put("hash", hash);
+            jsonObject.put("merahantID", merahantID);
+            jsonObject.put("amount", amount);
+            jsonObject.put("currency", currency);
+            jsonObject.put("orderID", orderID);
+            jsonObject.put("f_name", this.name.split(" ")[0]);
+            jsonObject.put("l_name", this.name.split(" ")[1]);
+            System.out.println("phone" + this.phone);
+            System.out.println("city" + this.city);
+            System.out.println("address" + this.address);
+            System.out.println("country" + this.country);
+            jsonObject.put("phone", this.phone);
+            jsonObject.put("address", this.address);
+            jsonObject.put("city", this.city);
+            jsonObject.put("country", this.country);
+            System.out.println(jsonObject.toString());
+
+
+
+            //insert to purchase
+            PreparedStatement preparedStatement2 = connection.prepareStatement("insert into purchase (content_id, user_id, date, time)");
+
+            LocalDate currentDate = LocalDate.now();
+            LocalTime currentTime= LocalTime.now();
+            Date date = Date.valueOf(currentDate);
+            Time time = Time.valueOf(currentTime);
+            for (int i = 0;i<content.length();i++){
+                System.out.println(i);
+                preparedStatement2.setInt(1, content.getJSONObject(i).getInt("content_id"));
+                preparedStatement2.setInt(2, this.userID);
+                preparedStatement2.setDate(3, date);
+                preparedStatement2.setTime(4, time);
+                preparedStatement2.addBatch();
+            }
+
+            result = preparedStatement1.executeBatch();
+
+            System.out.println(result.length);
+
+            if (result.length!= content.length()){
+                jsonObject.put("errorMessage", "Unknown error occurred");
+                return jsonObject;
+            }
+
+            jsonObject.put("isError", false);
+            jsonObject.put("errorMessage", "Item purchased successfully");
+            return jsonObject;
+
+        }
+
+        catch(BatchUpdateException exception){
+            System.out.println(exception);
+            jsonObject.put("errorMessage", "You have already purchased this course");
+        }
+
+        catch (Exception exception){
+            System.out.println(exception);
+        }
+        finally {
+           try {
+               connection.close();
+           }catch (Exception exception){
+               System.out.println("could not close the database connection");
+           }
+        }
+
+        return jsonObject;
+
+
+
+
+//
+//
+//        String merahantID     = "1223119";
+//        String merchantSecret = "Mjc3OTAzNDIzMjM2OTQ1ODc1MzI2NDgzNDY3ODgxMzkwNjgwNDQw";
+//        String orderID        = "12345";
+//        double amount         = 1000.00;
+//        String currency       = "LKR";
+//        String hash =  DigestUtils.md5Hex(
+//                (merahantID +
+//                        orderID +
+//                        String.format("%.2f", amount) +
+//                        currency +
+//                        StringUtils.upperCase(DigestUtils.md5Hex(merchantSecret)))
+//        ).toUpperCase();
+//
+//        System.out.println("Generated Hash: " + hash);
+//        jsonObject.put("hash", hash);
+//        return jsonObject;
+    }
+
 
 
 
