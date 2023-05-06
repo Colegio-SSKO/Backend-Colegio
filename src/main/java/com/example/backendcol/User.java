@@ -538,7 +538,10 @@ public class User extends ApiHandler {
                 Map.Entry<Integer, Question> entry = iterator.next();
                 Integer key = entry.getKey();
                 Question value = entry.getValue();
-               jsonArray.put(value.data);
+                JSONObject object = new JSONObject();
+                object = value.data;
+                object.put("messages", value.messages);
+               jsonArray.put(object);
             }
 
         }catch (Exception exception){
