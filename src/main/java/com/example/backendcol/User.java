@@ -928,7 +928,14 @@ public class User extends ApiHandler {
                 System.out.println(content.getClass().getName());
                 System.out.println(content.data.getJSONArray("comments"));
                 if (content instanceof Course){
-                    jsonArray.put(content.data);
+                    JSONObject courseJson = content.data;
+                    JSONArray resCourseMedia = new JSONArray();
+                    ((Course) content).courseMedia.forEach(media->{
+                        resCourseMedia.put(media.data);
+                    });
+                    courseJson.put("media", resCourseMedia);
+
+                    jsonArray.put(courseJson);
                 }
 
             }
@@ -1142,22 +1149,19 @@ public class User extends ApiHandler {
     public JSONArray continue_course(Integer id, JSONObject requestObject){
         System.out.println("cont course1");
         JSONArray jsonArray= new JSONArray();
-        Course newCourse = new Course();
+
         try{
             System.out.println("cont course2");
-            for(int i =0 ; i < purchasedContent.size() ;i ++){
-                System.out.println("cont course3");
-                if (purchasedContent.get(i) instanceof Course && purchasedContent.get(i).data.getInt("content_id") == id){
-                    newCourse = new Course((JSONObject) purchasedContent.get(i).data);
-                    System.out.println(newCourse.courseMedia.size());
-                }
-            }
+            Course newCourse;
+            newCourse = (Course) purchasedContent.get(id);
+
             System.out.println("cont course4");
             if (newCourse.data == null){
                 System.out.println("no course media");
                 return jsonArray;
             }
 
+            System.out.println(newCourse.courseMedia.size());
             for (int i=0 ; i < newCourse.courseMedia.size() ; i++){
                 JSONObject newJsonObject = new JSONObject();
                 newJsonObject.put("f_name", newCourse.data.getString("f_name"));
