@@ -530,6 +530,38 @@ public class User extends ApiHandler {
 
 
 
+
+    //mek omkay
+    public JSONArray mychats(Integer id, JSONObject requestObject){
+        System.out.println("my chatss");
+        JSONArray jsonArray = new JSONArray();
+        try {
+            System.out.println("hellow this is chats");
+            System.out.println("view purchase questions");
+            System.out.println(this.questions == null);
+            System.out.println("view purchase questions");
+
+
+            Iterator<Map.Entry<Integer, Question>> iterator = questions.entrySet().iterator();
+
+            while (iterator.hasNext()) {
+                Map.Entry<Integer, Question> entry = iterator.next();
+                Integer key = entry.getKey();
+                Question value = entry.getValue();
+                jsonArray.put(value.data);
+            }
+
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+
+        System.out.println(jsonArray.length());
+        return jsonArray;
+    }
+
+
+
+
     // meka omkay
     public JSONArray myQuizes(Integer id, JSONObject requestObject){
         JSONArray jsonArray = new JSONArray();
