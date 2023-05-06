@@ -668,10 +668,11 @@ public class Teacher extends User {
 
 
     public JSONArray answer_questions(Integer id, JSONObject requestObject){
+        System.out.println("meka thma call une");
         JSONArray jsonArray = new JSONArray();
         try {
             System.out.println("view purchase questions answer");
-            System.out.println(this.questions == null);
+            System.out.println(this.answeringQuestions == null);
             System.out.println("view purchase questions answer");
 
             if (this.answeringQuestions == null){
@@ -682,7 +683,6 @@ public class Teacher extends User {
 
             while (iterator.hasNext()) {
                 Map.Entry<Integer, Question> entry = iterator.next();
-                Integer key = entry.getKey();
                 Question value = entry.getValue();
                 jsonArray.put(value.data);
             }

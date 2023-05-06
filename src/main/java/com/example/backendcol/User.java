@@ -848,30 +848,30 @@ public class User extends ApiHandler {
 
 
 
-
-
-    public JSONArray answer_questions(Integer id, JSONObject requestObject){
-        System.out.println(id);
-        JSONArray jasonarray = new JSONArray();
-        Connection connection = Driver.getConnection();
-        try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM question INNER JOIN teacher ON question.accept_teacher_id= teacher.teacher_id INNER JOIN user ON question.user_id= user.user_id INNER join question_media on question.question_id = question_media.question_id WHERE (question.status=1 OR question.status=2) AND teacher.user_ID=?;");
-            System.out.println("yesss");
-            statement.setInt(1,id);
-            ResultSet resultSet = statement.executeQuery();
-
-            jasonarray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description","media", "f_name" , "l_name","pro_pic","question.user_id","question.status");
-        }catch (Exception exception){
-            System.out.println(exception);
-        }
-
-
-        return jasonarray;
-    }
-
-
-
-
+//
+//
+//    public JSONArray answer_questions(Integer id, JSONObject requestObject){
+//        System.out.println(id);
+//        JSONArray jasonarray = new JSONArray();
+//        Connection connection = Driver.getConnection();
+//        try {
+//            PreparedStatement statement = connection.prepareStatement("SELECT * FROM question INNER JOIN teacher ON question.accept_teacher_id= teacher.teacher_id INNER JOIN user ON question.user_id= user.user_id INNER join question_media on question.question_id = question_media.question_id WHERE (question.status=1 OR question.status=2) AND teacher.user_ID=?;");
+//            System.out.println("yesss");
+//            statement.setInt(1,id);
+//            ResultSet resultSet = statement.executeQuery();
+//
+//            jasonarray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description","media", "f_name" , "l_name","pro_pic","question.user_id","question.status");
+//        }catch (Exception exception){
+//            System.out.println(exception);
+//        }
+//
+//
+//        return jasonarray;
+//    }
+//
+//
+//
+//
 
 
 
