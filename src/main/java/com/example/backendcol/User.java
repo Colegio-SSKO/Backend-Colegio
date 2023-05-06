@@ -27,6 +27,8 @@ public class User extends ApiHandler {
     public Session session;
 
     public Session notificationSession;
+
+    public Session commentSession;
     public Integer userID ;
     public String name ;
     public String phone;
@@ -44,7 +46,7 @@ public class User extends ApiHandler {
 
     public Cart cart;
 
-    public List<Content> purchasedContent;
+    public HashMap<Integer,Content> purchasedContent;
 
     public HashMap<Integer,Question> questions;
 
@@ -64,7 +66,7 @@ public class User extends ApiHandler {
         this.city = city;
         this.country = country;
         this.cart = new Cart(userID);
-        this.purchasedContent = new ArrayList<>();
+        this.purchasedContent = new HashMap<>();
         this.questions = new HashMap<>();
 
 
@@ -80,7 +82,12 @@ public class User extends ApiHandler {
             jsonArray = JsonHandler.createJSONArray(resultSet, "title", "f_name", "l_name", "description","qulification_level","content_id" , "pro_pic","image", "course_id", "rate_count");
             for (int i = 0; i<jsonArray.length() ; i++){
                 Course newCourse = new Course(jsonArray.getJSONObject(i));
-                purchasedContent.add(newCourse);
+                PreparedStatement preparedStatement1 = connection.prepareStatement("select * from comments inner join user on user.user_id = comments.user_id where content_id = ?");
+                preparedStatement1.setInt(1, jsonArray.getJSONObject(i).getInt("content_id"));
+                ResultSet resultSet1 = preparedStatement1.executeQuery();
+                JSONArray comments = JsonHandler.createJSONArray(resultSet1, "comments.comment_id", "comments.message", "comments.date", "comments.user_id", "user.f_name", "user.l_name", "user.pro_pic");
+                newCourse.data.put("comments", comments);
+                purchasedContent.put(newCourse.data.getInt("content_id"),newCourse);
                 System.out.println("nidimthai");
 
             }
@@ -95,7 +102,13 @@ public class User extends ApiHandler {
             jsonArray = JsonHandler.createJSONArray(resultSet, "title", "f_name", "l_name", "description","qulification_level","content_id" , "pro_pic","image", "quiz_id", "rate_count");
             for (int i = 0; i<jsonArray.length() ; i++){
                 Quiz newQuiz = new Quiz(jsonArray.getJSONObject(i));
-                purchasedContent.add(newQuiz);
+                PreparedStatement preparedStatement1 = connection.prepareStatement("select * from comments inner join user on user.user_id = comments.user_id where content_id = ?");
+                preparedStatement1.setInt(1, jsonArray.getJSONObject(i).getInt("content_id"));
+                ResultSet resultSet1 = preparedStatement1.executeQuery();
+                JSONArray comments = JsonHandler.createJSONArray(resultSet1, "comments.comment_id", "comments.message", "comments.date", "comments.user_id", "user.f_name", "user.l_name", "user.pro_pic");
+                System.out.println("comment size ek: " + comments.length());
+                newQuiz.data.put("comments", comments);
+                purchasedContent.put(newQuiz.data.getInt("content_id"),newQuiz);
                 System.out.println("nidimthai");
 
             }
@@ -594,13 +607,26 @@ public class User extends ApiHandler {
             System.out.println("view purchase quiz");
             System.out.println(this.purchasedContent == null);
             System.out.println("view purchase quiz");
-            for (Content content : purchasedContent){
+            for (Map.Entry<Integer, Content> entry : purchasedContent.entrySet()) {
+
+                Content content = entry.getValue();
                 System.out.println("mkkd aula quiz eke");
                 System.out.println(content.getClass().getName());
+                System.out.println(content.data.getJSONArray("comments"));
                 if (content instanceof Quiz){
                     jsonArray.put(content.data);
                 }
+
             }
+
+//            for (Content content : purchasedContent){
+//                System.out.println("mkkd aula quiz eke");
+//                System.out.println(content.getClass().getName());
+//                System.out.println(content.data.getJSONArray("comments"));
+//                if (content instanceof Quiz){
+//                    jsonArray.put(content.data);
+//                }
+//            }
 
         }catch (Exception exception){
             System.out.println(exception);
@@ -895,13 +921,24 @@ public class User extends ApiHandler {
             System.out.println("view purchase course");
             System.out.println(this.purchasedContent == null);
             System.out.println("view purchase course");
-            for (Content content : purchasedContent){
-                System.out.println("mkkd aula");
+            for (Map.Entry<Integer, Content> entry : purchasedContent.entrySet()) {
+
+                Content content = entry.getValue();
+                System.out.println("mkkd aula course eke");
                 System.out.println(content.getClass().getName());
+                System.out.println(content.data.getJSONArray("comments"));
                 if (content instanceof Course){
                     jsonArray.put(content.data);
                 }
+
             }
+//            for (Content content : purchasedContent){
+//                System.out.println("mkkd aula");
+//                System.out.println(content.getClass().getName());
+//                if (content instanceof Course){
+//                    jsonArray.put(content.data);
+//                }
+//            }
 
         }catch (Exception exception){
             System.out.println(exception);
@@ -1764,7 +1801,7 @@ public class User extends ApiHandler {
             for (int i = 0; i<content.length(); i++){
                 System.out.println("content ek add kr");
                 Content newContent = new Content(content.getJSONObject(i).getInt("content_id"));
-                purchasedContent.add(newContent);
+                purchasedContent.put(content.getJSONObject(i).getInt("content_id"), newContent);
             }
             return jsonObject;
 
@@ -1877,6 +1914,68 @@ public class User extends ApiHandler {
             System.out.println(sqlException);
         }
 
+        return jsonObject;
+    }
+
+    public JSONObject addComments(Integer id, JSONObject requestObject){
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("isError", true);
+        System.out.println(requestObject.toString());
+        try {
+            Connection connection = Driver.getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement("insert into comments (message, date, content_id, user_id) values (?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setString(1, requestObject.getString("message"));
+            LocalDate currentDate = LocalDate.now();
+            Date date = Date.valueOf(currentDate);
+            preparedStatement.setDate(2, date);
+            preparedStatement.setInt(3, requestObject.getInt("content_id"));
+            preparedStatement.setInt(4, this.userID);
+
+            JSONObject comment = new JSONObject();
+            comment.put("name", this.name);
+            comment.put("date", date);
+            comment.put("pro_pic", this.profilePicture);
+            comment.put("message", requestObject.getString("message"));
+            comment.put("content_id", requestObject.getInt("content_id"));
+            System.out.println(this.profilePicture);
+            System.out.println(comment.toString());
+
+            int result = preparedStatement.executeUpdate();
+            ResultSet rs = preparedStatement.getGeneratedKeys();
+            Integer generatedId = null;
+            if (rs.next()) {
+                generatedId = rs.getInt(1);
+
+            }
+
+            if (result>0 && generatedId != null){
+
+                for (Map.Entry<Integer, Object> entry : ServerData.users.entrySet()) {
+
+                    User user = (User) entry.getValue();
+                    user.commentSession.getAsyncRemote().sendText(comment.toString());
+                    JSONObject newComment = new JSONObject();
+                    newComment.put("comments.date", date);
+                    newComment.put("comments.message", requestObject.getString("message"));
+                    newComment.put("comments.user_id", this.userID);
+                    newComment.put("user.pro_pic", this.profilePicture);
+                    newComment.put("user.f_name", this.name.split(" ")[0]);
+                    newComment.put("user.l_name", this.name.split(" ")[1]);
+                    newComment.put("comments.comment_id", generatedId);
+                    this.purchasedContent.get(requestObject.getInt("content_id")).
+                            data.getJSONArray("comments").put(newComment);
+                }
+
+                jsonObject.put("isError", false);
+
+            }
+            else{
+                jsonObject.put("errorMessage", "Unknown error occurred");
+            }
+
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
         return jsonObject;
     }
 

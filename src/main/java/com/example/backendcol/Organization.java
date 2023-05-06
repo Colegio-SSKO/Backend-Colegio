@@ -23,6 +23,7 @@ public class Organization extends User {
         organization.address = user.address;
         organization.city = user.city;
         organization.country = user.country;
+        organization.profilePicture = user.profilePicture;
         return organization;
     }
 

@@ -1,5 +1,6 @@
 package com.example.backendcol;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.sql.Connection;
@@ -32,6 +33,12 @@ public class Content {
 
             jsonObject = JsonHandler.createJSONObject(rs, "img_src", "description", "title" , "price", "description2", "author", "content_id");
             data = jsonObject;
+            PreparedStatement preparedStatement1 = connection.prepareStatement("select * from comments inner join user on user.user_id = comments.user_id where content_id = ?");
+            preparedStatement1.setInt(1, id);
+
+            ResultSet resultSet1 = preparedStatement1.executeQuery();
+            JSONArray comments = JsonHandler.createJSONArray(resultSet1, "comments.comment_id", "comments.message", "comments.date", "comments.user_id", "user.f_name", "user.l_name", "user.pro_pic");
+            data.put("comments", comments);
         }
 
         catch(SQLException sqlException){

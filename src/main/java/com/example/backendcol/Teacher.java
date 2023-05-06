@@ -65,6 +65,7 @@ public class Teacher extends User {
         teacher.address = user.address;
         teacher.city = user.city;
         teacher.country = user.country;
+        teacher.profilePicture = user.profilePicture;
         return teacher;
     }
 //    public JSONObject teacher_send_req(Integer id, JSONObject requestObject){
