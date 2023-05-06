@@ -1380,6 +1380,7 @@ public class User extends ApiHandler {
             System.out.println(teachers.length());
 
 
+
             for (int i = 0;i<teachers.length();i++){
                 //get teacher_id relevernt to tag
                 statement = connection.prepareStatement("SELECT * FROM teacher where tag=?;" );
@@ -1399,6 +1400,8 @@ public class User extends ApiHandler {
                     statement.setInt(3, generatedKey);
                     Integer num2= statement.executeUpdate();
                     System.out.println("student_send_question table ekata data dmma");
+
+
 
                     //notification part
                     Date date = Date.valueOf(currentDate);
@@ -1434,12 +1437,29 @@ public class User extends ApiHandler {
                     }
 
                     jsonObject.put("message","send_question request");
-                    return jsonObject;
+
                 }
                 else{
                     System.out.println("Tag is invalid");
                 }
             }
+
+            //live update ek
+            System.out.println(this.questions.get(60).data.toString());
+            JSONObject newQuestionData = new JSONObject();
+            newQuestionData.put("question_media.media", "");
+            newQuestionData.put("question.question_id", generatedKey);
+            newQuestionData.put("question.user_id", this.userID);
+            newQuestionData.put("question_img",requestObject.getString("image"));
+            newQuestionData.put("question_description", requestObject.getString("description"));
+            newQuestionData.put("messages", new JSONArray());
+            newQuestionData.put("question_title",requestObject.getString("title"));
+            newQuestionData.put("status", 0);
+
+            System.out.println(newQuestionData.toString());
+            Question newQuestion = new Question(newQuestionData);
+            this.questions.put(newQuestionData.getInt("question.question_id"), newQuestion);
+
 
         }
 
