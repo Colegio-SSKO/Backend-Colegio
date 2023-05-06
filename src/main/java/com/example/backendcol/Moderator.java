@@ -6,7 +6,10 @@ import org.json.JSONObject;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Random;
 
+
+import java.util.Random;
 
 public class Moderator extends ApiHandler {
 
@@ -306,7 +309,7 @@ public class Moderator extends ApiHandler {
             statement = connection.prepareStatement("SELECT * from upgrade_to_teacher INNER JOIN user ON upgrade_to_teacher.user_id= user.user_id where upgrade_to_teacher.status=0 && upgrade_to_teacher.user_id=? ;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
-            jsonObject = JsonHandler.createJSONObject(rs, "user_id","upgrade_id","education_level", "f_name", "l_name","pro_pic", "certificate","refers","email");
+            jsonObject = JsonHandler.createJSONObject(rs, "user_id","upgrade_id","education_level", "f_name", "l_name","pro_pic", "certificate","refers","email", "gender");
 
         }
 
@@ -322,7 +325,16 @@ public class Moderator extends ApiHandler {
         Connection connection = Driver.getConnection();
 
         JSONObject jsonObject= new JSONObject();
+
+
         try{
+
+            Integer min = 1;
+            Integer max = 10000000;
+
+            Random random = new Random();
+            Integer randomNumber  = random.nextInt((max-min) + 1) + min;
+
             PreparedStatement statement;
             statement = connection.prepareStatement("UPDATE upgrade_to_teacher SET status=2 WHERE upgrade_id=?;");
             statement.setInt(1,requestObject.getInt("upgrade_id"));
@@ -333,6 +345,27 @@ public class Moderator extends ApiHandler {
             statement.setInt(1,requestObject.getInt("upgrade_id"));
             statement.setInt(2,id);
             Integer num2= statement.executeUpdate();
+
+
+            String numberString = String.valueOf(requestObject.getInt("user_id"));
+            char firstDigit = numberString.charAt(0);
+            int firstDigitInt = Character.getNumericValue(firstDigit);
+            Integer tag= randomNumber+ firstDigitInt;
+
+            statement = connection.prepareStatement("INSERT INTO teacher (gender, qulification_level, tag, user_ID) VALUES (?,?,?,?);");
+            statement.setString(1, requestObject.getString("gender"));
+            statement.setString(2, requestObject.getString("qulification_level"));
+            statement.setInt(3,tag);
+            statement.setInt(4,requestObject.getInt("user_id"));
+            Integer num3= statement.executeUpdate();
+
+            statement = connection.prepareStatement("UPDATE student SET status=1 WHERE user_id=?;");
+            statement.setInt(1,requestObject.getInt("user_id"));
+            Integer num4= statement.executeUpdate();
+
+            statement = connection.prepareStatement("UPDATE user SET verification_status=2 WHERE user_id=?;");
+            statement.setInt(1,requestObject.getInt("user_id"));
+            Integer num5= statement.executeUpdate();
 
 
         }
@@ -360,6 +393,10 @@ public class Moderator extends ApiHandler {
             statement.setInt(1,requestObject.getInt("upgrade_id"));
             statement.setInt(2,id);
             Integer num2= statement.executeUpdate();
+
+            statement = connection.prepareStatement("UPDATE user SET verification_status=3 WHERE user_id=?;");
+            statement.setInt(1,requestObject.getInt("user_id"));
+            Integer num5= statement.executeUpdate();
 
 
         }

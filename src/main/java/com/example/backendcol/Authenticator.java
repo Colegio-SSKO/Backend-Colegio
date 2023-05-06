@@ -55,12 +55,15 @@ public class Authenticator extends ApiHandler{
 
             String hashedPassword = hashPassword(requestObject.getString("password"));
             Connection connection = Driver.getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement("INSERT into user (f_name, l_name, email, password, DOB) values (?, ?, ?, ?, ?)");
+            PreparedStatement preparedStatement = connection.prepareStatement("INSERT into user (f_name, l_name, email, password, DOB, city, tel_no, address) values (?, ?, ?, ?, ?,?,?,?)");
             preparedStatement.setString(1, requestObject.getString("fname"));
             preparedStatement.setString(2, requestObject.getString("lname"));
             preparedStatement.setString(3, requestObject.getString("email"));
             preparedStatement.setString(4, hashedPassword);
             preparedStatement.setString(5, "2020-02-01");
+            preparedStatement.setString(6, requestObject.getString("city"));
+            preparedStatement.setInt(7, requestObject.getInt("tel_num"));
+            preparedStatement.setString(8, requestObject.getString("address"));
 
             int result = preparedStatement.executeUpdate();
             if (result == 0){

@@ -344,13 +344,16 @@ public class Teacher extends User {
         try{
             PreparedStatement statement;
 
-
+            connection.setAutoCommit(false);
             //create new content
-            statement = connection.prepareStatement("INSERT INTO content (user_id, subject_id, date, status, type, price) VALUES (?, ?,?,0,1,?)",Statement.RETURN_GENERATED_KEYS );
+            statement = connection.prepareStatement("INSERT INTO content (user_id, subject_id, date, status, type, price, image, title, description) VALUES (?, ?,?,0,1,?,?,?,?)",Statement.RETURN_GENERATED_KEYS );
             statement.setInt(1,id);
             statement.setInt(2,requestObject.getInt("subject"));
             statement.setDate(3, Date.valueOf(currentDate));
             statement.setInt(4, requestObject.getInt("price"));
+            statement.setString(5, requestObject.getString("image"));
+            statement.setString(6, requestObject.getString("title"));
+            statement.setString(7, requestObject.getString("description"));
             Integer result = statement.executeUpdate();
             System.out.println("Hri meka wada");
 
@@ -364,10 +367,8 @@ public class Teacher extends User {
 
 
             //insert details to quiz table
-            statement = connection.prepareStatement("INSERT INTO quiz (description, quiz_title, content_id) VALUES (?,?,?)",Statement.RETURN_GENERATED_KEYS );
-            statement.setString(1,requestObject.getString("description"));
-            statement.setString(2, requestObject.getString("title"));
-            statement.setInt(3, generatedKey);
+            statement = connection.prepareStatement("INSERT INTO quiz (content_id) VALUES (?)",Statement.RETURN_GENERATED_KEYS );
+            statement.setInt(1, generatedKey);
             Integer num = statement.executeUpdate();
 
             if (num == 1){
@@ -402,14 +403,31 @@ public class Teacher extends User {
             if (numberOdUpdates.length == quizQuestions.length()){
                 System.out.println("Update ek lssnt una");
             }
+            connection.commit();
+
+
+    }catch (Exception exception){
+        System.out.println(exception);
+        try {
+            connection.rollback();
+        }catch (Exception exception1){
+            System.out.println("sys: "+exception);
         }
 
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
+    }
+        finally {
+        try {
+            connection.close();
+        }catch (Exception exception){
+            System.out.println("sys: "+exception);
         }
+
+    }
 
         return jsonObject;
-    }
+}
+
+
 
 
     @Override
@@ -798,6 +816,121 @@ public class Teacher extends User {
 
 
         }catch (Exception exception){
+            System.out.println(exception);
+            try {
+                connection.rollback();
+            }catch (Exception exception1){
+                System.out.println("sys: "+exception);
+            }
+
+        }
+        finally {
+            try {
+                connection.close();
+            }catch (Exception exception){
+                System.out.println("sys: "+exception);
+            }
+
+        }
+
+        return jsonObject;
+    }
+
+
+
+
+    public JSONObject add_publish(Integer id, JSONObject requestObject){
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("isError", true);
+        Connection connection = Driver.getConnection();
+        try{
+            System.out.println("create course ekt awa");
+            System.out.println(requestObject.toString());
+
+            connection.setAutoCommit(false);
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO upgrade_to_teacher (user_id, education_level, certificate,refers) VALUES (?,?,?,?);", Statement.RETURN_GENERATED_KEYS);
+            statement.setInt(1, requestObject.getInt("userId"));
+            statement.setString(2, requestObject.getString("education_level"));
+            statement.setString(3, requestObject.getString("certificate"));
+            statement.setString(4, requestObject.getString("references"));
+            Integer result = statement.executeUpdate();
+            System.out.println("meka wada klaaa");
+
+
+
+            Integer generatedKey = -100;
+            if (result == 1){
+                ResultSet resultSet = statement.getGeneratedKeys();
+                if(resultSet.next()){
+                    generatedKey = resultSet.getInt(1);
+                    System.out.println("key is : "+ generatedKey);
+                }
+            }
+
+
+            if (generatedKey<0){
+                System.out.println("could not insert to content  table");
+                return jsonObject;
+            }
+
+
+            PreparedStatement statement2 = connection.prepareStatement("UPDATE user SET verification_status=1 WHERE user_id=?;");
+            statement2.setInt(1, requestObject.getInt("userId"));
+
+
+            result = statement2.executeUpdate();
+
+            connection.commit();
+
+
+        }catch (Exception exception){
+            System.out.println(exception);
+            try {
+                connection.rollback();
+            }catch (Exception exception1){
+                System.out.println("sys: "+exception);
+            }
+
+        }
+        finally {
+            try {
+                connection.close();
+            }catch (Exception exception){
+                System.out.println("sys: "+exception);
+            }
+
+        }
+
+        return jsonObject;
+    }
+
+
+
+    public JSONObject answer_question(Integer id, JSONObject requestObject){
+        System.out.println("wedaaaaaaaaaaaaa");
+        Connection connection = Driver.getConnection();
+
+        JSONObject jsonObject= new JSONObject();
+
+
+        try{
+            connection.setAutoCommit(false);
+            PreparedStatement statement;
+
+
+            //insert data to question table
+            statement = connection.prepareStatement("INSERT INTO question_media (question_id, media) VALUES (?,?);" );
+            statement.setInt(1,requestObject.getInt("question_id"));
+            statement.setString(2,requestObject.getString("image"));
+            Integer result = statement.executeUpdate();
+            System.out.println("Hri meka wada");
+
+
+            connection.commit();
+        }
+
+
+        catch (Exception exception){
             System.out.println(exception);
             try {
                 connection.rollback();
