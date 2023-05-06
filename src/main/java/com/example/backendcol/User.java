@@ -538,7 +538,42 @@ public class User extends ApiHandler {
                 Map.Entry<Integer, Question> entry = iterator.next();
                 Integer key = entry.getKey();
                 Question value = entry.getValue();
-               jsonArray.put(value.data);
+                JSONObject object = new JSONObject();
+                object = value.data;
+                object.put("messages", value.messages);
+               jsonArray.put(object);
+            }
+
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+
+        System.out.println(jsonArray.length());
+        return jsonArray;
+    }
+
+
+
+
+
+    //mek omkay
+    public JSONArray mychats(Integer id, JSONObject requestObject){
+        System.out.println("my chatss");
+        JSONArray jsonArray = new JSONArray();
+        try {
+            System.out.println("hellow this is chats");
+            System.out.println("view purchase questions");
+            System.out.println(this.questions == null);
+            System.out.println("view purchase questions");
+
+
+            Iterator<Map.Entry<Integer, Question>> iterator = questions.entrySet().iterator();
+
+            while (iterator.hasNext()) {
+                Map.Entry<Integer, Question> entry = iterator.next();
+                Integer key = entry.getKey();
+                Question value = entry.getValue();
+                jsonArray.put(value.data);
             }
 
         }catch (Exception exception){
@@ -676,22 +711,22 @@ public class User extends ApiHandler {
 
 
 
-//    public JSONObject search_quiz_open(Integer id, JSONObject requestObject){
-//        JSONObject jasonobject = new JSONObject();
-//
-//        try {
-//            Connection connection = Driver.getConnection();
-//            PreparedStatement statement = connection.prepareStatement("SELECT * from quiz INNER JOIN content on quiz.content_id=content.content_id INNER JOIN user ON content.user_id=user.user_id inner join teacher on content.user_id = teacher.user_id where content.content_id=?;");
-//            statement.setInt(1,id);
-//            ResultSet resultSet = statement.executeQuery();
-//            jasonobject = JsonHandler.createJSONObject(resultSet, "quiz_title", "image", "f_name", "l_name", "description" , "content_id","date");
-//        }catch (Exception exception){
-//            System.out.println(exception);
-//        }
-//
-//
-//        return jasonobject;
-//    }
+    public JSONObject search_quiz_open(Integer id, JSONObject requestObject){
+        JSONObject jasonobject = new JSONObject();
+
+        try {
+            Connection connection = Driver.getConnection();
+            PreparedStatement statement = connection.prepareStatement("SELECT * from quiz INNER JOIN content on quiz.content_id=content.content_id INNER JOIN user ON content.user_id=user.user_id inner join teacher on content.user_id = teacher.user_id where content.content_id=?;");
+            statement.setInt(1,id);
+            ResultSet resultSet = statement.executeQuery();
+            jasonobject = JsonHandler.createJSONObject(resultSet, "quiz_title", "image", "f_name", "l_name", "description" , "content_id","date");
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+
+
+        return jasonobject;
+    }
 
 
 
@@ -952,15 +987,37 @@ public class User extends ApiHandler {
             String title= rs2.getString("course.title");
             System.out.println("sew");
 
-
+            Date date = Date.valueOf(currentDate);
+            Time time = Time.valueOf(currentTime);
+            String message ="report your course " + title;
             statement = connection.prepareStatement("INSERT INTO notification (date,time,message,type, user_id_sender, user_id_receiver) VALUES (?,?,?,11,?,?);");
-            statement.setDate(1, Date.valueOf(currentDate));
-            statement.setTime(2, Time.valueOf(currentTime));
-            statement.setString(3, "report your course " + title);
+            statement.setDate(1, date);
+            statement.setTime(2, time);
+            statement.setString(3, message);
             statement.setInt(4, id);
             statement.setInt(5,content_userid);
             Integer num2 = statement.executeUpdate();
+            JSONObject notificationObject = new JSONObject();
+            jsonObject.put("date", date);
+            jsonObject.put("time", time);
+            jsonObject.put("message", message);
+            jsonObject.put("user_id_sender", this.userID);
+            jsonObject.put("user_id_receiver", content_userid);
+            jsonObject.put("type", type);
+            System.out.println(jsonObject.toString());
+            System.out.println("reciver " + content_userid);
+            System.out.println("sender " +this.userID);
 
+            if (!ServerData.users.containsKey(content_userid)){
+                System.out.println("receiver is offline");
+            }
+            else{
+                User receiver = (User) ServerData.users.get(content_userid);
+                receiver.notificationSession.getAsyncRemote().sendText(jsonObject.toString());
+            }
+
+            jsonObject.put("message", "report your course " + title);
+            return jsonObject;
 
         }
 
@@ -999,14 +1056,37 @@ public class User extends ApiHandler {
 
 
             //notification part
-            statement = connection.prepareStatement("INSERT INTO notification (date,time,message,type, user_id_sender, user_id_receiver, status) VALUES (?,?,'report your account',9,?,?,0);");
-            statement.setDate(1, Date.valueOf(currentDate));
-            statement.setTime(2, Time.valueOf(currentTime));
+            Date date = Date.valueOf(currentDate);
+            Time time = Time.valueOf(currentTime);
+            String message ="report your account";
+            statement = connection.prepareStatement("INSERT INTO notification (date,time,message,type, user_id_sender, user_id_receiver, status) VALUES (?,?,?,9,?,?,0);");
+            statement.setDate(1, date);
+            statement.setTime(2, time);
             statement.setInt(3, id);
             statement.setInt(4,requestObject.getInt("user_id"));
             Integer num2 = statement.executeUpdate();
             System.out.println("notifiaction eka giyaa");
+            JSONObject notificationObject = new JSONObject();
+            jsonObject.put("date", date);
+            jsonObject.put("time", time);
+            jsonObject.put("message", message);
+            jsonObject.put("user_id_sender", this.userID);
+            jsonObject.put("user_id_receiver", id);
+            jsonObject.put("type", type);
+            System.out.println(jsonObject.toString());
+            System.out.println(id);
+            System.out.println(this.userID);
 
+            if (!ServerData.users.containsKey(id)){
+                System.out.println("receiver is offline");
+            }
+            else{
+                User receiver = (User) ServerData.users.get(id);
+                receiver.notificationSession.getAsyncRemote().sendText(jsonObject.toString());
+            }
+
+            jsonObject.put("message", "report your account");
+            return jsonObject;
 
         }
 
@@ -1277,6 +1357,23 @@ public class User extends ApiHandler {
                 }
             }
 
+
+//            //insert data to student send question
+//            statement = connection.prepareStatement("INSERT INTO student_send_question (user_id, teacher_id, question_id) VALUES (?,?,?)" );
+//            statement.setInt(1,id);
+//
+//            statement.setInt(3, generatedKey);
+//            Integer num = statement.executeUpdate();
+//
+//            if (num == 1){
+//                ResultSet resultSet2 = statement.getGeneratedKeys();
+//                if(resultSet2.next()){
+//                    generatedKey2 = resultSet2.getInt(1);
+//                    System.out.println("key is : "+ generatedKey2);
+//                }
+//            }
+
+
             //get questions array in the request object
             JSONArray teachers = requestObject.getJSONArray("teachers");
             System.out.println("teachers thiyna array eka gaththa");
@@ -1304,15 +1401,40 @@ public class User extends ApiHandler {
                     System.out.println("student_send_question table ekata data dmma");
 
                     //notification part
-                    statement= connection.prepareStatement("INSERT INTO notification (date, time, type, message, user_id_receiver,user_id_sender,status) values (?,?,6,'send_question request',?,?,0)");
+                    Date date = Date.valueOf(currentDate);
+                    Time time = Time.valueOf(currentTime);
+                    String message = "send_question request";
+                    statement= connection.prepareStatement("INSERT INTO notification (date, time, type, message, user_id_receiver,user_id_sender,status) values (?,?,6,?,?,?,0)");
                     statement.setDate(1, Date.valueOf(currentDate));
                     statement.setTime(2, Time.valueOf(currentTime));
-                    statement.setInt(3, teacher_userid);
+                    statement.setString(3, message);
                     statement.setInt(4,id);
+                    statement.setInt(5, teacher_userid);
                     Integer num3 = statement.executeUpdate();
                     System.out.println("notification eka damma");
 
                     connection.commit();
+                    JSONObject notificationObject = new JSONObject();
+                    jsonObject.put("date", date);
+                    jsonObject.put("time", time);
+                    jsonObject.put("message", message);
+                    jsonObject.put("user_id_sender", this.userID);
+                    jsonObject.put("user_id_receiver", id);
+                    jsonObject.put("type", type);
+                    System.out.println(jsonObject.toString());
+                    System.out.println(id);
+                    System.out.println(this.userID);
+
+                    if (!ServerData.users.containsKey(id)){
+                        System.out.println("receiver is offline");
+                    }
+                    else{
+                        User receiver = (User) ServerData.users.get(id);
+                        receiver.notificationSession.getAsyncRemote().sendText(jsonObject.toString());
+                    }
+
+                    jsonObject.put("message","send_question request");
+                    return jsonObject;
                 }
                 else{
                     System.out.println("Tag is invalid");
@@ -1674,37 +1796,6 @@ public class User extends ApiHandler {
 
 
 
-
-    public JSONObject upload_pro_pic(Integer id, JSONObject requestObject){
-        Connection connection = Driver.getConnection();
-
-        JSONObject jsonObject= new JSONObject();
-        try{
-            System.out.println("ane deiyo");
-            PreparedStatement statement;
-            statement = connection.prepareStatement("UPDATE user SET pro_pic=? WHERE user_id=?;");
-            statement.setString(1,requestObject.getString("image"));
-            statement.setInt(2,id);
-            Integer num= statement.executeUpdate();
-
-            if (num==1){
-                jsonObject.put("isError",1);
-            }
-            else{
-                jsonObject.put("isError",2);
-            }
-        }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
-
-        return jsonObject;
-    }
-
-
-
-
     public JSONArray get_content_media_quiz(Integer id, JSONObject requestObject){
         Connection connection = Driver.getConnection();
 
@@ -1737,6 +1828,37 @@ public class User extends ApiHandler {
 
 
 
+
+
+
+
+
+    public JSONObject upload_pro_pic(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONObject jsonObject= new JSONObject();
+        try{
+            System.out.println("ane deiyo");
+            PreparedStatement statement;
+            statement = connection.prepareStatement("UPDATE user SET pro_pic=? WHERE user_id=?;");
+            statement.setString(1,requestObject.getString("image"));
+            statement.setInt(2,id);
+            Integer num= statement.executeUpdate();
+
+            if (num==1){
+                jsonObject.put("isError",1);
+            }
+            else{
+                jsonObject.put("isError",2);
+            }
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
 
 
 

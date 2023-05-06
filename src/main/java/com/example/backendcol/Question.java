@@ -18,6 +18,7 @@ public class Question {
 
     public Question(JSONObject jsonObject){
         data = jsonObject;
+        messages = new JSONArray();
 
         try{
 
