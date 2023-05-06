@@ -1253,17 +1253,19 @@ public class User extends ApiHandler {
         Integer generatedKey = -100;
 
         try{
+            connection.setAutoCommit(false);
             PreparedStatement statement;
 
 
             //insert data to question table
-            statement = connection.prepareStatement("INSERT INTO question (subject_id, question_title, date, time, question_description, user_id, status) VALUES (?,?,?,?,?,?,0)",Statement.RETURN_GENERATED_KEYS );
+            statement = connection.prepareStatement("INSERT INTO question (subject_id, question_title, question_img, date, time, question_description, user_id, status) VALUES (?,?,?,?,?,?,?,0)",Statement.RETURN_GENERATED_KEYS );
             statement.setInt(1,requestObject.getInt("subject"));
             statement.setString(2,requestObject.getString("title"));
-            statement.setDate(3, Date.valueOf(currentDate));
-            statement.setTime(4, Time.valueOf(currentTime));
-            statement.setString(5,requestObject.getString("description"));
-            statement.setInt(6,id);
+            statement.setString(3,requestObject.getString("image"));
+            statement.setDate(4, Date.valueOf(currentDate));
+            statement.setTime(5, Time.valueOf(currentTime));
+            statement.setString(6,requestObject.getString("description"));
+            statement.setInt(7,id);
             Integer result = statement.executeUpdate();
             System.out.println("Hri meka wada");
 
@@ -1274,23 +1276,6 @@ public class User extends ApiHandler {
                     System.out.println("key is : "+ generatedKey);
                 }
             }
-
-
-//            //insert data to student send question
-//            statement = connection.prepareStatement("INSERT INTO student_send_question (user_id, teacher_id, question_id) VALUES (?,?,?)" );
-//            statement.setInt(1,id);
-//
-//            statement.setInt(3, generatedKey);
-//            Integer num = statement.executeUpdate();
-//
-//            if (num == 1){
-//                ResultSet resultSet2 = statement.getGeneratedKeys();
-//                if(resultSet2.next()){
-//                    generatedKey2 = resultSet2.getInt(1);
-//                    System.out.println("key is : "+ generatedKey2);
-//                }
-//            }
-
 
             //get questions array in the request object
             JSONArray teachers = requestObject.getJSONArray("teachers");
@@ -1326,6 +1311,8 @@ public class User extends ApiHandler {
                     statement.setInt(4,id);
                     Integer num3 = statement.executeUpdate();
                     System.out.println("notification eka damma");
+
+                    connection.commit();
                 }
                 else{
                     System.out.println("Tag is invalid");
@@ -1334,12 +1321,28 @@ public class User extends ApiHandler {
 
         }
 
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
+
+        catch (Exception exception){
+            System.out.println(exception);
+            try {
+                connection.rollback();
+            }catch (Exception exception1){
+                System.out.println("sys: "+exception);
+            }
+
+        }
+        finally {
+            try {
+                connection.close();
+            }catch (Exception exception){
+                System.out.println("sys: "+exception);
+            }
+
         }
 
         return jsonObject;
     }
+
 
 
 
@@ -1667,6 +1670,37 @@ public class User extends ApiHandler {
 //        return jsonObject;
     }
 
+
+
+
+
+
+    public JSONObject upload_pro_pic(Integer id, JSONObject requestObject){
+        Connection connection = Driver.getConnection();
+
+        JSONObject jsonObject= new JSONObject();
+        try{
+            System.out.println("ane deiyo");
+            PreparedStatement statement;
+            statement = connection.prepareStatement("UPDATE user SET pro_pic=? WHERE user_id=?;");
+            statement.setString(1,requestObject.getString("image"));
+            statement.setInt(2,id);
+            Integer num= statement.executeUpdate();
+
+            if (num==1){
+                jsonObject.put("isError",1);
+            }
+            else{
+                jsonObject.put("isError",2);
+            }
+        }
+
+        catch(SQLException sqlException){
+            System.out.println(sqlException);
+        }
+
+        return jsonObject;
+    }
 
 
 
