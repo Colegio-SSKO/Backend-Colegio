@@ -1539,14 +1539,9 @@ public class User extends ApiHandler {
                 preparedStatement1.addBatch();
             }
 
-            int[] result = preparedStatement1.executeBatch();
 
-            System.out.println(result.length);
 
-            if (result.length!= content.length()){
-                jsonObject.put("errorMessage", "Unknown error occurred");
-                return jsonObject;
-            }
+
 
 
             String merahantID     = "1223119";
@@ -1583,7 +1578,7 @@ public class User extends ApiHandler {
 
 
             //insert to purchase
-            PreparedStatement preparedStatement2 = connection.prepareStatement("insert into purchase (content_id, user_id, date, time)");
+            PreparedStatement preparedStatement2 = connection.prepareStatement("insert into purchase (content_id, user_id, date, time) values (?,?,?,?)");
 
             LocalDate currentDate = LocalDate.now();
             LocalTime currentTime= LocalTime.now();
@@ -1598,24 +1593,42 @@ public class User extends ApiHandler {
                 preparedStatement2.addBatch();
             }
 
-            result = preparedStatement1.executeBatch();
 
-            System.out.println(result.length);
+            int[] result1 = preparedStatement1.executeBatch();
+            int[] result2 = preparedStatement2.executeBatch();
 
-            if (result.length!= content.length()){
+            connection.commit();
+
+
+
+
+            if (result1.length!= content.length()){
                 jsonObject.put("errorMessage", "Unknown error occurred");
                 return jsonObject;
             }
 
+
+            if (result2.length!= content.length()){
+                jsonObject.put("errorMessage", "Unknown error occurred");
+                return jsonObject;
+            }
+            connection.commit();
             jsonObject.put("isError", false);
             jsonObject.put("errorMessage", "Item purchased successfully");
+
+            for (int i = 0; i<content.length(); i++){
+                System.out.println("content ek add kr");
+                Content newContent = new Content(content.getJSONObject(i).getInt("content_id"));
+                purchasedContent.add(newContent);
+            }
             return jsonObject;
 
         }
 
         catch(BatchUpdateException exception){
             System.out.println(exception);
-            jsonObject.put("errorMessage", "You have already purchased this course");
+            jsonObject.put("errorMessage", "You have already purchased this item");
+            return jsonObject;
         }
 
         catch (Exception exception){
