@@ -31,7 +31,7 @@ public class Teacher extends User {
             preparedStatement.setInt(1, userid);
             ResultSet resultSet = preparedStatement.executeQuery();
             System.out.println("mkkd oi me questions teacher");
-            jsonArray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description","media", "f_name" , "l_name","pro_pic","question.user_id","question.status", "teacher.user_ID");
+            jsonArray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description","media", "f_name" , "l_name","pro_pic","question.user_id","question.status", "teacher.user_ID", "question.accept_teacher_id");
             System.out.println("meka empty kypnko: "+ jsonArray.length());
             this.answeringQuestions = new HashMap<>();
             for (int i = 0; i<jsonArray.length() ; i++){
@@ -690,7 +690,10 @@ public class Teacher extends User {
             while (iterator.hasNext()) {
                 Map.Entry<Integer, Question> entry = iterator.next();
                 Question value = entry.getValue();
-                jsonArray.put(value.data);
+                JSONObject object = value.data;
+                object.put("messages", value.messages);
+                System.out.println("json ek: "+ object.toString());
+                jsonArray.put(object);
             }
 
         }catch (Exception exception){

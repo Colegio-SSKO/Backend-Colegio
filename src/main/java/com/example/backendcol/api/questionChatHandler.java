@@ -2,6 +2,7 @@ package com.example.backendcol.api;
 
 
 import com.example.backendcol.*;
+import com.example.backendcol.Driver;
 import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
@@ -9,6 +10,8 @@ import jakarta.websocket.server.ServerEndpoint;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,8 +58,8 @@ public class questionChatHandler {
                 System.out.println("nene");
                 System.out.println(messageData.getInt("receiver"));
 
-                Object receiver = ServerData.users.get(messageData.getInt("receiver"));
-                Object sender = ServerData.users.get(messageData.getInt("sender"));
+                User receiver = (User) ServerData.users.get(messageData.getInt("receiver"));
+                User sender = (User) ServerData.users.get(messageData.getInt("sender"));
 
                 if (receiver == null) {
                     System.out.println("receiver not logged in");
@@ -65,72 +68,22 @@ public class questionChatHandler {
                     System.out.println("sender logged out");
                 }
                 else{
+                    receiver.session.getAsyncRemote().sendText(message);
+                    sender.questions.get(messageData.getInt("questionId")).data.getJSONArray("messages").put(messageData);
 
-
-                    Boolean isAcceptedSender = false;
-
-                    if (sender instanceof Teacher){
-                        System.out.println(sender.getClass().getName());
-                        Question question = ((Teacher) sender).questions.get(messageData.getInt("questionId"));
-                        Question answerQuestion = ((Teacher) sender).answeringQuestions.get(messageData.getInt("questionId"));
-                        if (question != null){
-                            System.out.println("question");
-                            if (question.data.getInt("question.user_id") == messageData.getInt("sender")
-                                    &&
-                                    question.data.getInt("teacher.user_ID") == messageData.getInt("receiver")
-                            ){
-                                isAcceptedSender = true;
-                                question.storeMessage(messageData.getString("message"), ((Teacher) sender).userID);
-                            }
-                            else {
-                                System.out.println("invalid message");
-                            }
-                        }
-                        else if (answerQuestion != null){
-                            System.out.println("question answer");
-                            if (answerQuestion.data.getInt("question.user_id") == messageData.getInt("receiver")
-                                    &&
-                                    answerQuestion.data.getInt("teacher.user_ID") == messageData.getInt("sender")
-                            ){
-                                isAcceptedSender = true;
-                                answerQuestion.storeMessage(messageData.getString("message"), ((Teacher) sender).userID);
-                            }
-                            else {
-                                System.out.println("invalid message");
-                            }
-                        }
-                        else {
-                            System.out.println("invalid sender");
-                        }
-
-                    }
-
-                    else {
-                        System.out.println(sender.getClass().getName());
-                        Question question = ((User) sender).questions.get(messageData.getInt("questionId"));
-                        if (question != null){
-                            if (question.data.getInt("question.user_id") == messageData.getInt("sender")
-                                    &&
-                                    question.data.getInt("teacher.user_ID") == messageData.getInt("receiver")
-                            ){
-                                isAcceptedSender = true;
-                                question.storeMessage(messageData.getString("message"), ((User) sender).userID);
-                            }
-                        }
-
-                        else {
-                            System.out.println("invalid sender");
-                        }
-
-                    }
-
-                    if (isAcceptedSender){
-                        System.out.println("valid massage");
-                        ((User)receiver).session.getAsyncRemote().sendText(message);
-
-                    }
 
                 }
+                Connection connection = Driver.getConnection();
+                PreparedStatement preparedStatement = connection.prepareStatement("Insert into accept (teacher_id, question_id, message, isTeacherSent) values (?,?,?,?)");
+
+
+
+                preparedStatement.setInt(1,messageData.getInt("teacher_id"));
+                preparedStatement.setInt(2,messageData.getInt("questionId"));
+                preparedStatement.setString(3,messageData.getString("message"));
+                preparedStatement.setInt(4,messageData.getInt("isTeacherSent"));
+
+                Integer result = preparedStatement.executeUpdate();
 
 
 

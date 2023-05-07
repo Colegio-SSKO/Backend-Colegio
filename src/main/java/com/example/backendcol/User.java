@@ -562,6 +562,7 @@ public class User extends ApiHandler {
                 JSONObject object = new JSONObject();
                 object = value.data;
                 object.put("messages", value.messages);
+                System.out.println("json ek: "+ object.toString());
                jsonArray.put(object);
             }
 
@@ -1623,6 +1624,7 @@ public class User extends ApiHandler {
 
 
     public JSONArray read_notification(Integer id, JSONObject requestObject){
+        System.out.println("mmmmmmm");
         Connection connection = Driver.getConnection();
 
         JSONArray jsonArray= new JSONArray();
@@ -1632,13 +1634,15 @@ public class User extends ApiHandler {
             statement = connection.prepareStatement("SELECT * FROM notification INNER JOIN user ON notification.user_id_sender= user.user_id WHERE notification.user_id_receiver=? && notification.status=0;");
             statement.setInt(1,id);
             ResultSet rs= statement.executeQuery();
-            jsonArray = JsonHandler.createJSONArray(rs, "date", "time", "type","user_id_sender", "pro_pic", "message","notification_id", "user_id_sender", "user_id_reciver");
+            jsonArray = JsonHandler.createJSONArray(rs, "date", "time", "type","user_id_sender", "pro_pic", "message","notification_id", "user_id_sender", "user_id_receiver");
 
             for (int i = 0;i<jsonArray.length();i++){
 
                 //check isUser
+                System.out.println("aaaaa");
                 int type = jsonArray.getJSONObject(i).getInt("type");
                 if (type == 1 || type == 2 || type == 3 || type == 4 || type == 14 || type == 15) {
+                    System.out.println("if");
                     jsonArray.getJSONObject(i).put("isUser",1);
                     jsonArray.getJSONObject(i).put("isContent",0);
                     jsonArray.getJSONObject(i).put("isQuestion",0);
@@ -1647,7 +1651,9 @@ public class User extends ApiHandler {
                 }
 
                 //check isContent
+
                 else if (type == 9 || type == 10 || type == 13) {
+                    System.out.println("else 1");
                     jsonArray.getJSONObject(i).put("isUser",0);
                     jsonArray.getJSONObject(i).put("isContent",1);
                     jsonArray.getJSONObject(i).put("isQuestion",0);
@@ -1657,6 +1663,7 @@ public class User extends ApiHandler {
 
                 //check isQuestion
                 else if (type == 8 || type == 6) {
+                    System.out.println("else 2");
                     jsonArray.getJSONObject(i).put("isUser",0);
                     jsonArray.getJSONObject(i).put("isContent",0);
                     jsonArray.getJSONObject(i).put("isQuestion",1);
@@ -1683,12 +1690,13 @@ public class User extends ApiHandler {
 
                 //check isSession
                 else if (type == 5 || type == 7) {
+                    System.out.println("else 3");
                     jsonArray.getJSONObject(i).put("isUser",0);
                     jsonArray.getJSONObject(i).put("isContent",0);
                     jsonArray.getJSONObject(i).put("isQuestion",0);
                     jsonArray.getJSONObject(i).put("isSession",1);
                     statement= connection.prepareStatement("select * from teacher where user_ID=?");
-                    statement.setInt(1,jsonArray.getJSONObject(i).getInt("user_id_reciver"));
+                    statement.setInt(1,jsonArray.getJSONObject(i).getInt("user_id_receiver"));
                     ResultSet rs2= statement.executeQuery();
 
                     if(rs2.next()){
@@ -1717,8 +1725,8 @@ public class User extends ApiHandler {
             System.out.println("data dunna");
         }
 
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
+        catch(Exception exception){
+            exception.printStackTrace();
         }
 
         return jsonArray;
