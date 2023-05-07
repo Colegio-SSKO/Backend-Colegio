@@ -855,6 +855,27 @@ public class User extends ApiHandler {
 
 
 
+    public JSONArray easy_nav_cards(Integer id, JSONObject requestObject){
+        JSONArray jasonarray = new JSONArray();
+
+        try {
+            Connection connection = Driver.getConnection();
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM content INNER JOIN subject ON content.subject_id= subject.subject_id INNER JOIN teacher on content.user_id = teacher.user_ID INNER join user on teacher.user_ID = user.user_id WHERE content.subject_id=?;");
+            statement.setInt(1,id);
+            ResultSet resultSet = statement.executeQuery();
+            System.out.println("hari");
+            jasonarray = JsonHandler.createJSONArray(resultSet, "title", "image", "f_name", "l_name", "content_id","teacher_id");
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+
+
+        return jasonarray;
+    }
+
+
+
+
 
 //
 //
