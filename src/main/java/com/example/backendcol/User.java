@@ -221,9 +221,10 @@ public class User extends ApiHandler {
         JSONObject jsonObject= new JSONObject();
 
         try{
+            System.out.println("meka tma aula");
             PreparedStatement statement;
             statement = connection.prepareStatement("SELECT content.title as title, content.image as img_src, subject.name as subject, content.price as price, content.description as description, content.rate_count as rates, content.content_id as content_id, concat(user.f_name,' ', user.l_name) as author, content.date as date from course inner join content on course.content_id= content.content_id INNER join user on content.user_id= user.user_id INNER JOIN subject on content.subject_id= subject.subject_id ORDER BY content.purchase_count DESC LIMIT 1;");
-            statement.setInt(1,20);
+//            statement.setInt(1,20);
             ResultSet rs = statement.executeQuery();
 
             jsonObject = JsonHandler.createJSONObject(rs, "title", "img_src", "price", "description", "content_id", "author", "date", "subject","rates");
