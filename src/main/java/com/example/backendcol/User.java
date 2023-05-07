@@ -1632,7 +1632,88 @@ public class User extends ApiHandler {
             statement = connection.prepareStatement("SELECT * FROM notification INNER JOIN user ON notification.user_id_sender= user.user_id WHERE notification.user_id_receiver=? && notification.status=0;");
             statement.setInt(1,id);
             ResultSet rs= statement.executeQuery();
-            jsonArray = JsonHandler.createJSONArray(rs, "date", "time", "f_name","l_name","type","user_id_sender", "pro_pic", "message","notification_id");
+            jsonArray = JsonHandler.createJSONArray(rs, "date", "time", "type","user_id_sender", "pro_pic", "message","notification_id", "user_id_sender", "user_id_reciver");
+
+            for (int i = 0;i<jsonArray.length();i++){
+
+                //check isUser
+                int type = jsonArray.getJSONObject(i).getInt("type");
+                if (type == 1 || type == 2 || type == 3 || type == 4 || type == 14 || type == 15) {
+                    jsonArray.getJSONObject(i).put("isUser",1);
+                    jsonArray.getJSONObject(i).put("isContent",0);
+                    jsonArray.getJSONObject(i).put("isQuestion",0);
+                    jsonArray.getJSONObject(i).put("isSession",0);
+                    jsonArray.getJSONObject(i).put("user_id",jsonArray.getJSONObject(i).getInt("user_id_sender"));
+                }
+
+                //check isContent
+                else if (type == 9 || type == 10 || type == 13) {
+                    jsonArray.getJSONObject(i).put("isUser",0);
+                    jsonArray.getJSONObject(i).put("isContent",1);
+                    jsonArray.getJSONObject(i).put("isQuestion",0);
+                    jsonArray.getJSONObject(i).put("isSession",0);
+
+                }
+
+                //check isQuestion
+                else if (type == 8 || type == 6) {
+                    jsonArray.getJSONObject(i).put("isUser",0);
+                    jsonArray.getJSONObject(i).put("isContent",0);
+                    jsonArray.getJSONObject(i).put("isQuestion",1);
+                    jsonArray.getJSONObject(i).put("isSession",0);
+                    statement= connection.prepareStatement("select * from teacher where user_ID=?");
+                    statement.setInt(1,jsonArray.getJSONObject(i).getInt("user_id_reciver"));
+                    ResultSet rs2= statement.executeQuery();
+
+                    if(rs2.next()){
+                        Integer teacher_id= rs2.getInt("teacher_id");
+                        statement= connection.prepareStatement("SELECT * FROM student_send_question WHERE user_id=? && teacher_id=?;");
+                        statement.setInt(1,jsonArray.getJSONObject(i).getInt("user_id_sender"));
+                        statement.setInt(2,teacher_id);
+                        ResultSet rs3= statement.executeQuery();
+
+                        if(rs3.next()){
+                            Integer question_id= rs3.getInt("question_id");
+                            jsonArray.getJSONObject(i).put("question_id",question_id);
+
+                        }
+
+                    }
+                }
+
+                //check isSession
+                else if (type == 5 || type == 7) {
+                    jsonArray.getJSONObject(i).put("isUser",0);
+                    jsonArray.getJSONObject(i).put("isContent",0);
+                    jsonArray.getJSONObject(i).put("isQuestion",0);
+                    jsonArray.getJSONObject(i).put("isSession",1);
+                    statement= connection.prepareStatement("select * from teacher where user_ID=?");
+                    statement.setInt(1,jsonArray.getJSONObject(i).getInt("user_id_reciver"));
+                    ResultSet rs2= statement.executeQuery();
+
+                    if(rs2.next()){
+                        Integer teacher_id= rs2.getInt("teacher_id");
+                        statement= connection.prepareStatement("SELECT * FROM user_req_session WHERE user_id=? && teacher_id=?;");
+                        statement.setInt(1,jsonArray.getJSONObject(i).getInt("user_id_sender"));
+                        statement.setInt(2,teacher_id);
+                        ResultSet rs3= statement.executeQuery();
+
+                        if(rs3.next()){
+                            Integer question_id= rs3.getInt("question_id");
+                            jsonArray.getJSONObject(i).put("question_id",question_id);
+
+                        }
+
+                    }
+                }
+
+
+            }
+
+
+
+
+
             System.out.println("data dunna");
         }
 
@@ -1913,6 +1994,7 @@ public class User extends ApiHandler {
             statement.setString(1,requestObject.getString("image"));
             statement.setInt(2,id);
             Integer num= statement.executeUpdate();
+            this.profilePicture=requestObject.getString("image");
 
             if (num==1){
                 jsonObject.put("isError",1);

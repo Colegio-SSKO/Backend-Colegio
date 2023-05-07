@@ -751,21 +751,23 @@ public class Teacher extends User {
                 statement.setInt(2,teacher_id);
                 Integer res_id2 = statement.executeUpdate();
 
-                //notification part
-//                statement= connection.prepareStatement("Select * from  teacher where teacher_id=?");
-//                statement.setInt(1, requestObject.getInt("teacher_id"));
-//                ResultSet rs2= statement.executeQuery();
-//
-//                if(rs2.next()){
-//                    Integer teacher_userid= rs2.getInt("user_ID");
-//                    statement= connection.prepareStatement("insert INTO notification (date, time, message, type, user_id_sender, user_id_receiver,status) VALUES (?,?,'organization remove you', 14,?,?,0);");
-//                    statement.setDate(1, Date.valueOf(currentDate));
-//                    statement.setTime(2, Time.valueOf(currentTime));
-//                    statement.setInt(3,id);
-//                    statement.setInt(4,teacher_userid);
-//                    Integer num2 = statement.executeUpdate();
-//                    System.out.println("notification eka yuwa");
-//                }
+//                notification part
+                statement= connection.prepareStatement("Select * from  teacher where teacher_id=?");
+                statement.setInt(1, requestObject.getInt("teacher_id"));
+                ResultSet rs2= statement.executeQuery();
+
+                if(rs2.next()){
+                    Integer teacher_userid= rs2.getInt("user_ID");
+                    String message= this.name+ "teacher leave from your organization";
+                    statement= connection.prepareStatement("insert INTO notification (date, time, message, type, user_id_sender, user_id_receiver,status) VALUES (?,?,?, 15,?,?,0);");
+                    statement.setDate(1, Date.valueOf(currentDate));
+                    statement.setTime(2, Time.valueOf(currentTime));
+                    statement.setString(3,message);
+                    statement.setInt(4,id);
+                    statement.setInt(5,teacher_userid);
+                    Integer num2 = statement.executeUpdate();
+                    System.out.println("notification eka yuwa");
+                }
             }
 
             if(res_id==1){
