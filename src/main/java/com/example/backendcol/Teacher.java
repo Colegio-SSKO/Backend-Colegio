@@ -293,8 +293,8 @@ public class Teacher extends User {
         try{
             System.out.println("DB connectiontt");
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT content.image as img_src, content.title as title, content.description as description, content.price as price, content.content_id as content_id, content.status as status from course INNER JOIN content on course.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=? && content.status=0;");
-            statement.setInt(1,id);
+            statement = connection.prepareStatement("SELECT content.image as img_src, content.title as title, content.description as description, content.price as price, content.content_id as content_id, content.status as status from course INNER JOIN content on course.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN teacher on teacher.user_ID= content.user_id where content.user_id=?");
+            statement.setInt(1,this.userID);
             ResultSet rs = statement.executeQuery();
 
             jsonArray = JsonHandler.createJSONArray(rs, "description", "img_src", "title", "status", "content_id","price");
@@ -316,8 +316,8 @@ public class Teacher extends User {
         try{
             System.out.println("DB connectiontt");
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT content.image as img_src, content.title as title, content.description as description, content.price as price, content.content_id as content_id, content.status as status from quiz INNER JOIN content on quiz.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN publisher on publisher.user_id= content.user_id where publisher.user_id=?;");
-            statement.setInt(1,id);
+            statement = connection.prepareStatement("SELECT content.image as img_src, content.title as title, content.description as description, content.price as price, content.content_id as content_id, content.status as status from quiz INNER JOIN content on quiz.content_id= content.content_id INNER JOIN user on content.user_id=user.user_id INNER JOIN teacher on teacher.user_ID= content.user_id where content.user_id=?;");
+            statement.setInt(1,this.userID);
             ResultSet rs = statement.executeQuery();
 
             jsonArray = JsonHandler.createJSONArray(rs, "description", "img_src", "title", "status", "content_id","price");
@@ -394,7 +394,7 @@ public class Teacher extends User {
 
 
             //insert details to quiz table
-            statement = connection.prepareStatement("INSERT INTO quiz (content_id) VALUES (?)",Statement.RETURN_GENERATED_KEYS );
+            statement = connection.prepareStatement("INSERT INTO quiz (content_id, quiz_q_number, duration) VALUES (?,20,30)",Statement.RETURN_GENERATED_KEYS );
             statement.setInt(1, generatedKey);
             Integer num = statement.executeUpdate();
 
@@ -492,6 +492,7 @@ public class Teacher extends User {
         LocalTime currentTime = LocalTime.now();
 
         try{
+            connection.setAutoCommit(false);
             PreparedStatement statement;
             statement = connection.prepareStatement("SELECT * FROM teacher WHERE user_ID=?");
             statement.setInt(1,id);
@@ -500,7 +501,7 @@ public class Teacher extends User {
             if(rs.next()){
                 Integer teacher_id= rs.getInt("teacher_id");
 
-                statement = connection.prepareStatement("INSERT INTO org_teacher_request (teacher_id, organization_id, status, type) VALUES (?,?,0,0) ON DUPLICATE KEY UPDATE status = 0, type=1;");
+                statement = connection.prepareStatement("INSERT INTO org_teacher_request (teacher_id, organization_id, status, type) VALUES (?,?,0,1) ON DUPLICATE KEY UPDATE status = 0, type=1;");
                 statement.setInt(2,requestObject.getInt("organization_id"));
                 statement.setInt(1,teacher_id);
                 Integer num = statement.executeUpdate();
@@ -528,8 +529,11 @@ public class Teacher extends User {
                     statement.setTime(2, time);
                     statement.setString(3, message);
                     statement.setInt(4, organization_userid);
-                    statement.setInt(4,id);
+                    statement.setInt(5,id);
                     Integer num2 = statement.executeUpdate();
+
+                    connection.commit();
+
                     System.out.println("notification eka damma");
                     JSONObject notificationObject = new JSONObject();
                     jsonObject.put("date", date);
@@ -541,6 +545,8 @@ public class Teacher extends User {
                     System.out.println(jsonObject.toString());
                     System.out.println(organization_userid);
                     System.out.println(this.userID);
+
+                    connection.commit();
 
                     if (!ServerData.users.containsKey(organization_userid)){
                         System.out.println("receiver is offline");
@@ -891,17 +897,21 @@ public class Teacher extends User {
     public JSONObject add_publish(Integer id, JSONObject requestObject){
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("isError", true);
+
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
         Connection connection = Driver.getConnection();
         try{
             System.out.println("create course ekt awa");
             System.out.println(requestObject.toString());
 
             connection.setAutoCommit(false);
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO upgrade_to_teacher (user_id, education_level, certificate,refers) VALUES (?,?,?,?);", Statement.RETURN_GENERATED_KEYS);
-            statement.setInt(1, requestObject.getInt("userId"));
-            statement.setString(2, requestObject.getString("education_level"));
-            statement.setString(3, requestObject.getString("certificate"));
-            statement.setString(4, requestObject.getString("references"));
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO advertisment (ad_media, date, time, organization_id, teacher_id) VALUES (?,?,?,?,?);", Statement.RETURN_GENERATED_KEYS);
+            statement.setString(1, requestObject.getString("add"));
+            statement.setDate(2, Date.valueOf(currentDate));
+            statement.setTime(3, Time.valueOf(currentTime));
+            statement.setInt(4, requestObject.getInt("organization_id"));
+            statement.setInt(5, requestObject.getInt("userId"));
             Integer result = statement.executeUpdate();
             System.out.println("meka wada klaaa");
 
@@ -923,11 +933,6 @@ public class Teacher extends User {
             }
 
 
-            PreparedStatement statement2 = connection.prepareStatement("UPDATE user SET verification_status=1 WHERE user_id=?;");
-            statement2.setInt(1, requestObject.getInt("userId"));
-
-
-            result = statement2.executeUpdate();
 
             connection.commit();
 

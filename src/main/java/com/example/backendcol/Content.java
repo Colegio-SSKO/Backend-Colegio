@@ -26,11 +26,11 @@ public class Content {
         try{
             Connection connection = Driver.getConnection();
             PreparedStatement statement;
-            statement = connection.prepareStatement("Select content.description, content.image as img_src , content.content_id as content_id, content.title as title, content.price as price, user.date_joined as description2, CONCAT(user.f_name, user.l_name) as author from content inner join cart on cart.content_id= content.content_id inner join user on content.user_id= user.user_id where content.content_id = ?;");
+            statement = connection.prepareStatement("Select content.description, content.rate_count, content.image as img_src , content.content_id as content_id, content.title as title, content.price as price, user.date_joined as description2, CONCAT(user.f_name, user.l_name) as author from content inner join cart on cart.content_id= content.content_id inner join user on content.user_id= user.user_id where content.content_id = ?;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
 
-            jsonObject = JsonHandler.createJSONObject(rs, "img_src", "description", "title" , "price", "description2", "author", "content_id");
+            jsonObject = JsonHandler.createJSONObject(rs, "img_src", "description", "title" , "price", "description2", "author", "content_id","rate_count");
             data = jsonObject;
         }
 
