@@ -61,6 +61,11 @@ public class Teacher extends User {
         teacher.purchasedContent = user.purchasedContent;
         teacher.questions = user.questions;
         teacher.type = user.type;
+        teacher.phone = user.phone;
+        teacher.address = user.address;
+        teacher.city = user.city;
+        teacher.country = user.country;
+        teacher.profilePicture = user.profilePicture;
         return teacher;
     }
 //    public JSONObject teacher_send_req(Integer id, JSONObject requestObject){
@@ -669,10 +674,11 @@ public class Teacher extends User {
 
 
     public JSONArray answer_questions(Integer id, JSONObject requestObject){
+        System.out.println("meka thma call une");
         JSONArray jsonArray = new JSONArray();
         try {
             System.out.println("view purchase questions answer");
-            System.out.println(this.questions == null);
+            System.out.println(this.answeringQuestions == null);
             System.out.println("view purchase questions answer");
 
             if (this.answeringQuestions == null){
@@ -683,7 +689,6 @@ public class Teacher extends User {
 
             while (iterator.hasNext()) {
                 Map.Entry<Integer, Question> entry = iterator.next();
-                Integer key = entry.getKey();
                 Question value = entry.getValue();
                 jsonArray.put(value.data);
             }

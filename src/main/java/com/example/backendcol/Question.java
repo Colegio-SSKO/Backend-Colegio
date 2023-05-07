@@ -18,6 +18,7 @@ public class Question {
 
     public Question(JSONObject jsonObject){
         data = jsonObject;
+        messages = new JSONArray();
 
         try{
 
@@ -27,7 +28,7 @@ public class Question {
             preparedStatement.setInt(1, data.getInt("question.question_id"));
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            JSONArray jsonArray = JsonHandler.createJSONArray(resultSet, "message", "isTeacherSent", "time");
+            JSONArray jsonArray = JsonHandler.createJSONArray(resultSet, "message", "isTeacherSent", "time", "chat_id");
             messages = jsonArray;
 
         }catch (Exception exception){

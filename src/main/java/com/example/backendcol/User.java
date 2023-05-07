@@ -1,6 +1,8 @@
 package com.example.backendcol;
 
 import jakarta.websocket.Session;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -25,15 +27,26 @@ public class User extends ApiHandler {
     public Session session;
 
     public Session notificationSession;
+
+    public Session commentSession;
     public Integer userID ;
     public String name ;
+    public String phone;
+
+    public String address;
+
+    public String city;
+
+    public String country;
+
+    public String profilePicture;
     public String email;
 
     public Integer type;
 
     public Cart cart;
 
-    public List<Content> purchasedContent;
+    public HashMap<Integer,Content> purchasedContent;
 
     public HashMap<Integer,Question> questions;
 
@@ -43,13 +56,19 @@ public class User extends ApiHandler {
         System.out.println("default User called");
     }
 
-    public User(Integer userID, String name, String email){
+    public User(Integer userID, String name, String email, String proPic, String phone, String address, String city, String country){
         this.userID = userID;
         this.name = name;
         this.email = email;
+        this.profilePicture = proPic;
+        this.phone = phone;
+        this.address = address;
+        this.city = city;
+        this.country = country;
         this.cart = new Cart(userID);
-        this.purchasedContent = new ArrayList<>();
+        this.purchasedContent = new HashMap<>();
         this.questions = new HashMap<>();
+
 
 
         Connection connection = Driver.getConnection();
@@ -63,7 +82,12 @@ public class User extends ApiHandler {
             jsonArray = JsonHandler.createJSONArray(resultSet, "title", "f_name", "l_name", "description","qulification_level","content_id" , "pro_pic","image", "course_id", "rate_count");
             for (int i = 0; i<jsonArray.length() ; i++){
                 Course newCourse = new Course(jsonArray.getJSONObject(i));
-                purchasedContent.add(newCourse);
+                PreparedStatement preparedStatement1 = connection.prepareStatement("select * from comments inner join user on user.user_id = comments.user_id where content_id = ?");
+                preparedStatement1.setInt(1, jsonArray.getJSONObject(i).getInt("content_id"));
+                ResultSet resultSet1 = preparedStatement1.executeQuery();
+                JSONArray comments = JsonHandler.createJSONArray(resultSet1, "comments.comment_id", "comments.message", "comments.date", "comments.user_id", "user.f_name", "user.l_name", "user.pro_pic");
+                newCourse.data.put("comments", comments);
+                purchasedContent.put(newCourse.data.getInt("content_id"),newCourse);
                 System.out.println("nidimthai");
 
             }
@@ -78,7 +102,13 @@ public class User extends ApiHandler {
             jsonArray = JsonHandler.createJSONArray(resultSet, "title", "f_name", "l_name", "description","qulification_level","content_id" , "pro_pic","image", "quiz_id", "rate_count");
             for (int i = 0; i<jsonArray.length() ; i++){
                 Quiz newQuiz = new Quiz(jsonArray.getJSONObject(i));
-                purchasedContent.add(newQuiz);
+                PreparedStatement preparedStatement1 = connection.prepareStatement("select * from comments inner join user on user.user_id = comments.user_id where content_id = ?");
+                preparedStatement1.setInt(1, jsonArray.getJSONObject(i).getInt("content_id"));
+                ResultSet resultSet1 = preparedStatement1.executeQuery();
+                JSONArray comments = JsonHandler.createJSONArray(resultSet1, "comments.comment_id", "comments.message", "comments.date", "comments.user_id", "user.f_name", "user.l_name", "user.pro_pic");
+                System.out.println("comment size ek: " + comments.length());
+                newQuiz.data.put("comments", comments);
+                purchasedContent.put(newQuiz.data.getInt("content_id"),newQuiz);
                 System.out.println("nidimthai");
 
             }
@@ -212,11 +242,14 @@ public class User extends ApiHandler {
 
     public JSONObject delete_cart(Integer id, JSONObject requestObject){
         System.out.println("enne ndd halo");
+
         JSONObject jsonObject  = new JSONObject();
+        jsonObject.put("isError", true);
         try {
             System.out.println("remove cart called");
             System.out.println(this.userID);
             jsonObject = cart.removeItem(this.userID, requestObject);
+            jsonObject.put("isError", false);
 
         }
         catch (Exception exception){
@@ -228,6 +261,7 @@ public class User extends ApiHandler {
 
     public JSONObject addtocart(Integer id, JSONObject requestObject){
         JSONObject jsonObject  = new JSONObject();
+        jsonObject.put("isError", true);
         try {
             System.out.println("add to cart called");
             System.out.println(this.userID);
@@ -236,6 +270,7 @@ public class User extends ApiHandler {
         }
         catch (Exception exception){
             System.out.println(exception);
+            jsonObject.put("isError", false);
         }
         return jsonObject;
     }
@@ -524,7 +559,42 @@ public class User extends ApiHandler {
                 Map.Entry<Integer, Question> entry = iterator.next();
                 Integer key = entry.getKey();
                 Question value = entry.getValue();
-               jsonArray.put(value.data);
+                JSONObject object = new JSONObject();
+                object = value.data;
+                object.put("messages", value.messages);
+               jsonArray.put(object);
+            }
+
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+
+        System.out.println(jsonArray.length());
+        return jsonArray;
+    }
+
+
+
+
+
+    //mek omkay
+    public JSONArray mychats(Integer id, JSONObject requestObject){
+        System.out.println("my chatss");
+        JSONArray jsonArray = new JSONArray();
+        try {
+            System.out.println("hellow this is chats");
+            System.out.println("view purchase questions");
+            System.out.println(this.questions == null);
+            System.out.println("view purchase questions");
+
+
+            Iterator<Map.Entry<Integer, Question>> iterator = questions.entrySet().iterator();
+
+            while (iterator.hasNext()) {
+                Map.Entry<Integer, Question> entry = iterator.next();
+                Integer key = entry.getKey();
+                Question value = entry.getValue();
+                jsonArray.put(value.data);
             }
 
         }catch (Exception exception){
@@ -545,13 +615,26 @@ public class User extends ApiHandler {
             System.out.println("view purchase quiz");
             System.out.println(this.purchasedContent == null);
             System.out.println("view purchase quiz");
-            for (Content content : purchasedContent){
+            for (Map.Entry<Integer, Content> entry : purchasedContent.entrySet()) {
+
+                Content content = entry.getValue();
                 System.out.println("mkkd aula quiz eke");
                 System.out.println(content.getClass().getName());
+                System.out.println(content.data.getJSONArray("comments"));
                 if (content instanceof Quiz){
                     jsonArray.put(content.data);
                 }
+
             }
+
+//            for (Content content : purchasedContent){
+//                System.out.println("mkkd aula quiz eke");
+//                System.out.println(content.getClass().getName());
+//                System.out.println(content.data.getJSONArray("comments"));
+//                if (content instanceof Quiz){
+//                    jsonArray.put(content.data);
+//                }
+//            }
 
         }catch (Exception exception){
             System.out.println(exception);
@@ -773,30 +856,30 @@ public class User extends ApiHandler {
 
 
 
-
-
-    public JSONArray answer_questions(Integer id, JSONObject requestObject){
-        System.out.println(id);
-        JSONArray jasonarray = new JSONArray();
-        Connection connection = Driver.getConnection();
-        try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM question INNER JOIN teacher ON question.accept_teacher_id= teacher.teacher_id INNER JOIN user ON question.user_id= user.user_id INNER join question_media on question.question_id = question_media.question_id WHERE (question.status=1 OR question.status=2) AND teacher.user_ID=?;");
-            System.out.println("yesss");
-            statement.setInt(1,id);
-            ResultSet resultSet = statement.executeQuery();
-
-            jasonarray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description","media", "f_name" , "l_name","pro_pic","question.user_id","question.status");
-        }catch (Exception exception){
-            System.out.println(exception);
-        }
-
-
-        return jasonarray;
-    }
-
-
-
-
+//
+//
+//    public JSONArray answer_questions(Integer id, JSONObject requestObject){
+//        System.out.println(id);
+//        JSONArray jasonarray = new JSONArray();
+//        Connection connection = Driver.getConnection();
+//        try {
+//            PreparedStatement statement = connection.prepareStatement("SELECT * FROM question INNER JOIN teacher ON question.accept_teacher_id= teacher.teacher_id INNER JOIN user ON question.user_id= user.user_id INNER join question_media on question.question_id = question_media.question_id WHERE (question.status=1 OR question.status=2) AND teacher.user_ID=?;");
+//            System.out.println("yesss");
+//            statement.setInt(1,id);
+//            ResultSet resultSet = statement.executeQuery();
+//
+//            jasonarray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description","media", "f_name" , "l_name","pro_pic","question.user_id","question.status");
+//        }catch (Exception exception){
+//            System.out.println(exception);
+//        }
+//
+//
+//        return jasonarray;
+//    }
+//
+//
+//
+//
 
 
 
@@ -846,13 +929,31 @@ public class User extends ApiHandler {
             System.out.println("view purchase course");
             System.out.println(this.purchasedContent == null);
             System.out.println("view purchase course");
-            for (Content content : purchasedContent){
-                System.out.println("mkkd aula");
+            for (Map.Entry<Integer, Content> entry : purchasedContent.entrySet()) {
+
+                Content content = entry.getValue();
+                System.out.println("mkkd aula course eke");
                 System.out.println(content.getClass().getName());
+                System.out.println(content.data.getJSONArray("comments"));
                 if (content instanceof Course){
-                    jsonArray.put(content.data);
+                    JSONObject courseJson = content.data;
+                    JSONArray resCourseMedia = new JSONArray();
+                    ((Course) content).courseMedia.forEach(media->{
+                        resCourseMedia.put(media.data);
+                    });
+                    courseJson.put("media", resCourseMedia);
+
+                    jsonArray.put(courseJson);
                 }
+
             }
+//            for (Content content : purchasedContent){
+//                System.out.println("mkkd aula");
+//                System.out.println(content.getClass().getName());
+//                if (content instanceof Course){
+//                    jsonArray.put(content.data);
+//                }
+//            }
 
         }catch (Exception exception){
             System.out.println(exception);
@@ -1056,22 +1157,19 @@ public class User extends ApiHandler {
     public JSONArray continue_course(Integer id, JSONObject requestObject){
         System.out.println("cont course1");
         JSONArray jsonArray= new JSONArray();
-        Course newCourse = new Course();
+
         try{
             System.out.println("cont course2");
-            for(int i =0 ; i < purchasedContent.size() ;i ++){
-                System.out.println("cont course3");
-                if (purchasedContent.get(i) instanceof Course && purchasedContent.get(i).data.getInt("content_id") == id){
-                    newCourse = new Course((JSONObject) purchasedContent.get(i).data);
-                    System.out.println(newCourse.courseMedia.size());
-                }
-            }
+            Course newCourse;
+            newCourse = (Course) purchasedContent.get(id);
+
             System.out.println("cont course4");
             if (newCourse.data == null){
                 System.out.println("no course media");
                 return jsonArray;
             }
 
+            System.out.println(newCourse.courseMedia.size());
             for (int i=0 ; i < newCourse.courseMedia.size() ; i++){
                 JSONObject newJsonObject = new JSONObject();
                 newJsonObject.put("f_name", newCourse.data.getString("f_name"));
@@ -1331,6 +1429,7 @@ public class User extends ApiHandler {
             System.out.println(teachers.length());
 
 
+
             for (int i = 0;i<teachers.length();i++){
                 //get teacher_id relevernt to tag
                 statement = connection.prepareStatement("SELECT * FROM teacher where tag=?;" );
@@ -1350,6 +1449,8 @@ public class User extends ApiHandler {
                     statement.setInt(3, generatedKey);
                     Integer num2= statement.executeUpdate();
                     System.out.println("student_send_question table ekata data dmma");
+
+
 
                     //notification part
                     Date date = Date.valueOf(currentDate);
@@ -1385,12 +1486,29 @@ public class User extends ApiHandler {
                     }
 
                     jsonObject.put("message","send_question request");
-                    return jsonObject;
+
                 }
                 else{
                     System.out.println("Tag is invalid");
                 }
             }
+
+            //live update ek
+            System.out.println(this.questions.get(60).data.toString());
+            JSONObject newQuestionData = new JSONObject();
+            newQuestionData.put("question_media.media", "");
+            newQuestionData.put("question.question_id", generatedKey);
+            newQuestionData.put("question.user_id", this.userID);
+            newQuestionData.put("question_img",requestObject.getString("image"));
+            newQuestionData.put("question_description", requestObject.getString("description"));
+            newQuestionData.put("messages", new JSONArray());
+            newQuestionData.put("question_title",requestObject.getString("title"));
+            newQuestionData.put("status", 0);
+
+            System.out.println(newQuestionData.toString());
+            Question newQuestion = new Question(newQuestionData);
+            this.questions.put(newQuestionData.getInt("question.question_id"), newQuestion);
+
 
         }
 
@@ -1452,7 +1570,7 @@ public class User extends ApiHandler {
                 Integer userid= rs.getInt("user_ID");
                 System.out.println("teacherge user id eka gaththa");
 
-                String message = "message";
+                String message = this.name + " has requested a session";
                 //notification part
                 PreparedStatement statement3 = connection.prepareStatement("INSERT INTO notification (date, time, type, user_id_receiver, user_id_sender, status, message) VALUES (?,?,5,?,?,0, ?);");
                 Date date = Date.valueOf(currentDate);
@@ -1471,6 +1589,7 @@ public class User extends ApiHandler {
                 jsonObject.put("user_id_receiver", userid);
                 jsonObject.put("user_id_sender", this.userID);
                 jsonObject.put("message", message);
+                jsonObject.put("img_src", this.profilePicture);
                 System.out.println(jsonObject.toString());
                 System.out.println(userid);
                 System.out.println(this.userID);
@@ -1570,6 +1689,180 @@ public class User extends ApiHandler {
     }
 
 
+    public JSONObject getOrderData(Integer id, JSONObject requestObject){
+        System.out.println("get order hash");
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("isError", true);
+        Connection connection = Driver.getConnection();
+
+        try {
+            connection.setAutoCommit(false);
+            JSONArray content = requestObject.getJSONArray("content");
+            if (content.length()==0){
+                jsonObject.put("errorMessage", "No content were added to purchase");
+                return jsonObject;
+            }
+
+            String quaryParameter = "content_id = " + content.getJSONObject(0).getInt("content_id");
+            for (int i = 1; i<content.length() ; i++){
+                quaryParameter += " or content_id = " + content.getJSONObject(i).getInt("content_id");
+            }
+
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT price from content where "+ quaryParameter);
+            System.out.println("SELECT price from content where "  + quaryParameter);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            Integer totalAmount = 0;
+            while(resultSet.next()){
+                System.out.println("price : " + resultSet.getInt("price"));
+                totalAmount += resultSet.getInt("price");
+            }
+            System.out.println("iwrai");
+
+            long currentTimeMillis = System.currentTimeMillis();
+            System.out.println(currentTimeMillis);
+
+            PreparedStatement preparedStatement1 = connection.prepareStatement("Insert into content_order (user_id, content_id, order_id) values (?, ?, ?)");
+
+            for (int i = 0;i<content.length();i++){
+                System.out.println(i);
+                preparedStatement1.setInt(1, this.userID);
+                preparedStatement1.setInt(2, content.getJSONObject(i).getInt("content_id"));
+                preparedStatement1.setLong(3, currentTimeMillis);
+                preparedStatement1.addBatch();
+            }
+
+
+
+
+
+
+            String merahantID     = "1223119";
+            String merchantSecret = "Mjc3OTAzNDIzMjM2OTQ1ODc1MzI2NDgzNDY3ODgxMzkwNjgwNDQw";
+            double amount         = totalAmount;
+            String currency       = "LKR";
+            String orderID        = Long.toString(currentTimeMillis);
+            String hash =  DigestUtils.md5Hex(
+                    (merahantID +
+                            orderID +
+                            String.format("%.2f", amount) +
+                            currency +
+                            StringUtils.upperCase(DigestUtils.md5Hex(merchantSecret)))
+            ).toUpperCase();
+
+            System.out.println("Generated Hash: " + hash);
+            jsonObject.put("hash", hash);
+            jsonObject.put("merahantID", merahantID);
+            jsonObject.put("amount", amount);
+            jsonObject.put("currency", currency);
+            jsonObject.put("orderID", orderID);
+            jsonObject.put("f_name", this.name.split(" ")[0]);
+            jsonObject.put("l_name", this.name.split(" ")[1]);
+            System.out.println("phone" + this.phone);
+            System.out.println("city" + this.city);
+            System.out.println("address" + this.address);
+            System.out.println("country" + this.country);
+            jsonObject.put("phone", this.phone);
+            jsonObject.put("address", this.address);
+            jsonObject.put("city", this.city);
+            jsonObject.put("country", this.country);
+            System.out.println(jsonObject.toString());
+
+
+
+            //insert to purchase
+            PreparedStatement preparedStatement2 = connection.prepareStatement("insert into purchase (content_id, user_id, date, time) values (?,?,?,?)");
+
+            LocalDate currentDate = LocalDate.now();
+            LocalTime currentTime= LocalTime.now();
+            Date date = Date.valueOf(currentDate);
+            Time time = Time.valueOf(currentTime);
+            for (int i = 0;i<content.length();i++){
+                System.out.println(i);
+                preparedStatement2.setInt(1, content.getJSONObject(i).getInt("content_id"));
+                preparedStatement2.setInt(2, this.userID);
+                preparedStatement2.setDate(3, date);
+                preparedStatement2.setTime(4, time);
+                preparedStatement2.addBatch();
+            }
+
+
+            int[] result1 = preparedStatement1.executeBatch();
+            int[] result2 = preparedStatement2.executeBatch();
+
+            connection.commit();
+
+
+
+
+            if (result1.length!= content.length()){
+                jsonObject.put("errorMessage", "Unknown error occurred");
+                return jsonObject;
+            }
+
+
+            if (result2.length!= content.length()){
+                jsonObject.put("errorMessage", "Unknown error occurred");
+                return jsonObject;
+            }
+            connection.commit();
+            jsonObject.put("isError", false);
+            jsonObject.put("errorMessage", "Item purchased successfully");
+
+            for (int i = 0; i<content.length(); i++){
+                System.out.println("content ek add kr");
+                Content newContent = new Content(content.getJSONObject(i).getInt("content_id"));
+                purchasedContent.put(content.getJSONObject(i).getInt("content_id"), newContent);
+            }
+            return jsonObject;
+
+        }
+
+        catch(BatchUpdateException exception){
+            System.out.println(exception);
+            jsonObject.put("errorMessage", "You have already purchased this item");
+            return jsonObject;
+        }
+
+        catch (Exception exception){
+            System.out.println(exception);
+        }
+        finally {
+           try {
+               connection.close();
+           }catch (Exception exception){
+               System.out.println("could not close the database connection");
+           }
+        }
+
+        return jsonObject;
+
+
+
+
+//
+//
+//        String merahantID     = "1223119";
+//        String merchantSecret = "Mjc3OTAzNDIzMjM2OTQ1ODc1MzI2NDgzNDY3ODgxMzkwNjgwNDQw";
+//        String orderID        = "12345";
+//        double amount         = 1000.00;
+//        String currency       = "LKR";
+//        String hash =  DigestUtils.md5Hex(
+//                (merahantID +
+//                        orderID +
+//                        String.format("%.2f", amount) +
+//                        currency +
+//                        StringUtils.upperCase(DigestUtils.md5Hex(merchantSecret)))
+//        ).toUpperCase();
+//
+//        System.out.println("Generated Hash: " + hash);
+//        jsonObject.put("hash", hash);
+//        return jsonObject;
+    }
+
+
+
 
 
     public JSONArray get_content_media_quiz(Integer id, JSONObject requestObject){
@@ -1633,6 +1926,68 @@ public class User extends ApiHandler {
             System.out.println(sqlException);
         }
 
+        return jsonObject;
+    }
+
+    public JSONObject addComments(Integer id, JSONObject requestObject){
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("isError", true);
+        System.out.println(requestObject.toString());
+        try {
+            Connection connection = Driver.getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement("insert into comments (message, date, content_id, user_id) values (?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setString(1, requestObject.getString("message"));
+            LocalDate currentDate = LocalDate.now();
+            Date date = Date.valueOf(currentDate);
+            preparedStatement.setDate(2, date);
+            preparedStatement.setInt(3, requestObject.getInt("content_id"));
+            preparedStatement.setInt(4, this.userID);
+
+            JSONObject comment = new JSONObject();
+            comment.put("name", this.name);
+            comment.put("date", date);
+            comment.put("pro_pic", this.profilePicture);
+            comment.put("message", requestObject.getString("message"));
+            comment.put("content_id", requestObject.getInt("content_id"));
+            System.out.println(this.profilePicture);
+            System.out.println(comment.toString());
+
+            int result = preparedStatement.executeUpdate();
+            ResultSet rs = preparedStatement.getGeneratedKeys();
+            Integer generatedId = null;
+            if (rs.next()) {
+                generatedId = rs.getInt(1);
+
+            }
+
+            if (result>0 && generatedId != null){
+
+                for (Map.Entry<Integer, Object> entry : ServerData.users.entrySet()) {
+
+                    User user = (User) entry.getValue();
+                    user.commentSession.getAsyncRemote().sendText(comment.toString());
+                    JSONObject newComment = new JSONObject();
+                    newComment.put("comments.date", date);
+                    newComment.put("comments.message", requestObject.getString("message"));
+                    newComment.put("comments.user_id", this.userID);
+                    newComment.put("user.pro_pic", this.profilePicture);
+                    newComment.put("user.f_name", this.name.split(" ")[0]);
+                    newComment.put("user.l_name", this.name.split(" ")[1]);
+                    newComment.put("comments.comment_id", generatedId);
+                    this.purchasedContent.get(requestObject.getInt("content_id")).
+                            data.getJSONArray("comments").put(newComment);
+                }
+
+                jsonObject.put("isError", false);
+
+            }
+            else{
+                jsonObject.put("errorMessage", "Unknown error occurred");
+            }
+
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
         return jsonObject;
     }
 

@@ -19,6 +19,11 @@ public class Organization extends User {
         organization.type  = user.type;
         organization.purchasedContent = user.purchasedContent;
         organization.questions = user.questions;
+        organization.phone = user.phone;
+        organization.address = user.address;
+        organization.city = user.city;
+        organization.country = user.country;
+        organization.profilePicture = user.profilePicture;
         return organization;
     }
 

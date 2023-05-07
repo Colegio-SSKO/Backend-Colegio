@@ -18,7 +18,6 @@ import java.util.Map;
 public class questionChatHandler {
 
 
-    public static final HashMap<Integer, Session> userIdToChatWebSocketId = new HashMap<>();
 
     @OnOpen
     public void onOpen(Session session){
