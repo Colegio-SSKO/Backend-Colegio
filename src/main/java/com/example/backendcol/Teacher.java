@@ -476,7 +476,7 @@ public class Teacher extends User {
                         receiver.notificationSession.getAsyncRemote().sendText(jsonObject.toString());
                     }
 
-                    jsonObject.put("message", "send request to join your organization");
+                    jsonObject.put("message", "Send request successfully");
                     return jsonObject;
                 }
 
@@ -489,7 +489,7 @@ public class Teacher extends User {
         catch(SQLException sqlException){
             System.out.println(sqlException);
         }
-
+        jsonObject.put("message", "Send request successfully");
         return jsonObject;
     }
 
@@ -657,6 +657,7 @@ public class Teacher extends User {
             statement.setInt(1,requestObject.getInt("organization_id"));
             statement.setInt(2,id);
             Integer res_id = statement.executeUpdate();
+            System.out.println("meka wada");
 
             statement = connection.prepareStatement("SELECT * FROM teacher WHERE teacher.user_id=?;");
             statement.setInt(1,id);
@@ -668,21 +669,21 @@ public class Teacher extends User {
                 statement.setInt(1,requestObject.getInt("organization_id"));
                 statement.setInt(2,teacher_id);
                 Integer res_id2 = statement.executeUpdate();
+                System.out.println("meka wada");
 
 //                notification part
                 statement= connection.prepareStatement("Select * from  teacher where teacher_id=?");
-                statement.setInt(1, requestObject.getInt("teacher_id"));
+                statement.setInt(1, teacher_id);
                 ResultSet rs2= statement.executeQuery();
 
                 if(rs2.next()){
                     Integer teacher_userid= rs2.getInt("user_ID");
-                    String message= this.name+ "teacher leave from your organization";
-                    statement= connection.prepareStatement("insert INTO notification (date, time, message, type, user_id_sender, user_id_receiver,status) VALUES (?,?,?, 15,?,?,0);");
+                    System.out.println("mekath wada");
+                    statement= connection.prepareStatement("insert INTO notification (date, time, message, type, user_id_sender, user_id_receiver,status) VALUES (?,?,'leave from org', 15,?,?,0);");
                     statement.setDate(1, Date.valueOf(currentDate));
                     statement.setTime(2, Time.valueOf(currentTime));
-                    statement.setString(3,message);
-                    statement.setInt(4,id);
-                    statement.setInt(5,teacher_userid);
+                    statement.setInt(3,this.userID);
+                    statement.setInt(4,teacher_userid);
                     Integer num2 = statement.executeUpdate();
                     System.out.println("notification eka yuwa");
                 }

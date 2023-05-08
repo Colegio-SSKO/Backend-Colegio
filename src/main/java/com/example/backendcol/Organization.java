@@ -273,7 +273,7 @@ public class Organization extends User {
                         receiver.notificationSession.getAsyncRemote().sendText(jsonObject.toString());
                     }
 
-                    jsonObject.put("message", "organization send request to join with their organization");
+                    jsonObject.put("message", "Request send successfully");
                     return jsonObject;
 
                 }
@@ -346,14 +346,17 @@ public class Organization extends User {
         JSONObject jsonObject= new JSONObject();
         try{
             PreparedStatement statement;
+            System.out.println(requestObject.getInt("teacher_id"));
             statement = connection.prepareStatement("Update org_has_teacher inner join organization on org_has_teacher.organization_id= organization.organization_id set status=1 where org_has_teacher.teacher_id=? && organization.user_id=?");
             statement.setInt(1,requestObject.getInt("teacher_id"));
             statement.setInt(2,id);
             Integer res_id = statement.executeUpdate();
+            System.out.println("meka wada");
 
             statement = connection.prepareStatement("SELECT * FROM organization WHERE organization.user_id=?;");
             statement.setInt(1,id);
             ResultSet rs = statement.executeQuery();
+            System.out.println("meka wada2");
 
             if(rs.next()){
                 Integer org_id= rs.getInt("organization_id");
@@ -361,22 +364,24 @@ public class Organization extends User {
                 statement.setInt(2,requestObject.getInt("teacher_id"));
                 statement.setInt(1,org_id);
                 Integer res_id2 = statement.executeUpdate();
+                System.out.println("meka wada 3");
 
                 //notification part
                 statement= connection.prepareStatement("Select * from  teacher where teacher_id=?");
                 statement.setInt(1, requestObject.getInt("teacher_id"));
                 ResultSet rs2= statement.executeQuery();
+                System.out.println("meka wada 4");
 
-                if(rs2.next()){
-                    Integer teacher_userid= rs2.getInt("user_ID");
-                    statement= connection.prepareStatement("insert INTO notification (date, time, message, type, user_id_sender, user_id_receiver,status) VALUES (?,?,'organization remove you', 14,?,?,0);");
-                    statement.setDate(1, Date.valueOf(currentDate));
-                    statement.setTime(2, Time.valueOf(currentTime));
-                    statement.setInt(3,id);
-                    statement.setInt(4,teacher_userid);
-                    Integer num2 = statement.executeUpdate();
-                    System.out.println("notification eka yuwa");
-                }
+//                if(rs2.next()){
+//                    Integer teacher_userid= rs2.getInt("user_ID");
+//                    statement= connection.prepareStatement("insert INTO notification (date, time, message, type, user_id_sender, user_id_receiver,status) VALUES (?,?,'organization remove you', 14,?,?,0);");
+//                    statement.setDate(1, Date.valueOf(currentDate));
+//                    statement.setTime(2, Time.valueOf(currentTime));
+//                    statement.setInt(3,this.userID);
+//                    statement.setInt(4,teacher_userid);
+//                    Integer num2 = statement.executeUpdate();
+//                    System.out.println("notification eka yuwa");
+//                }
             }
 
             if(res_id==1){
