@@ -73,6 +73,7 @@ public class questionChatHandler {
 
 
                 }
+                System.out.println("aah");
                 Connection connection = Driver.getConnection();
                 PreparedStatement preparedStatement = connection.prepareStatement("Insert into accept (teacher_id, question_id, message, isTeacherSent) values (?,?,?,?)");
 
@@ -84,29 +85,11 @@ public class questionChatHandler {
                 preparedStatement.setInt(4,messageData.getInt("isTeacherSent"));
 
                 Integer result = preparedStatement.executeUpdate();
-
-
-
-//                if (receiver == null) {
-//                    System.out.println("receiver not logged in");
-//                }
-//                else if(sender == null) {
-//                    System.out.println("sender logged out");
-//                }
-//                else{
-//                    System.out.println("receiver" + receiver.userID);
-//                    System.out.println("sender" + sender.userID);
-//                    Question question = sender.questions.get(messageData.getInt("questionId"));
-//                    System.out.println(question.data.getInt("question.question_id"));
-//                    question.storeMessage(message, sender.userID);
-//                }
-//
-//               receiver.session.getAsyncRemote().sendText(message);
-
+                System.out.println(result);
             }
         }
         catch (Exception exception){
-            System.out.println(exception);
+            exception.printStackTrace();
         }
 
 
