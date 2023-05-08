@@ -222,7 +222,7 @@ public class User extends ApiHandler {
 
         try{
             PreparedStatement statement;
-            statement = connection.prepareStatement("SELECT content.title as title, content.image as img_src, subject.name as subject, content.price as price, content.description as description, content.rate_count as rates, content.content_id as content_id, concat(user.f_name,' ', user.l_name) as author, content.date as date from course inner join content on course.content_id= content.content_id INNER join user on content.user_id= user.user_id INNER JOIN subject on content.subject_id= subject.subject_id ORDER BY content.purchase_count DESC LIMIT 1;");
+            statement = connection.prepareStatement("SELECT content.title as title, content.image as img_src, subject.name as subject, content.price as price, content.description as description, content.purchase_count as count, content.rate_count as rates, content.content_id as content_id, concat(user.f_name,' ', user.l_name) as author, content.date as date from course inner join content on course.content_id= content.content_id INNER join user on content.user_id= user.user_id INNER JOIN subject on content.subject_id= subject.subject_id ORDER BY content.purchase_count DESC LIMIT 1;");
             statement.setInt(1,20);
             ResultSet rs = statement.executeQuery();
 
@@ -286,11 +286,20 @@ public class User extends ApiHandler {
             ResultSet rs = statement.executeQuery();
 
             jsonArray = JsonHandler.createJSONArray(rs, "name", "address", "img_src", "organization_id");
+            statement.close();
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+        finally {
+            try
+            {
+                connection.close();
+            }
+            catch (Exception exception){
+                System.out.println(exception);
+            }
         }
 
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
 
         return jsonArray;
     }
@@ -306,12 +315,19 @@ public class User extends ApiHandler {
             ResultSet rs = statement.executeQuery();
 
             jsonObject = JsonHandler.createJSONObject(rs, "name", "address", "img_src", "organization_id", "tel_num");
+            statement.close();
+        }catch (Exception exception){
+            System.out.println(exception);
         }
-
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
+        finally {
+            try
+            {
+                connection.close();
+            }
+            catch (Exception exception){
+                System.out.println(exception);
+            }
         }
-
         return jsonObject;
     }
 
@@ -327,11 +343,20 @@ public class User extends ApiHandler {
 
             jsonArray = JsonHandler.createJSONArray(rs, "img_src", "title" , "price", "author", "content_id","rate_count");
 
+            statement.close();
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+        finally {
+            try
+            {
+                connection.close();
+            }
+            catch (Exception exception){
+                System.out.println(exception);
+            }
         }
 
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
 
         return jsonArray;
     }
@@ -349,11 +374,20 @@ public class User extends ApiHandler {
             ResultSet rs = statement.executeQuery();
             jsonArray = JsonHandler.createJSONArray(rs, "name", "quli", "user_id", "teacher_id", "img_src");
 
+            statement.close();
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+        finally {
+            try
+            {
+                connection.close();
+            }
+            catch (Exception exception){
+                System.out.println(exception);
+            }
         }
 
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
 
         return jsonArray;
     }
@@ -370,11 +404,20 @@ public class User extends ApiHandler {
             ResultSet rs = statement.executeQuery();
             jsonArray = JsonHandler.createJSONArray(rs, "author", "title", "price", "img_src", "content_id","rate_count", "type");
 
+            statement.close();
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+        finally {
+            try
+            {
+                connection.close();
+            }
+            catch (Exception exception){
+                System.out.println(exception);
+            }
         }
 
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
-        }
 
         return jsonArray;
     }
@@ -768,42 +811,6 @@ public class User extends ApiHandler {
 
 
 
-//    public JSONArray show_notifications(Integer id, JSONObject requestObject){
-//        Connection connection = Driver.getConnection();
-//
-//        JSONArray jsonArray= new JSONArray();
-//        try{
-//            PreparedStatement statement;
-//            statement = connection.prepareStatement("SELECT n.notification_id, n.title, n.description, n.date, n.time, n.type, n.status, \n" +
-//                    "    CONCAT(u.f_name, ' ', u.l_name) AS sender_name, 'user' AS sender_type\n" +
-//                    "FROM notification n\n" +
-//                    "JOIN user u ON n.user_id_sender = u.user_id\n" +
-//                    "WHERE n.user_id_receiver = ? OR n.mod_id_receiver = ? \n" +
-//                    "UNION ALL\n" +
-//                    "SELECT n.notification_id, n.title, n.description, n.date, n.time, n.type, n.status, \n" +
-//                    "    CONCAT(m.f_name, ' (Moderator)') AS sender_name, 'moderator' AS sender_type\n" +
-//                    "FROM notification n\n" +
-//                    "JOIN moderator m ON n.mod_id_sender = m.moderator_id\n" +
-//                    "WHERE n.user_id_receiver = ? OR n.mod_id_receiver = ? ;\n");
-//            statement.setInt(1, id);
-//            statement.setInt(2, id);
-//            statement.setInt(3, id);
-//            statement.setInt(4, id);
-//
-//
-//            ResultSet rs = statement.executeQuery();
-//            System.out.println(rs);
-//            jsonArray = JsonHandler.createJSONArray(rs, "notification_id", "sender_name", "sender_type", "date" ,"time", "title", "description", "type", "status");
-//        }
-//
-//        catch(SQLException sqlException){
-//            System.out.println(sqlException);
-//        }
-//
-//        return jsonArray;
-//    }
-
-
 
 
 
@@ -857,30 +864,7 @@ public class User extends ApiHandler {
 
 
 
-//
-//
-//    public JSONArray answer_questions(Integer id, JSONObject requestObject){
-//        System.out.println(id);
-//        JSONArray jasonarray = new JSONArray();
-//        Connection connection = Driver.getConnection();
-//        try {
-//            PreparedStatement statement = connection.prepareStatement("SELECT * FROM question INNER JOIN teacher ON question.accept_teacher_id= teacher.teacher_id INNER JOIN user ON question.user_id= user.user_id INNER join question_media on question.question_id = question_media.question_id WHERE (question.status=1 OR question.status=2) AND teacher.user_ID=?;");
-//            System.out.println("yesss");
-//            statement.setInt(1,id);
-//            ResultSet resultSet = statement.executeQuery();
-//
-//            jasonarray = JsonHandler.createJSONArray(resultSet,  "question.question_id", "question_img","question_title","question_description","media", "f_name" , "l_name","pro_pic","question.user_id","question.status");
-//        }catch (Exception exception){
-//            System.out.println(exception);
-//        }
-//
-//
-//        return jasonarray;
-//    }
-//
-//
-//
-//
+
 
 
 

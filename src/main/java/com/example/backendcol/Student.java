@@ -94,6 +94,7 @@ public class Student extends User{
             result = statement2.executeUpdate();
 
             connection.commit();
+            jsonObject.put("message","Send upgrade to teacher details successfully");
 
 
 
