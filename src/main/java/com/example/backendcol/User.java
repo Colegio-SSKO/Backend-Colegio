@@ -224,6 +224,8 @@ public class User extends ApiHandler {
             PreparedStatement statement;
             statement = connection.prepareStatement("SELECT content.title as title, content.image as img_src, subject.name as subject, content.price as price, content.description as description, content.purchase_count as count, content.rate_count as rates, content.content_id as content_id, concat(user.f_name,' ', user.l_name) as author, content.date as date from course inner join content on course.content_id= content.content_id INNER join user on content.user_id= user.user_id INNER JOIN subject on content.subject_id= subject.subject_id ORDER BY content.purchase_count DESC LIMIT 1;");
             statement.setInt(1,20);
+            statement = connection.prepareStatement("SELECT content.title as title, content.image as img_src, subject.name as subject, content.price as price, content.description as description, content.rate_count as rates, content.content_id as content_id, concat(user.f_name,' ', user.l_name) as author, content.date as date from course inner join content on course.content_id= content.content_id INNER join user on content.user_id= user.user_id INNER JOIN subject on content.subject_id= subject.subject_id ORDER BY content.purchase_count DESC LIMIT 1;");
+//            statement.setInt(1,20);
             ResultSet rs = statement.executeQuery();
 
             jsonObject = JsonHandler.createJSONObject(rs, "title", "img_src", "price", "description", "content_id", "author", "date", "subject","rates");
@@ -356,7 +358,6 @@ public class User extends ApiHandler {
                 System.out.println(exception);
             }
         }
-
 
         return jsonArray;
     }
@@ -858,6 +859,27 @@ public class User extends ApiHandler {
         }
 
 
+    }
+
+
+
+
+    public JSONArray easy_nav_cards(Integer id, JSONObject requestObject){
+        JSONArray jasonarray = new JSONArray();
+
+        try {
+            Connection connection = Driver.getConnection();
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM content INNER JOIN subject ON content.subject_id= subject.subject_id INNER JOIN teacher on content.user_id = teacher.user_ID INNER join user on teacher.user_ID = user.user_id WHERE content.subject_id=?;");
+            statement.setInt(1,id);
+            ResultSet resultSet = statement.executeQuery();
+            System.out.println("hari");
+            jasonarray = JsonHandler.createJSONArray(resultSet, "title", "image", "f_name", "l_name", "content_id","teacher_id");
+        }catch (Exception exception){
+            System.out.println(exception);
+        }
+
+
+        return jasonarray;
     }
 
 
