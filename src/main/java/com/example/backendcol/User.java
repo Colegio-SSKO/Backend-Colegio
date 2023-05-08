@@ -701,35 +701,93 @@ public class User extends ApiHandler {
             PreparedStatement statement;
             System.out.println(name);
             System.out.println("pre search");
-            statement = connection.prepareStatement("SELECT t.type, t.name, t.img_src, t.quli, t.id, t.course_title, t.quiz_title, t.content_id, t.status, CONCAT(u.f_name, ' ', u.l_name) AS creator,\n" +
-                    "CASE WHEN t.type = 'course' THEN c.introduction_media ELSE NULL END AS intro_media,\n" +
-                    "CASE WHEN t.type = 'quiz' THEN q.image ELSE NULL END AS quiz_img,\n" +
-                    "CASE WHEN t.type = 'teacher' THEN teacher.teacher_id ELSE NULL END AS teacher_id,\n" +
-                    "CASE WHEN t.type = 'organization' THEN organization.organization_id ELSE NULL END AS organization_id\n" +
+            statement = connection.prepareStatement("SELECT\n" +
+                    "  t.type,\n" +
+                    "  t.name,\n" +
+                    "  t.img_src,\n" +
+                    "  t.quli,\n" +
+                    "  t.id,\n" +
+                    "  t.course_title,\n" +
+                    "  t.quiz_title,\n" +
+                    "  t.content_id,\n" +
+                    "  t.status,\n" +
+                    "  CONCAT(u.f_name, ' ', u.l_name) AS creator,\n" +
+                    "  c.image AS intro_media, -- Retrieve the image from the \"content\" table for courses\n" +
+                    "  q.image AS quiz_img -- Retrieve the image from the \"content\" table for quizzes\n" +
                     "FROM (\n" +
-                    "  SELECT 'teacher' AS type, CONCAT(user.f_name, ' ', user.l_name, ' (', teacher.teacher_id, ')') AS name, user.pro_pic AS img_src, teacher.qulification_level AS quli, teacher.teacher_id AS id, NULL AS course_title, NULL AS quiz_title, NULL AS content_id, NULL AS status, teacher.user_ID AS user_id, NULL AS organization_id\n" +
-                    "  FROM user \n" +
+                    "  SELECT\n" +
+                    "    'teacher' AS type,\n" +
+                    "    CONCAT(user.f_name, ' ', user.l_name, ' (', teacher.teacher_id, ')') AS name,\n" +
+                    "    user.pro_pic AS img_src,\n" +
+                    "    teacher.qulification_level AS quli,\n" +
+                    "    teacher.teacher_id AS id,\n" +
+                    "    NULL AS course_title,\n" +
+                    "    NULL AS quiz_title,\n" +
+                    "    NULL AS content_id,\n" +
+                    "    NULL AS status,\n" +
+                    "    teacher.user_ID AS user_id,\n" +
+                    "    NULL AS organization_id\n" +
+                    "  FROM user\n" +
                     "  INNER JOIN teacher ON teacher.user_ID = user.user_id\n" +
                     "  WHERE CONCAT(user.f_name, user.l_name) LIKE ? \n" +
+                    "  \n" +
                     "  UNION ALL\n" +
-                    "  SELECT 'course' AS type, NULL AS name, NULL AS img_src, NULL AS quli, course.course_id AS id, course.course_title, NULL AS quiz_title, content.content_id, content.status, content.user_id, NULL AS organization_id\n" +
-                    "  FROM course \n" +
-                    "  INNER JOIN content ON course.content_id = content.content_id \n" +
-                    "  WHERE course.course_title LIKE ? AND content.status = 0\n" +
+                    "  \n" +
+                    "  SELECT\n" +
+                    "    'course' AS type,\n" +
+                    "    NULL AS name,\n" +
+                    "    content.image AS img_src,\n" +
+                    "    NULL AS quli,\n" +
+                    "    course.course_id AS id,\n" +
+                    "    content.title AS course_title,\n" +
+                    "    NULL AS quiz_title,\n" +
+                    "    content.content_id,\n" +
+                    "    content.status,\n" +
+                    "    content.user_id,\n" +
+                    "    NULL AS organization_id\n" +
+                    "  FROM course\n" +
+                    "  INNER JOIN content ON course.content_id = content.content_id\n" +
+                    "  WHERE content.title LIKE ? AND content.status = 0\n" +
+                    "  \n" +
                     "  UNION ALL\n" +
-                    "  SELECT 'quiz' AS type, NULL AS name, NULL AS img_src, NULL AS quli, quiz.quiz_id AS id, NULL AS course_title, quiz.quiz_title, content.content_id, content.status, content.user_id, NULL AS organization_id\n" +
-                    "  FROM quiz \n" +
-                    "  INNER JOIN content ON quiz.content_id = content.content_id \n" +
-                    "  WHERE quiz.quiz_title LIKE ? AND content.status = 0\n" +
+                    "  \n" +
+                    "  SELECT\n" +
+                    "    'quiz' AS type,\n" +
+                    "    NULL AS name,\n" +
+                    "    content.image AS img_src,\n" +
+                    "    NULL AS quli,\n" +
+                    "    quiz.quiz_id AS id,\n" +
+                    "    NULL AS course_title,\n" +
+                    "    content.title AS quiz_title,\n" +
+                    "    content.content_id,\n" +
+                    "    content.status,\n" +
+                    "    content.user_id,\n" +
+                    "    NULL AS organization_id\n" +
+                    "  FROM quiz\n" +
+                    "  INNER JOIN content ON quiz.content_id = content.content_id\n" +
+                    "  WHERE content.title LIKE ? AND content.status = 0\n" +
+                    "  \n" +
                     "  UNION ALL\n" +
-                    "  SELECT 'organization' AS type, CONCAT(user.f_name, ' ', user.l_name, ' (', organization.organization_id, ')') AS name, user.pro_pic AS img_src, NULL AS quli, organization.organization_id AS id, NULL AS course_title, NULL AS quiz_title, NULL AS content_id, NULL AS status, organization.user_ID AS user_id, organization.organization_id AS organization_id\n" +
-                    "  FROM user \n" +
+                    "  \n" +
+                    "  SELECT\n" +
+                    "    'organization' AS type,\n" +
+                    "    CONCAT(user.f_name, ' ', user.l_name, ' (', organization.organization_id, ')') AS name,\n" +
+                    "    user.pro_pic AS img_src,\n" +
+                    "    NULL AS quli,\n" +
+                    "    organization.organization_id AS id,\n" +
+                    "    NULL AS course_title,\n" +
+                    "    NULL AS quiz_title,\n" +
+                    "    NULL AS content_id,\n" +
+                    "    NULL AS status,\n" +
+                    "    organization.user_ID AS user_id,\n" +
+                    "    organization.organization_id AS organization_id\n" +
+                    "  FROM user\n" +
                     "  INNER JOIN organization ON organization.user_ID = user.user_id\n" +
-                    "  WHERE CONCAT(user.f_name, user.l_name) LIKE ? \n" +
+                    "  WHERE CONCAT(user.f_name, user.l_name) LIKE ?\n" +
                     ") AS t\n" +
                     "LEFT JOIN user AS u ON t.user_id = u.user_id\n" +
-                    "LEFT JOIN course AS c ON t.id = c.course_id\n" +
-                    "LEFT JOIN quiz AS q ON t.id = q.quiz_id\n" +
+                    "LEFT JOIN content AS c ON t.id = c.content_id AND t.type = 'course' -- Join the \"content\" table for courses\n" +
+                    "LEFT JOIN content AS q ON t.id = q.content_id AND t.type = 'quiz' -- Join the \"content\" table for quizzes\n" +
                     "LEFT JOIN teacher ON t.id = teacher.teacher_id\n" +
                     "LEFT JOIN organization ON t.id = organization.organization_id;");
             statement.setString(1, "%"+ name +"%");
