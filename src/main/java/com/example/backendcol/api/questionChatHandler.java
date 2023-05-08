@@ -69,7 +69,19 @@ public class questionChatHandler {
                 }
                 else{
                     receiver.session.getAsyncRemote().sendText(message);
-                    sender.questions.get(messageData.getInt("questionId")).data.getJSONArray("messages").put(messageData);
+                    if (messageData.getInt("isTeacherSent")==0){
+                        System.out.println("u");
+                        sender.questions.get(messageData.getInt("questionId")).data.getJSONArray("messages").put(messageData);
+                    }
+                    else if (messageData.getInt("isTeacherSent")==1){
+                        System.out.println("t");
+                        Teacher senderTeacher = (Teacher) sender;
+                        senderTeacher.answeringQuestions.get(messageData.getInt("questionId")).data.getJSONArray("messages").put(messageData);
+                    }
+                    else{
+                        System.out.println("error");
+                    }
+
 
 
                 }

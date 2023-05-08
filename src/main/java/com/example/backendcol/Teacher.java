@@ -281,6 +281,7 @@ public class Teacher extends User {
         Connection connection = Driver.getConnection();
 
         JSONObject jsonObject= new JSONObject();
+        jsonObject.put("isError", true);
         LocalDate currentDate = LocalDate.now();
 
         Integer generatedKey = -100;
@@ -348,6 +349,7 @@ public class Teacher extends User {
             int[] numberOdUpdates = statement.executeBatch();
 
             if (numberOdUpdates.length == quizQuestions.length()){
+                jsonObject.put("isError", false);
                 System.out.println("Update ek lssnt una");
             }
             connection.commit();
@@ -791,6 +793,7 @@ public class Teacher extends User {
             ){
                 connection.commit();
                 System.out.println("Update ek lssnt una");
+                jsonObject.put("isError", "false");
             }
 
 
