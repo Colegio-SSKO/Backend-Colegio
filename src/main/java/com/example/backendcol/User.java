@@ -1964,8 +1964,10 @@ public class User extends ApiHandler {
 
             for (int i = 0; i<content.length(); i++){
                 System.out.println("content ek add kr");
+                System.out.println(this.purchasedContent.size());
                 Content newContent = new Content(content.getJSONObject(i).getInt("content_id"));
                 purchasedContent.put(content.getJSONObject(i).getInt("content_id"), newContent);
+                System.out.println(this.purchasedContent.size());
             }
             return jsonObject;
 
