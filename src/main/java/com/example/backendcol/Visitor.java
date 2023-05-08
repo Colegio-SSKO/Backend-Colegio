@@ -10,6 +10,8 @@ import java.sql.SQLException;
 
 public class Visitor extends ApiHandler{
 
+
+
     public JSONObject view_featured_cont(Integer id, JSONObject requestObject){
         Connection connection = Driver.getConnection();
         System.out.println("DB connectionqq");
@@ -45,7 +47,7 @@ public class Visitor extends ApiHandler{
             var name =requestObject.getString("name");
             PreparedStatement statement;
             System.out.println(name);
-            System.out.println("pre search");
+            System.out.println("pre search aa");
             statement = connection.prepareStatement("SELECT\n" +
                     "  t.type,\n" +
                     "  t.name,\n" +
@@ -142,11 +144,13 @@ public class Visitor extends ApiHandler{
 
             ResultSet rs = statement.executeQuery();
             System.out.println(rs);
-            jsonArray = JsonHandler.createJSONArray(rs, "type", "name", "img_src", "quli" ,"id", "course_title", "quiz_title", "content_id", "status", "creator", "intro_media", "quiz_img", "teacher_id");
+            jsonArray = JsonHandler.createJSONArray(rs, "type", "name", "img_src", "quli" ,"id", "course_title", "quiz_title", "content_id", "status", "creator", "intro_media", "quiz_img");
         }
 
-        catch(SQLException sqlException){
-            System.out.println(sqlException);
+        catch(Exception exception){
+            System.out.println("ad00");
+            exception.printStackTrace();
+
         }
 
         return jsonArray;
