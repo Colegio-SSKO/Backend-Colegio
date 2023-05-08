@@ -864,6 +864,8 @@ public class Teacher extends User {
 
 
             connection.commit();
+            jsonObject.put("isError", false);
+
 
 
         }catch (Exception exception){
@@ -871,7 +873,7 @@ public class Teacher extends User {
             try {
                 connection.rollback();
             }catch (Exception exception1){
-                System.out.println("sys: "+exception);
+                exception1.printStackTrace();
             }
 
         }
@@ -880,6 +882,7 @@ public class Teacher extends User {
                 connection.close();
             }catch (Exception exception){
                 System.out.println("sys: "+exception);
+                exception.printStackTrace();
             }
 
         }
