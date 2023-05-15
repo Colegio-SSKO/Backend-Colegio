@@ -1,6 +1,8 @@
-package com.example.backendcol.api;
+package com.example.backendcol;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class Driver {
     public static Connection getConnection(){
@@ -9,15 +11,18 @@ public class Driver {
         try {
             String user = "root";
             String password = "";
-            String url = "jdbc:mysql://localhost:3306/colegionew";
+            String url = "jdbc:mysql://localhost:3306/colegio";
             String jdbcDriver = "com.mysql.cj.jdbc.Driver";
             Class.forName(jdbcDriver);
             connection = DriverManager.getConnection(url, user, password);
 
 
 
-        }catch (Exception exception){
-            System.out.println(exception);
+        }catch (SQLException sqlException){
+            System.out.println(sqlException);
+        }
+        catch (ClassNotFoundException classNotFoundException){
+            System.out.println(classNotFoundException);
         }
 
         return connection;
